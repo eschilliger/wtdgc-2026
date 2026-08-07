@@ -1,5 +1,6 @@
 import type { PdgaApiPlayer } from "@/server/pdga/types";
 import { searchPdgaPlayers } from "@/server/pdga/client";
+import { findKnownPdgaResolution } from "./known-pdga-resolutions";
 import type { NormalizedWtdgcMember } from "./types";
 
 const COUNTRY_CODE_BY_TEAM_COUNTRY: Record<string, string> = {
@@ -68,15 +69,23 @@ export async function resolveMissingPdgaNumber(member: NormalizedWtdgcMember) {
     .sort((a, b) => b.score - a.score);
 
   const best = ranked[0];
-  if (!best || best.score < 8) return member;
-  if (ranked[1] && ranked[1].score === best.score) return member;
+  if (best && best.score >= 8 && (!ranked[1] || ranked[1].score !== best.score)) {
+    const pdgaNumber = Number.parseInt(best.candidate.pdga_number, 10);
+    if (Number.isFinite(pdgaNumber)) {
+      return {
+        ...member,
+        pdgaNumberNormalized: pdgaNumber,
+        pdgaResolutionSource: "pdga-api" as const,
+      };
+    }
+  }
 
-  const pdgaNumber = Number.parseInt(best.candidate.pdga_number, 10);
-  if (!Number.isFinite(pdgaNumber)) return member;
+  const known = findKnownPdgaResolution(member.teamKey, member.fullName);
+  if (!known) return member;
 
   return {
     ...member,
-    pdgaNumberNormalized: pdgaNumber,
-    pdgaResolutionSource: "pdga-api" as const,
+    pdgaNumberNormalized: known.pdgaNumber,
+    pdgaResolutionSource: "pdga-site" as const,
   };
 }
