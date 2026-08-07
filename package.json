@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "import:wtdgc": "tsx scripts/import-wtdgc.ts"
+    "import:wtdgc": "tsx scripts/import-wtdgc.ts",
+    "import:firestore": "tsx scripts/import-firestore.ts"
   },
   "dependencies": {
     "firebase": "^12.1.0",
