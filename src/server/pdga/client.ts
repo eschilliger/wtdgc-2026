@@ -1,4 +1,3 @@
-import "server-only";
 import type { PdgaApiPlayer, PdgaSession } from "./types";
 
 const baseUrl = process.env.PDGA_API_BASE_URL ?? "https://api.pdga.com";
