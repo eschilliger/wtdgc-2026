@@ -69,6 +69,24 @@ export async function getPdgaPlayer(pdgaNumber: number): Promise<PdgaApiPlayer |
   return result.players?.[0] ?? null;
 }
 
+export async function searchPdgaPlayers(input: {
+  firstName?: string;
+  lastName?: string;
+  country?: string;
+  limit?: number;
+}): Promise<PdgaApiPlayer[]> {
+  const params = new URLSearchParams();
+  if (input.firstName) params.set("first_name", input.firstName);
+  if (input.lastName) params.set("last_name", input.lastName);
+  if (input.country) params.set("country", input.country);
+  params.set("limit", String(Math.min(input.limit ?? 20, 200)));
+
+  const result = await pdgaGet<{ players?: PdgaApiPlayer[] }>(
+    `/services/json/players?${params.toString()}`,
+  );
+  return result.players ?? [];
+}
+
 export async function getPdgaPlayerStatistics(year: number, pdgaNumber?: number) {
   const params = new URLSearchParams({ year: String(year) });
   if (pdgaNumber) params.set("pdga_number", String(pdgaNumber));
