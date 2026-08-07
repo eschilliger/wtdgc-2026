@@ -1,0 +1,69 @@
+name: Import all PDGA rating history
+
+on:
+  workflow_dispatch:
+    inputs:
+      offset:
+        description: "Index de départ dans la liste triée des joueurs WTDGC"
+        required: true
+        default: "0"
+      limit:
+        description: "Nombre de joueurs à traiter (max 50)"
+        required: true
+        default: "25"
+      delay_ms:
+        description: "Pause entre deux joueurs en millisecondes"
+        required: true
+        default: "1500"
+      force:
+        description: "Réimporter aussi les joueurs déjà backfillés"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  import-rating-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare Firebase service account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT secret is missing"
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Import rating history batch
+        shell: bash
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+          GOOGLE_CLOUD_PROJECT: wtdgc-2026
+          FORCE_IMPORT: ${{ inputs.force }}
+        run: |
+          EXTRA_ARGS=""
+          if [ "$FORCE_IMPORT" = "true" ]; then
+            EXTRA_ARGS="--force"
+          fi
+          npx tsx scripts/import-all-pdga-rating-history.ts \
+            --offset "${{ inputs.offset }}" \
+            --limit "${{ inputs.limit }}" \
+            --delay-ms "${{ inputs.delay_ms }}" \
+            $EXTRA_ARGS
