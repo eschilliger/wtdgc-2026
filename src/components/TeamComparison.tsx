@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 export type ComparisonPlayer = {
@@ -75,7 +76,11 @@ function TeamCard({ team, featured = false }: { team: ComparisonTeam; featured?:
         {sortedPlayers.map((player) => (
           <div className="player-row" key={player.id}>
             <div className="player-row__main">
-              <strong>{player.firstName} {player.lastName}</strong>
+              {player.pdgaNumber ? (
+                <Link className="player-link" href={`/player/${player.pdgaNumber}`}>{player.firstName} {player.lastName}</Link>
+              ) : (
+                <strong>{player.firstName} {player.lastName}</strong>
+              )}
               <span>
                 {player.pdgaNumber ? `PDGA #${player.pdgaNumber}` : "PDGA non renseigné"}
                 {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ""}
