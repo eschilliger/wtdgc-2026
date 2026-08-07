@@ -20,6 +20,8 @@ type RegistrationRow = [
   "wtdgc" | "pdga-api" | "pdga-site" | "unresolved",
 ];
 
+type TeamCounts = { players: number; nptm: number; npts: number };
+
 async function loadSnapshot() {
   const meta = JSON.parse(await readFile("data/full/meta.json", "utf8")) as {
     capturedAt: string;
@@ -52,7 +54,7 @@ async function main() {
   }
 
   const people = new Map<string, Record<string, unknown>>();
-  const teamCounts = new Map<string, { players: number; nptm: number; npts: number }>();
+  const teamCounts = new Map<string, TeamCounts>();
   for (const row of source.registrations) {
     const [teamId, personId, role, firstName, lastName, pdgaNumber, jerseyNumber, jerseyNumberRaw, specificFunction, pdgaNumberSource] = row;
     people.set(personId, {
@@ -65,7 +67,8 @@ async function main() {
       sourceUpdatedAt: source.capturedAt,
     });
     const counts = teamCounts.get(teamId) ?? { players: 0, nptm: 0, npts: 0 };
-    counts[role] += 1;
+    const countKey: keyof TeamCounts = role === "player" ? "players" : role;
+    counts[countKey] += 1;
     teamCounts.set(teamId, counts);
     void jerseyNumber;
     void jerseyNumberRaw;
