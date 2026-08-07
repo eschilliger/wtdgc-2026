@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import RatingHistoryChart, { type RatingHistoryPoint } from "@/components/RatingHistoryChart";
 import { db } from "@/server/firebase/admin";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ type TeamDoc = {
 type RatingHistoryDoc = {
   rating?: number;
   effectiveDate?: string | null;
+  roundsUsed?: number | null;
   firstSeenAt?: string;
   lastSeenAt?: string;
 };
@@ -82,22 +84,6 @@ function labelForStat(key: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function ratingPolyline(history: RatingHistoryDoc[]) {
-  const values = history.filter((item): item is RatingHistoryDoc & { rating: number } => Number.isFinite(item.rating));
-  if (values.length < 2) return null;
-  const ratings = values.map((item) => item.rating);
-  const min = Math.min(...ratings);
-  const max = Math.max(...ratings);
-  const span = Math.max(1, max - min);
-  return values
-    .map((item, index) => {
-      const x = (index / (values.length - 1)) * 100;
-      const y = 92 - ((item.rating - min) / span) * 76;
-      return `${x},${y}`;
-    })
-    .join(" ");
-}
-
 export default async function PlayerPage({ params }: { params: Promise<{ pdgaNumber: string }> }) {
   const { pdgaNumber: rawPdgaNumber } = await params;
   const pdgaNumber = Number.parseInt(rawPdgaNumber, 10);
@@ -116,6 +102,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   const profile = (profileSnapshot.data() ?? {}) as ProfileDoc;
   const player = (playerSnapshot.data() ?? {}) as PlayerDoc;
   const history = historySnapshot.docs.map((doc) => doc.data() as RatingHistoryDoc);
+  const ratingHistory: RatingHistoryPoint[] = history
+    .filter((item): item is RatingHistoryDoc & { rating: number; effectiveDate: string } => Number.isFinite(item.rating) && Boolean(item.effectiveDate))
+    .map((item) => ({
+      rating: item.rating,
+      effectiveDate: item.effectiveDate,
+      roundsUsed: item.roundsUsed ?? null,
+    }));
   const stats = (statsSnapshot.data() ?? {}) as YearlyStatsDoc;
 
   const registrationsSnapshot = await db.collection("registrations").where("personId", "==", `pdga-${pdgaNumber}`).get();
@@ -124,7 +117,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   const team = (teamSnapshot?.data() ?? {}) as TeamDoc;
 
   const fullName = player.fullName || [profile.firstName ?? player.firstName, profile.lastName ?? player.lastName].filter(Boolean).join(" ") || `PDGA #${pdgaNumber}`;
-  const chartPoints = ratingPolyline(history);
   const statsToShow = statPairs(stats.payload)
     .filter(([key]) => !/first.?name|last.?name|pdga.?number/i.test(key))
     .slice(0, 12);
@@ -165,26 +157,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
               <p className="eyebrow">Évolution</p>
               <h2>Historique du rating</h2>
             </div>
-            <strong>{history.length} relevé{history.length > 1 ? "s" : ""}</strong>
+            <strong>{ratingHistory.length} relevé{ratingHistory.length > 1 ? "s" : ""}</strong>
           </div>
 
-          {chartPoints ? (
-            <svg className="rating-chart" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Courbe d'évolution du rating">
-              <line x1="0" y1="92" x2="100" y2="92" />
-              <polyline points={chartPoints} />
-            </svg>
-          ) : (
-            <p className="empty-state">Il faut au moins deux ratings historisés pour tracer une tendance.</p>
-          )}
-
-          <div className="rating-history-list">
-            {[...history].reverse().slice(0, 8).map((item, index) => (
-              <div key={`${item.effectiveDate ?? "rating"}-${index}`}>
-                <span>{formatDate(item.effectiveDate)}</span>
-                <strong>{item.rating ?? "—"}</strong>
-              </div>
-            ))}
-          </div>
+          <RatingHistoryChart history={ratingHistory} currentRating={profile.currentRating} />
         </article>
       </section>
 
