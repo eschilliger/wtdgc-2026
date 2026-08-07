@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
+import styles from "./RatingHistoryChart.module.css";
 
 export type RatingHistoryPoint = {
   rating: number;
@@ -64,6 +65,11 @@ function signed(value: number | null) {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function trendClass(value: number | null) {
+  if (value === null || value === 0) return undefined;
+  return value > 0 ? styles.up : styles.down;
+}
+
 export default function RatingHistoryChart({ history, currentRating = null }: Props) {
   const [period, setPeriod] = useState<Period>("3y");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -102,8 +108,6 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
     return {
       points,
       polyline: points.map((point) => `${point.x},${point.y}`).join(" "),
-      min,
-      max,
     };
   }, [filteredHistory]);
 
@@ -118,30 +122,29 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
     if (!chart) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    const index = Math.round(ratio * (chart.points.length - 1));
-    setHoveredIndex(index);
+    setHoveredIndex(Math.round(ratio * (chart.points.length - 1)));
   };
 
   return (
-    <div className="rating-history-v2">
-      <div className="rating-kpis">
+    <div className={styles.root}>
+      <div className={styles.kpis}>
         <div><span>Rating actuel</span><strong>{current ?? "—"}</strong></div>
         <div><span>Record</span><strong>{best ?? "—"}</strong></div>
-        <div><span>3 mois</span><strong className={delta3 !== null && delta3 > 0 ? "trend-up" : delta3 !== null && delta3 < 0 ? "trend-down" : ""}>{signed(delta3)}</strong></div>
-        <div><span>6 mois</span><strong className={delta6 !== null && delta6 > 0 ? "trend-up" : delta6 !== null && delta6 < 0 ? "trend-down" : ""}>{signed(delta6)}</strong></div>
-        <div><span>12 mois</span><strong className={delta12 !== null && delta12 > 0 ? "trend-up" : delta12 !== null && delta12 < 0 ? "trend-down" : ""}>{signed(delta12)}</strong></div>
+        <div><span>3 mois</span><strong className={trendClass(delta3)}>{signed(delta3)}</strong></div>
+        <div><span>6 mois</span><strong className={trendClass(delta6)}>{signed(delta6)}</strong></div>
+        <div><span>12 mois</span><strong className={trendClass(delta12)}>{signed(delta12)}</strong></div>
       </div>
 
-      <div className="chart-toolbar" role="group" aria-label="Période de l'historique">
-        <button className={period === "1y" ? "active" : ""} onClick={() => setPeriod("1y")}>1 an</button>
-        <button className={period === "3y" ? "active" : ""} onClick={() => setPeriod("3y")}>3 ans</button>
-        <button className={period === "all" ? "active" : ""} onClick={() => setPeriod("all")}>Tout</button>
+      <div className={styles.toolbar} role="group" aria-label="Période de l'historique">
+        <button className={period === "1y" ? styles.active : ""} onClick={() => setPeriod("1y")}>1 an</button>
+        <button className={period === "3y" ? styles.active : ""} onClick={() => setPeriod("3y")}>3 ans</button>
+        <button className={period === "all" ? styles.active : ""} onClick={() => setPeriod("all")}>Tout</button>
       </div>
 
       {chart ? (
-        <div className="rating-chart-wrap">
+        <div className={styles.wrap}>
           <svg
-            className="rating-chart rating-chart--interactive"
+            className={styles.chart}
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             role="img"
@@ -153,15 +156,15 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
             <polyline points={chart.polyline} />
             {hovered ? (
               <>
-                <line className="rating-chart__cursor" x1={hovered.x} y1="8" x2={hovered.x} y2="92" />
-                <circle className="rating-chart__dot" cx={hovered.x} cy={hovered.y} r="1.8" />
+                <line className={styles.cursor} x1={hovered.x} y1="8" x2={hovered.x} y2="92" />
+                <circle className={styles.dot} cx={hovered.x} cy={hovered.y} r="1.8" />
               </>
             ) : null}
           </svg>
 
           {hovered ? (
             <div
-              className={`rating-tooltip${hovered.x > 72 ? " rating-tooltip--left" : ""}`}
+              className={`${styles.tooltip}${hovered.x > 72 ? ` ${styles.tooltipLeft}` : ""}`}
               style={{ left: `${hovered.x}%`, top: `${hovered.y}%` }}
               aria-live="polite"
             >
@@ -171,7 +174,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
             </div>
           ) : null}
 
-          <div className="rating-chart-axis" aria-hidden="true">
+          <div className={styles.axis} aria-hidden="true">
             <span>{formatShortDate(chart.points[0].effectiveDate)}</span>
             <span>{formatShortDate(chart.points[chart.points.length - 1].effectiveDate)}</span>
           </div>
@@ -180,7 +183,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
         <p className="empty-state">Il faut au moins deux ratings historisés pour tracer une tendance.</p>
       )}
 
-      <div className="rating-history-list">
+      <div className={styles.historyList}>
         {[...filteredHistory].reverse().slice(0, 8).map((item) => (
           <div key={item.effectiveDate}>
             <span>{formatTooltipDate(item.effectiveDate)}</span>
