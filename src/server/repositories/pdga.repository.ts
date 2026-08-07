@@ -1,4 +1,5 @@
 import { db } from "@/server/firebase/admin";
+import { extractPdgaGender } from "@/server/pdga/statistics";
 import type { PdgaApiPlayer } from "@/server/pdga/types";
 
 function parseRating(value?: string) {
@@ -61,10 +62,15 @@ export async function upsertPdgaProfile(player: PdgaApiPlayer, syncedAt: string)
 }
 
 export async function upsertPdgaYearlyStats(pdgaNumber: number, year: number, payload: unknown, syncedAt: string) {
-  await db
-    .collection("pdgaProfiles")
-    .doc(String(pdgaNumber))
+  const gender = extractPdgaGender(payload);
+  const profileRef = db.collection("pdgaProfiles").doc(String(pdgaNumber));
+
+  await profileRef
     .collection("yearlyStats")
     .doc(String(year))
-    .set({ pdgaNumber, year, payload, syncedAt }, { merge: true });
+    .set({ pdgaNumber, year, payload, gender, syncedAt }, { merge: true });
+
+  if (gender) {
+    await profileRef.set({ gender, genderSource: "pdga-player-statistics", syncedAt }, { merge: true });
+  }
 }

@@ -8,6 +8,7 @@ export type ComparisonPlayer = {
   lastName: string;
   pdgaNumber: number | null;
   rating: number | null;
+  gender: "M" | "F" | null;
   jerseyNumber: number | null;
 };
 
@@ -28,14 +29,30 @@ function flagEmoji(code: string) {
   return String.fromCodePoint(...[...code].map((char) => 127397 + char.charCodeAt(0)));
 }
 
-function averageRating(players: ComparisonPlayer[]) {
-  const ratings = players.map((player) => player.rating).filter((rating): rating is number => rating !== null);
-  if (!ratings.length) return null;
-  return Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length);
+function teamRatingSummary(players: ComparisonPlayer[]) {
+  const ranked = (gender: "M" | "F", limit: number) => players
+    .filter((player) => player.gender === gender && player.rating !== null)
+    .sort((a, b) => (b.rating as number) - (a.rating as number))
+    .slice(0, limit);
+
+  const men = ranked("M", 4);
+  const women = ranked("F", 2);
+  const selected = [...men, ...women];
+  const complete = men.length === 4 && women.length === 2;
+
+  if (!complete) {
+    return { average: null, complete, menCount: men.length, womenCount: women.length, selectedIds: new Set(selected.map((p) => p.id)) };
+  }
+
+  const average = Math.round(
+    selected.reduce((sum, player) => sum + (player.rating as number), 0) / selected.length,
+  );
+
+  return { average, complete, menCount: men.length, womenCount: women.length, selectedIds: new Set(selected.map((p) => p.id)) };
 }
 
 function TeamCard({ team, featured = false }: { team: ComparisonTeam; featured?: boolean }) {
-  const average = averageRating(team.players);
+  const summary = teamRatingSummary(team.players);
   const sortedPlayers = [...team.players].sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
 
   return (
@@ -49,8 +66,8 @@ function TeamCard({ team, featured = false }: { team: ComparisonTeam; featured?:
           </div>
         </div>
         <div className="rating-summary">
-          <strong>{average ?? "—"}</strong>
-          <span>rating moyen</span>
+          <strong>{summary.average ?? "—"}</strong>
+          <span>{summary.complete ? "moyenne top 4H + 2F" : `${summary.menCount}/4 H · ${summary.womenCount}/2 F`}</span>
         </div>
       </div>
 
@@ -62,6 +79,8 @@ function TeamCard({ team, featured = false }: { team: ComparisonTeam; featured?:
               <span>
                 {player.pdgaNumber ? `PDGA #${player.pdgaNumber}` : "PDGA non renseigné"}
                 {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ""}
+                {player.gender ? ` · ${player.gender}` : ""}
+                {summary.selectedIds.has(player.id) ? " · retenu" : ""}
               </span>
             </div>
             <div className="player-row__rating">{player.rating ?? "—"}</div>
