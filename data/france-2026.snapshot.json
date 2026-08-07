@@ -1,0 +1,44 @@
+{
+  "event": {"id":"wtdgc-2026","name":"WTDGC 2026","year":2026,"hostCity":"Vilnius","hostCountry":"Lithuania"},
+  "source": {"name":"WTDGC registration dashboard","capturedAt":"2026-08-07","url":"https://www.wtdgc.sport/teams-online-resigration-dashboard/"},
+  "teams": [
+    {"id":"fr-masters","country":"France","countryCode":"FR","division":"masters","teamCode":"FRA M","status":"complete","statusLabel":"All declared places filled","declared":{"nptm":1,"npts":0,"players":7},"submitted":{"nptm":1,"npts":0,"players":7},"remaining":{"nptm":0,"npts":0,"players":0},"totalDeclared":8,"totalSubmitted":8,"totalRemaining":0},
+    {"id":"fr-open","country":"France","countryCode":"FR","division":"open","teamCode":"FRA O","status":"complete","statusLabel":"All declared places filled","declared":{"nptm":1,"npts":0,"players":7},"submitted":{"nptm":1,"npts":0,"players":7},"remaining":{"nptm":0,"npts":0,"players":0},"totalDeclared":8,"totalSubmitted":8,"totalRemaining":0}
+  ],
+  "people": [
+    {"id":"pdga-57287","firstName":"Anne","lastName":"ACTIS","fullName":"Anne ACTIS","pdgaNumber":57287,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-153567","firstName":"Julien","lastName":"Aubry-Damon","fullName":"Julien Aubry-Damon","pdgaNumber":153567,"pdgaNumberSource":"wtdgc"},
+    {"id":"person-318cdfcd8db5","firstName":"Pierre","lastName":"Bonnefous","fullName":"Pierre Bonnefous","pdgaNumber":null,"pdgaNumberSource":"unresolved"},
+    {"id":"pdga-69452","firstName":"Mehdi","lastName":"BOUKARABILA","fullName":"Mehdi BOUKARABILA","pdgaNumber":69452,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-189790","firstName":"Maria Fernanda","lastName":"Buitrago Acevedo","fullName":"Maria Fernanda Buitrago Acevedo","pdgaNumber":189790,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-135234","firstName":"Mael","lastName":"GALLET","fullName":"Mael GALLET","pdgaNumber":135234,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-8431","firstName":"Sylvain","lastName":"Gouge","fullName":"Sylvain Gouge","pdgaNumber":8431,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-93622","firstName":"frederic","lastName":"keiflin","fullName":"frederic keiflin","pdgaNumber":93622,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-129367","firstName":"Loralie","lastName":"Lanneluc","fullName":"Loralie Lanneluc","pdgaNumber":129367,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-63655","firstName":"Dorian","lastName":"Legendre","fullName":"Dorian Legendre","pdgaNumber":63655,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-154224","firstName":"Liam","lastName":"Michael","fullName":"Liam Michael","pdgaNumber":154224,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-105676","firstName":"Johan","lastName":"RENAUDIER","fullName":"Johan RENAUDIER","pdgaNumber":105676,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-154229","firstName":"Vincent","lastName":"RENAUDIER","fullName":"Vincent RENAUDIER","pdgaNumber":154229,"pdgaNumberSource":"wtdgc"},
+    {"id":"person-04bb39b3a3cc","firstName":"Eric","lastName":"SCHILLIGER","fullName":"Eric SCHILLIGER","pdgaNumber":null,"pdgaNumberSource":"unresolved"},
+    {"id":"pdga-195584","firstName":"Ludovic","lastName":"Taveau","fullName":"Ludovic Taveau","pdgaNumber":195584,"pdgaNumberSource":"wtdgc"},
+    {"id":"pdga-237823","firstName":"Laura-Marie","lastName":"Vivet","fullName":"Laura-Marie Vivet","pdgaNumber":237823,"pdgaNumberSource":"wtdgc"}
+  ],
+  "registrations": [
+    {"id":"fr-open-pdga-63655","teamId":"fr-open","personId":"pdga-63655","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"63655","pdgaNumber":63655,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-105676","teamId":"fr-open","personId":"pdga-105676","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"105676","pdgaNumber":105676,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-153567","teamId":"fr-open","personId":"pdga-153567","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"153567","pdgaNumber":153567,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-237823","teamId":"fr-open","personId":"pdga-237823","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"237823","pdgaNumber":237823,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-154224","teamId":"fr-open","personId":"pdga-154224","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"154224","pdgaNumber":154224,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-129367","teamId":"fr-open","personId":"pdga-129367","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"129367","pdgaNumber":129367,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-pdga-135234","teamId":"fr-open","personId":"pdga-135234","teamKey":"France|Open","division":"open","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"135234","pdgaNumber":135234,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-open-person-04bb39b3a3cc","teamId":"fr-open","personId":"person-04bb39b3a3cc","teamKey":"France|Open","division":"open","role":"nptm","teamRoleRaw":"Non-Playing Team Member (NPTM)","specificFunction":"Team Captain","jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"","pdgaNumber":null,"pdgaNumberSource":"unresolved"},
+    {"id":"fr-masters-pdga-57287","teamId":"fr-masters","personId":"pdga-57287","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"57287","pdgaNumber":57287,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-93622","teamId":"fr-masters","personId":"pdga-93622","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"93622","pdgaNumber":93622,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-195584","teamId":"fr-masters","personId":"pdga-195584","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"195584","pdgaNumber":195584,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-189790","teamId":"fr-masters","personId":"pdga-189790","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"189790","pdgaNumber":189790,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-69452","teamId":"fr-masters","personId":"pdga-69452","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"69452","pdgaNumber":69452,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-8431","teamId":"fr-masters","personId":"pdga-8431","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"8431","pdgaNumber":8431,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-pdga-154229","teamId":"fr-masters","personId":"pdga-154229","teamKey":"France|Masters","division":"masters","role":"player","teamRoleRaw":"Player","specificFunction":null,"jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"154229","pdgaNumber":154229,"pdgaNumberSource":"wtdgc"},
+    {"id":"fr-masters-person-318cdfcd8db5","teamId":"fr-masters","personId":"person-318cdfcd8db5","teamKey":"France|Masters","division":"masters","role":"nptm","teamRoleRaw":"Non-Playing Team Member (NPTM)","specificFunction":"Team Captain","jerseyNumberRaw":"","jerseyNumber":null,"pdgaNumberRaw":"","pdgaNumber":null,"pdgaNumberSource":"unresolved"}
+  ]
+}
