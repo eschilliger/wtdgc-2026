@@ -44,12 +44,14 @@ export async function upsertPdgaProfile(player: PdgaApiPlayer, syncedAt: string)
 
   const historyId = ratingHistoryId(ratingEffectiveDate, rating);
   if (historyId && rating !== null) {
-    await profileRef.collection("ratingHistory").doc(historyId).set(
+    const historyRef = profileRef.collection("ratingHistory").doc(historyId);
+    const existing = await historyRef.get();
+    await historyRef.set(
       {
         pdgaNumber,
         rating,
         effectiveDate: ratingEffectiveDate,
-        firstSeenAt: syncedAt,
+        ...(existing.exists ? {} : { firstSeenAt: syncedAt }),
         lastSeenAt: syncedAt,
         source: "pdga-api",
       },
