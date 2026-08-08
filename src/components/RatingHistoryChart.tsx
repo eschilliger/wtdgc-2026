@@ -21,17 +21,6 @@ function parseDate(value: string) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function formatFullDate(value: string) {
-  const date = parseDate(value);
-  if (!date) return value;
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
-
 function formatMonth(value: string) {
   const date = parseDate(value);
   if (!date) return value;
@@ -117,8 +106,8 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
 
     const points = filteredHistory.map((item, index) => ({
       ...item,
-      x: ((dates[index] - firstTime) / timeSpan) * 100,
-      y: 92 - ((item.rating - chartMin) / span) * 80,
+      x: 4 + ((dates[index] - firstTime) / timeSpan) * 94,
+      y: 91 - ((item.rating - chartMin) / span) * 78,
     }));
 
     const tickStep = span <= 80 ? 20 : span <= 160 ? 25 : 50;
@@ -146,7 +135,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
   const nearestIndex = (event: PointerEvent<SVGSVGElement>) => {
     if (!chart) return null;
     const rect = event.currentTarget.getBoundingClientRect();
-    const xPercent = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const xPercent = Math.min(98, Math.max(4, ((event.clientX - rect.left) / rect.width) * 100));
     let nearest = 0;
     let distance = Number.POSITIVE_INFINITY;
     chart.points.forEach((point, index) => {
@@ -170,6 +159,8 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
     if (next !== null) setActiveIndex(next);
     setPinned(true);
   };
+
+  const recentHistory = [...filteredHistory].reverse().slice(0, 8);
 
   return (
     <div className={styles.root}>
@@ -201,22 +192,22 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
             onPointerLeave={() => { if (!pinned) setActiveIndex(null); }}
           >
             {chart.ticks.map((tick) => {
-              const y = 92 - ((tick - chart.chartMin) / chart.span) * 80;
-              return <line key={tick} className={tick % 100 === 0 ? styles.milestone : styles.gridLine} x1="0" y1={y} x2="100" y2={y} />;
+              const y = 91 - ((tick - chart.chartMin) / chart.span) * 78;
+              return <line key={tick} className={tick % 100 === 0 ? styles.milestone : styles.gridLine} x1="4" y1={y} x2="98" y2={y} />;
             })}
             {current !== null ? (
               <line
                 className={styles.currentLine}
-                x1="0"
-                y1={92 - ((current - chart.chartMin) / chart.span) * 80}
-                x2="100"
-                y2={92 - ((current - chart.chartMin) / chart.span) * 80}
+                x1="4"
+                y1={91 - ((current - chart.chartMin) / chart.span) * 78}
+                x2="98"
+                y2={91 - ((current - chart.chartMin) / chart.span) * 78}
               />
             ) : null}
             <polyline points={chart.polyline} />
             {active ? (
               <>
-                <line className={styles.cursor} x1={active.x} y1="8" x2={active.x} y2="92" />
+                <line className={styles.cursor} x1={active.x} y1="10" x2={active.x} y2="91" />
                 <circle className={styles.dot} cx={active.x} cy={active.y} r="1.8" />
               </>
             ) : null}
@@ -227,7 +218,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
               <span
                 key={tick}
                 className={tick % 100 === 0 ? styles.majorTick : ""}
-                style={{ top: `${92 - ((tick - chart.chartMin) / chart.span) * 80}%` }}
+                style={{ top: `${91 - ((tick - chart.chartMin) / chart.span) * 78}%` }}
               >{tick}</span>
             ))}
           </div>
@@ -239,7 +230,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
               aria-live="polite"
             >
               <strong>{active.rating}</strong>
-              <span>{formatFullDate(active.effectiveDate)}</span>
+              <span>{formatMonth(active.effectiveDate)}</span>
               {active.roundsUsed != null ? <small>{active.roundsUsed} rounds utilisés</small> : null}
             </div>
           ) : null}
@@ -254,14 +245,19 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
         <p className="empty-state">Il faut au moins deux ratings historisés pour tracer une tendance.</p>
       )}
 
-      <div className={styles.historyList}>
-        {[...filteredHistory].reverse().slice(0, 8).map((item) => (
-          <div key={item.effectiveDate}>
-            <span>{formatFullDate(item.effectiveDate)}</span>
-            <strong>{item.rating}</strong>
-            {item.roundsUsed != null ? <small>{item.roundsUsed} rounds</small> : null}
-          </div>
-        ))}
+      <div className={styles.historyList} aria-label="Derniers ratings">
+        {recentHistory.map((item, index) => {
+          const previous = recentHistory[index + 1];
+          const delta = previous ? item.rating - previous.rating : null;
+          return (
+            <div className={styles.historyRow} key={item.effectiveDate}>
+              <span>{formatMonth(item.effectiveDate)}</span>
+              <strong>{item.rating}</strong>
+              <small>{item.roundsUsed != null ? `${item.roundsUsed} rounds` : "—"}</small>
+              <b className={delta !== null && Math.abs(delta) >= 4 ? (delta > 0 ? styles.up : styles.down) : undefined}>{delta === null ? "" : signed(delta)}</b>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

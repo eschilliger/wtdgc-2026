@@ -61,7 +61,7 @@
 
 .wrap {
   position: relative;
-  padding: 0 0 22px 38px;
+  padding: 0 0 22px 46px;
 }
 
 .chart {
@@ -123,13 +123,13 @@
 .yAxis {
   position: absolute;
   inset: 0 auto 22px 0;
-  width: 34px;
+  width: 42px;
   pointer-events: none;
 }
 
 .yAxis span {
   position: absolute;
-  right: 5px;
+  right: 7px;
   transform: translateY(-50%);
   color: #96a1ad;
   font-size: .62rem;
@@ -145,7 +145,7 @@
   position: absolute;
   z-index: 3;
   min-width: 130px;
-  transform: translate(48px, -50%);
+  transform: translate(52px, -50%);
   padding: 9px 10px;
   border-radius: 10px;
   background: #102f53;
@@ -155,7 +155,7 @@
 }
 
 .tooltipLeft {
-  transform: translate(calc(-100% + 28px), -50%);
+  transform: translate(calc(-100% + 34px), -50%);
 }
 
 .tooltip strong,
@@ -165,7 +165,7 @@
 }
 
 .tooltip strong { font-size: 1rem; }
-.tooltip span { margin-top: 2px; font-size: .78rem; font-weight: 800; }
+.tooltip span { margin-top: 2px; font-size: .78rem; font-weight: 800; text-transform: capitalize; }
 .tooltip small { margin-top: 3px; color: rgba(255,255,255,.7); font-size: .66rem; }
 
 .axis {
@@ -176,9 +176,7 @@
   font-size: .66rem;
 }
 
-.axis span {
-  text-transform: lowercase;
-}
+.axis span { text-transform: lowercase; }
 
 .touchHint {
   display: none;
@@ -188,40 +186,51 @@
   text-align: center;
 }
 
-.historyList {
-  display: none;
-}
+.historyList { display: none; }
 
 @media (max-width: 760px) {
   .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .kpis > div:first-child { grid-column: span 2; }
   .toolbar { justify-content: flex-start; flex-wrap: wrap; }
-  .wrap { padding-left: 32px; }
-  .chart { height: 200px; }
-  .tooltip { transform: translate(40px, -50%); }
-  .tooltipLeft { transform: translate(calc(-100% + 22px), -50%); }
+  .wrap { padding-left: 44px; }
+  .chart { height: 210px; }
+  .yAxis { width: 40px; }
+  .yAxis span { right: 6px; font-size: .6rem; }
+  .tooltip { transform: translate(42px, -50%); }
+  .tooltipLeft { transform: translate(calc(-100% + 26px), -50%); }
   .touchHint { display: block; }
+
   .historyList {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 0;
+    border-top: 1px solid #e7edf3;
+  }
+
+  .historyRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) auto auto auto;
+    align-items: center;
     gap: 8px;
+    min-height: 42px;
+    padding: 8px 2px;
+    border-bottom: 1px solid #edf2f6;
   }
-  .historyList div {
-    padding: 10px;
-    border-radius: 12px;
-    background: #f5f8fb;
-  }
-  .historyList span,
-  .historyList small {
-    display: block;
+
+  .historyRow span,
+  .historyRow small {
     color: #7a8796;
-    font-size: .7rem;
+    font-size: .68rem;
   }
-  .historyList strong {
-    display: block;
-    margin-top: 4px;
-    color: #123968;
-    font-size: 1.1rem;
-  }
-  .historyList small { margin-top: 3px; font-size: .64rem; }
+
+  .historyRow span { text-transform: capitalize; }
+  .historyRow strong { color: #123968; font-size: .92rem; }
+  .historyRow small { white-space: nowrap; }
+  .historyRow b { min-width: 28px; text-align: right; color: #6d7c8c; font-size: .7rem; }
+}
+
+@media (max-width: 430px) {
+  .wrap { padding-left: 42px; }
+  .chart { height: 190px; }
+  .historyRow { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .historyRow small { display: none; }
 }
