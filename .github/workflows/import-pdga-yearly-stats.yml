@@ -1,0 +1,53 @@
+name: Import PDGA yearly stats
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "Année PDGA à importer"
+        required: true
+        default: "2025"
+      offset:
+        description: "Offset dans la liste des profils"
+        required: true
+        default: "0"
+      limit:
+        description: "Nombre de profils (max 100)"
+        required: true
+        default: "25"
+      delay_ms:
+        description: "Pause entre appels PDGA (ms)"
+        required: true
+        default: "1200"
+
+permissions:
+  contents: read
+
+jobs:
+  import-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Prepare Firebase service account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          test -n "$FIREBASE_SERVICE_ACCOUNT" || (echo "FIREBASE_SERVICE_ACCOUNT secret is missing" && exit 1)
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+      - name: Import yearly statistics
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+          GOOGLE_CLOUD_PROJECT: wtdgc-2026
+          PDGA_API_USERNAME: ${{ secrets.PDGA_API_USERNAME }}
+          PDGA_API_PASSWORD: ${{ secrets.PDGA_API_PASSWORD }}
+        run: npx tsx scripts/import-pdga-yearly-stats-batch.ts --year "${{ inputs.year }}" --offset "${{ inputs.offset }}" --limit "${{ inputs.limit }}" --delay-ms "${{ inputs.delay_ms }}"

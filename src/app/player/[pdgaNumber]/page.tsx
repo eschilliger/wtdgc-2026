@@ -9,193 +9,41 @@ export const dynamic = "force-dynamic";
 
 type ProfileDoc = {
   pdgaNumber: number;
-  firstName?: string;
-  lastName?: string;
-  currentRating?: number | null;
-  ratingEffectiveDate?: string | null;
-  gender?: "M" | "F" | null;
-  classification?: string | null;
-  city?: string | null;
-  stateProv?: string | null;
-  country?: string | null;
-  membershipStatus?: string | null;
-  syncedAt?: string | null;
+  firstName?: string; lastName?: string; currentRating?: number | null; ratingEffectiveDate?: string | null;
+  gender?: "M" | "F" | null; classification?: string | null; city?: string | null; stateProv?: string | null; country?: string | null;
+  membershipStatus?: string | null; membershipExpirationDate?: string | null; officialStatus?: string | null; officialExpirationDate?: string | null; syncedAt?: string | null;
 };
-
 type PlayerDoc = { id: string; firstName?: string; lastName?: string; fullName?: string; pdgaNumber?: number | null };
 type RegistrationDoc = { teamId: string; personId: string; role: "player" | "nptm" | "npts"; jerseyNumber?: number | null };
 type TeamDoc = { country?: string; countryCode?: string; division?: "open" | "masters" };
 type RatingHistoryDoc = { rating?: number; effectiveDate?: string | null; roundsUsed?: number | null };
 type YearlyStatsDoc = { year?: number; gender?: "M" | "F" | null; payload?: unknown; syncedAt?: string };
 
-function parseFlexibleDate(value?: string | null) {
-  if (!value) return null;
-  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00Z` : value;
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
+function parseFlexibleDate(value?: string | null) { if (!value) return null; const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00Z` : value; const date = new Date(normalized); return Number.isNaN(date.getTime()) ? null : date; }
+function formatDate(value?: string | null) { const date = parseFlexibleDate(value); if (!date) return value || "—"; return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(date); }
+function translateClassification(value?: string | null) { if (!value) return "—"; const v = value.trim().toUpperCase(); if (v === "P") return "Professionnel"; if (v === "A") return "Amateur"; return value; }
+function translateMembership(value?: string | null) { if (!value) return "—"; const v = value.trim().toLowerCase(); if (["current", "active", "yes"].includes(v)) return "Active"; if (["expired", "inactive", "no"].includes(v)) return "Inactive"; return value; }
+function translateOfficial(value?: string | null) { if (!value) return "Non renseigné"; const v = value.trim().toLowerCase(); if (["current", "active", "yes", "official"].includes(v)) return "Actif"; if (["expired", "inactive", "no"].includes(v)) return "Expiré"; return value; }
+function translateDivision(value?: string | null) { if (!value) return "—"; const map: Record<string,string> = { "Mixed Pro Open": "Open mixte professionnel", "Female Pro Open": "Open féminines professionnel", MPO: "MPO", FPO: "FPO" }; return map[value] ?? value; }
+function primitiveEntries(value: unknown, prefix = "", depth = 0): Array<[string, unknown]> { if (depth > 5 || value == null) return []; if (["string","number","boolean"].includes(typeof value)) return [[prefix,value]]; if (Array.isArray(value)) return value.flatMap((item,index)=>primitiveEntries(item,`${prefix}.${index+1}`,depth+1)); if (typeof value === "object") return Object.entries(value as Record<string,unknown>).flatMap(([key,item])=>primitiveEntries(item,prefix?`${prefix}.${key}`:key,depth+1)); return []; }
+function findStat(payload: unknown, candidates: string[]) { const entries = primitiveEntries(payload); const normalized = candidates.map((c)=>c.toLowerCase().replace(/[^a-z0-9]/g,"")); for (const [key,value] of entries) { const leaf = key.split(".").at(-1)?.toLowerCase().replace(/[^a-z0-9]/g,"") ?? ""; if (normalized.includes(leaf)) return value; } return null; }
+function asDisplay(value: unknown) { if (value == null || value === "") return null; if (typeof value === "number") return new Intl.NumberFormat("fr-FR").format(value); return String(value); }
+function curatedStats(payload: unknown, year: number): SeasonStat[] { const tournaments=asDisplay(findStat(payload,["tournaments","tournament_count"])); const rounds=asDisplay(findStat(payload,["rating_rounds_used","rounds_used"])); const points=asDisplay(findStat(payload,["points"])); const prize=asDisplay(findStat(payload,["prize","prize_money"])); const divisionName=asDisplay(findStat(payload,["division_name"])); const divisionCode=asDisplay(findStat(payload,["division_code"])); const country=asDisplay(findStat(payload,["country"])); const lastModifiedRaw=asDisplay(findStat(payload,["last_modified","lastmodified"])); return [tournaments?{label:"Tournois",value:tournaments,hint:`saison ${year}`}:null,rounds?{label:"Rounds pris en compte",value:rounds,hint:"pour le rating"}:null,points?{label:"Points PDGA",value:points}:null,prize?{label:"Gains",value:`${prize} $`}:null,divisionCode||divisionName?{label:"Division",value:divisionCode??"—",hint:translateDivision(divisionName)}:null,country?{label:"Pays",value:country}:null,lastModifiedRaw?{label:"Dernière mise à jour PDGA",value:formatDate(lastModifiedRaw)}:null].filter((item): item is SeasonStat => item !== null); }
 
-function formatDate(value?: string | null) {
-  const date = parseFlexibleDate(value);
-  if (!date) return value || "—";
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(date);
-}
-
-function translateClassification(value?: string | null) {
-  if (!value) return "—";
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "P") return "Professionnel";
-  if (normalized === "A") return "Amateur";
-  return value;
-}
-
-function translateMembership(value?: string | null) {
-  if (!value) return "—";
-  const normalized = value.trim().toLowerCase();
-  if (["current", "active", "yes"].includes(normalized)) return "Active";
-  if (["expired", "inactive", "no"].includes(normalized)) return "Inactive";
-  return value;
-}
-
-function translateDivision(value?: string | null) {
-  if (!value) return "—";
-  const map: Record<string, string> = {
-    "Mixed Pro Open": "Open mixte professionnel",
-    "Female Pro Open": "Open féminines professionnel",
-    MPO: "MPO",
-    FPO: "FPO",
-  };
-  return map[value] ?? value;
-}
-
-function primitiveEntries(value: unknown, prefix = "", depth = 0): Array<[string, unknown]> {
-  if (depth > 5 || value == null) return [];
-  if (["string", "number", "boolean"].includes(typeof value)) return [[prefix, value]];
-  if (Array.isArray(value)) return value.flatMap((item, index) => primitiveEntries(item, `${prefix}.${index + 1}`, depth + 1));
-  if (typeof value === "object") {
-    return Object.entries(value as Record<string, unknown>)
-      .flatMap(([key, item]) => primitiveEntries(item, prefix ? `${prefix}.${key}` : key, depth + 1));
-  }
-  return [];
-}
-
-function findStat(payload: unknown, candidates: string[]) {
-  const entries = primitiveEntries(payload);
-  const normalizedCandidates = candidates.map((candidate) => candidate.toLowerCase().replace(/[^a-z0-9]/g, ""));
-  for (const [key, value] of entries) {
-    const leaf = key.split(".").at(-1)?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? "";
-    if (normalizedCandidates.includes(leaf)) return value;
-  }
-  return null;
-}
-
-function asDisplay(value: unknown) {
-  if (value == null || value === "") return null;
-  if (typeof value === "number") return new Intl.NumberFormat("fr-FR").format(value);
-  return String(value);
-}
-
-function curatedStats(payload: unknown, year: number): SeasonStat[] {
-  const tournaments = asDisplay(findStat(payload, ["tournaments", "tournament_count"]));
-  const rounds = asDisplay(findStat(payload, ["rating_rounds_used", "rounds_used"]));
-  const points = asDisplay(findStat(payload, ["points"]));
-  const prize = asDisplay(findStat(payload, ["prize", "prize_money"]));
-  const divisionName = asDisplay(findStat(payload, ["division_name"]));
-  const divisionCode = asDisplay(findStat(payload, ["division_code"]));
-  const country = asDisplay(findStat(payload, ["country"]));
-  const lastModifiedRaw = asDisplay(findStat(payload, ["last_modified", "lastmodified"]));
-
-  return [
-    tournaments ? { label: "Tournois", value: tournaments, hint: `saison ${year}` } : null,
-    rounds ? { label: "Rounds pris en compte", value: rounds, hint: "pour le rating" } : null,
-    points ? { label: "Points PDGA", value: points } : null,
-    prize ? { label: "Gains", value: `${prize} $` } : null,
-    divisionCode || divisionName ? { label: "Division", value: divisionCode ?? "—", hint: translateDivision(divisionName) } : null,
-    country ? { label: "Pays", value: country } : null,
-    lastModifiedRaw ? { label: "Dernière mise à jour PDGA", value: formatDate(lastModifiedRaw) } : null,
-  ].filter((item): item is SeasonStat => item !== null);
-}
-
-export default async function PlayerPage({ params }: { params: Promise<{ pdgaNumber: string }> }) {
-  const { pdgaNumber: rawPdgaNumber } = await params;
-  const pdgaNumber = Number.parseInt(rawPdgaNumber, 10);
-  if (!Number.isFinite(pdgaNumber)) notFound();
-
+export default async function PlayerPage({ params, searchParams }: { params: Promise<{ pdgaNumber: string }>; searchParams: Promise<{ division?: string }> }) {
+  const { pdgaNumber: rawPdgaNumber } = await params; const query = await searchParams; const pdgaNumber = Number.parseInt(rawPdgaNumber,10); if (!Number.isFinite(pdgaNumber)) notFound();
+  const returnDivision = query.division === "masters" ? "masters" : "open";
   const profileRef = db.collection("pdgaProfiles").doc(String(pdgaNumber));
-  const [profileSnapshot, playerSnapshot, historySnapshot, stats2026Snapshot, stats2025Snapshot] = await Promise.all([
-    profileRef.get(),
-    db.collection("players").doc(`pdga-${pdgaNumber}`).get(),
-    profileRef.collection("ratingHistory").orderBy("effectiveDate", "asc").get(),
-    profileRef.collection("yearlyStats").doc("2026").get(),
-    profileRef.collection("yearlyStats").doc("2025").get(),
-  ]);
+  const [profileSnapshot, playerSnapshot, historySnapshot, stats2026Snapshot, stats2025Snapshot] = await Promise.all([profileRef.get(),db.collection("players").doc(`pdga-${pdgaNumber}`).get(),profileRef.collection("ratingHistory").orderBy("effectiveDate","asc").get(),profileRef.collection("yearlyStats").doc("2026").get(),profileRef.collection("yearlyStats").doc("2025").get()]);
   if (!profileSnapshot.exists && !playerSnapshot.exists) notFound();
-
-  const profile = (profileSnapshot.data() ?? {}) as ProfileDoc;
-  const player = (playerSnapshot.data() ?? {}) as PlayerDoc;
-  const history = historySnapshot.docs.map((doc) => doc.data() as RatingHistoryDoc);
-  const ratingHistory: RatingHistoryPoint[] = history
-    .filter((item): item is RatingHistoryDoc & { rating: number; effectiveDate: string } => Number.isFinite(item.rating) && Boolean(item.effectiveDate))
-    .map((item) => ({ rating: item.rating, effectiveDate: item.effectiveDate, roundsUsed: item.roundsUsed ?? null }));
-  const stats2026 = (stats2026Snapshot.data() ?? {}) as YearlyStatsDoc;
-  const stats2025 = (stats2025Snapshot.data() ?? {}) as YearlyStatsDoc;
-
-  const registrationsSnapshot = await db.collection("registrations").where("personId", "==", `pdga-${pdgaNumber}`).get();
-  const registration = registrationsSnapshot.docs.map((doc) => doc.data() as RegistrationDoc).find((item) => item.role === "player");
-  const teamSnapshot = registration?.teamId ? await db.collection("teams").doc(registration.teamId).get() : null;
-  const team = (teamSnapshot?.data() ?? {}) as TeamDoc;
-
-  const fullName = player.fullName || [profile.firstName ?? player.firstName, profile.lastName ?? player.lastName].filter(Boolean).join(" ") || `PDGA #${pdgaNumber}`;
-  const seasons = [
-    { year: 2026, syncedAt: stats2026.syncedAt ? formatDate(stats2026.syncedAt) : null, stats: curatedStats(stats2026.payload, 2026) },
-    { year: 2025, syncedAt: stats2025.syncedAt ? formatDate(stats2025.syncedAt) : null, stats: curatedStats(stats2025.payload, 2025) },
-  ];
-
-  return (
-    <main className="shell player-detail">
-      <Link className="back-link" href="/">← Retour au comparateur</Link>
-      <header className="player-hero">
-        <div>
-          <p className="eyebrow">{team.country ? `${team.country} · ${team.division === "masters" ? "Masters" : "Open"}` : "Profil joueur"}</p>
-          <h1>{fullName}</h1>
-          <p className="player-meta">PDGA #{pdgaNumber}{registration?.jerseyNumber ? ` · maillot #${registration.jerseyNumber}` : ""}</p>
-        </div>
-        <div className="player-rating-block">
-          <strong>{profile.currentRating ?? "—"}</strong>
-          <span>rating actuel</span>
-          <small>{profile.ratingEffectiveDate ? `depuis ${new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(parseFlexibleDate(profile.ratingEffectiveDate) ?? new Date())}` : ""}</small>
-        </div>
-      </header>
-
-      <section className="player-detail-grid">
-        <article className="detail-card">
-          <p className="eyebrow">Profil PDGA</p>
-          <dl className="profile-facts">
-            <div><dt>Genre</dt><dd>{profile.gender === "M" ? "Homme" : profile.gender === "F" ? "Féminine" : "—"}</dd></div>
-            <div><dt>Statut joueur</dt><dd>{translateClassification(profile.classification)}</dd></div>
-            <div><dt>Adhésion PDGA</dt><dd>{translateMembership(profile.membershipStatus)}</dd></div>
-            <div><dt>Localisation</dt><dd>{[profile.city, profile.stateProv, profile.country].filter(Boolean).join(", ") || "—"}</dd></div>
-            <div><dt>Dernière synchro</dt><dd>{formatDate(profile.syncedAt)}</dd></div>
-          </dl>
-          <a className="pdga-link" href={`https://www.pdga.com/player/${pdgaNumber}`} target="_blank" rel="noreferrer">Voir le profil sur PDGA.com ↗</a>
-        </article>
-
-        <article className="detail-card detail-card--history">
-          <div className="detail-card__heading">
-            <div><p className="eyebrow">Évolution</p><h2>Historique du rating</h2></div>
-            <strong>{ratingHistory.length} relevé{ratingHistory.length > 1 ? "s" : ""}</strong>
-          </div>
-          <RatingHistoryChart history={ratingHistory} currentRating={profile.currentRating} />
-        </article>
-      </section>
-
-      <section className="detail-card player-stats player-stats--curated">
-        <div className="detail-card__heading">
-          <div><p className="eyebrow">PDGA</p><h2>Statistiques saison</h2></div>
-        </div>
-        <SeasonStats seasons={seasons} />
-      </section>
-      <footer className="pdga-attribution">Données joueurs et statistiques : Professional Disc Golf Association (PDGA).</footer>
-    </main>
-  );
+  const profile=(profileSnapshot.data()??{}) as ProfileDoc; const player=(playerSnapshot.data()??{}) as PlayerDoc; const history=historySnapshot.docs.map((doc)=>doc.data() as RatingHistoryDoc);
+  const ratingHistory: RatingHistoryPoint[] = history.filter((item): item is RatingHistoryDoc & {rating:number;effectiveDate:string}=>Number.isFinite(item.rating)&&Boolean(item.effectiveDate)).map((item)=>({rating:item.rating,effectiveDate:item.effectiveDate,roundsUsed:item.roundsUsed??null}));
+  const stats2026=(stats2026Snapshot.data()??{}) as YearlyStatsDoc; const stats2025=(stats2025Snapshot.data()??{}) as YearlyStatsDoc;
+  const registrationsSnapshot=await db.collection("registrations").where("personId","==",`pdga-${pdgaNumber}`).get(); const registration=registrationsSnapshot.docs.map((doc)=>doc.data() as RegistrationDoc).find((item)=>item.role==="player"); const teamSnapshot=registration?.teamId?await db.collection("teams").doc(registration.teamId).get():null; const team=(teamSnapshot?.data()??{}) as TeamDoc;
+  const fullName=player.fullName||[profile.firstName??player.firstName,profile.lastName??player.lastName].filter(Boolean).join(" ")||`PDGA #${pdgaNumber}`;
+  const seasons=[{year:2026,syncedAt:stats2026.syncedAt?formatDate(stats2026.syncedAt):null,stats:curatedStats(stats2026.payload,2026)},{year:2025,syncedAt:stats2025.syncedAt?formatDate(stats2025.syncedAt):null,stats:curatedStats(stats2025.payload,2025)}];
+  const firstObservedDate=ratingHistory[0]?.effectiveDate??null; const firstObservedYear=firstObservedDate?parseFlexibleDate(firstObservedDate)?.getUTCFullYear()??null:null; const activityYears=firstObservedYear?Math.max(1,new Date().getUTCFullYear()-firstObservedYear):null;
+  return <main className="shell player-detail"><Link className="back-link" href={`/?division=${returnDivision}`}>← Retour au comparateur {returnDivision === "masters" ? "Masters" : "Open"}</Link><header className="player-hero"><div><p className="eyebrow">{team.country?`${team.country} · ${team.division==="masters"?"Masters":"Open"}`:"Profil joueur"}</p><h1>{fullName}</h1><p className="player-meta">PDGA #{pdgaNumber}{registration?.jerseyNumber?` · maillot #${registration.jerseyNumber}`:""}</p></div><div className="player-rating-block"><strong>{profile.currentRating??"—"}</strong><span>rating actuel</span><small>{profile.ratingEffectiveDate?`depuis ${new Intl.DateTimeFormat("fr-FR",{month:"long",year:"numeric",timeZone:"UTC"}).format(parseFlexibleDate(profile.ratingEffectiveDate)??new Date())}`:""}</small></div></header>
+  <section className="player-detail-grid"><article className="detail-card"><p className="eyebrow">Profil PDGA</p><dl className="profile-facts"><div><dt>Genre</dt><dd>{profile.gender==="M"?"Homme":profile.gender==="F"?"Féminine":"—"}</dd></div><div><dt>Statut joueur</dt><dd>{translateClassification(profile.classification)}</dd></div><div><dt>Adhésion PDGA</dt><dd>{translateMembership(profile.membershipStatus)}{profile.membershipExpirationDate?` jusqu'au ${formatDate(profile.membershipExpirationDate)}`:""}</dd></div><div><dt>Statut officiel PDGA</dt><dd>{translateOfficial(profile.officialStatus)}{profile.officialExpirationDate?` jusqu'au ${formatDate(profile.officialExpirationDate)}`:""}</dd></div><div><dt>Ancienneté PDGA observée</dt><dd>{firstObservedYear?`${firstObservedYear} · ${activityYears} an${activityYears!==1?"s":""}`:"—"}</dd></div><div><dt>Localisation</dt><dd>{[profile.city,profile.stateProv,profile.country].filter(Boolean).join(", ")||"—"}</dd></div><div><dt>Dernière synchro</dt><dd>{formatDate(profile.syncedAt)}</dd></div></dl><a className="pdga-link" href={`https://www.pdga.com/player/${pdgaNumber}`} target="_blank" rel="noreferrer">Voir le profil sur PDGA.com ↗</a></article><article className="detail-card detail-card--history"><div className="detail-card__heading"><div><p className="eyebrow">Évolution</p><h2>Historique du rating</h2></div><strong>{ratingHistory.length} relevé{ratingHistory.length>1?"s":""}</strong></div><RatingHistoryChart history={ratingHistory} currentRating={profile.currentRating}/></article></section>
+  <section className="detail-card player-stats player-stats--curated"><div className="detail-card__heading"><div><p className="eyebrow">PDGA</p><h2>Statistiques saison</h2></div></div><SeasonStats seasons={seasons}/></section><footer className="pdga-attribution">Données joueurs et statistiques : Professional Disc Golf Association (PDGA).</footer></main>;
 }
