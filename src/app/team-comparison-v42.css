@@ -1,3 +1,5 @@
+@import "./team-comparison-v45.css";
+
 .team-card__metrics--v42 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 /* V4.4: keep cards allowed to shrink inside the two-column comparison grid. */
