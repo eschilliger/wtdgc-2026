@@ -2,6 +2,7 @@ import "../../player-detail-v3.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import RatingHistoryChart, { type RatingHistoryPoint } from "@/components/RatingHistoryChart";
+import SeasonStats, { type SeasonStat } from "@/components/SeasonStats";
 import { db } from "@/server/firebase/admin";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,6 @@ type RegistrationDoc = { teamId: string; personId: string; role: "player" | "npt
 type TeamDoc = { country?: string; countryCode?: string; division?: "open" | "masters" };
 type RatingHistoryDoc = { rating?: number; effectiveDate?: string | null; roundsUsed?: number | null };
 type YearlyStatsDoc = { year?: number; gender?: "M" | "F" | null; payload?: unknown; syncedAt?: string };
-type CuratedStat = { label: string; value: string; hint?: string };
 
 function parseFlexibleDate(value?: string | null) {
   if (!value) return null;
@@ -61,7 +61,7 @@ function translateDivision(value?: string | null) {
   if (!value) return "—";
   const map: Record<string, string> = {
     "Mixed Pro Open": "Open mixte professionnel",
-    "Female Pro Open": "Open femmes professionnel",
+    "Female Pro Open": "Open féminines professionnel",
     MPO: "MPO",
     FPO: "FPO",
   };
@@ -95,7 +95,7 @@ function asDisplay(value: unknown) {
   return String(value);
 }
 
-function curatedStats(payload: unknown): CuratedStat[] {
+function curatedStats(payload: unknown, year: number): SeasonStat[] {
   const tournaments = asDisplay(findStat(payload, ["tournaments", "tournament_count"]));
   const rounds = asDisplay(findStat(payload, ["rating_rounds_used", "rounds_used"]));
   const points = asDisplay(findStat(payload, ["points"]));
@@ -106,14 +106,14 @@ function curatedStats(payload: unknown): CuratedStat[] {
   const lastModifiedRaw = asDisplay(findStat(payload, ["last_modified", "lastmodified"]));
 
   return [
-    tournaments ? { label: "Tournois", value: tournaments, hint: "saison 2026" } : null,
+    tournaments ? { label: "Tournois", value: tournaments, hint: `saison ${year}` } : null,
     rounds ? { label: "Rounds pris en compte", value: rounds, hint: "pour le rating" } : null,
     points ? { label: "Points PDGA", value: points } : null,
     prize ? { label: "Gains", value: `${prize} $` } : null,
     divisionCode || divisionName ? { label: "Division", value: divisionCode ?? "—", hint: translateDivision(divisionName) } : null,
     country ? { label: "Pays", value: country } : null,
     lastModifiedRaw ? { label: "Dernière mise à jour PDGA", value: formatDate(lastModifiedRaw) } : null,
-  ].filter((item): item is CuratedStat => item !== null);
+  ].filter((item): item is SeasonStat => item !== null);
 }
 
 export default async function PlayerPage({ params }: { params: Promise<{ pdgaNumber: string }> }) {
@@ -122,11 +122,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   if (!Number.isFinite(pdgaNumber)) notFound();
 
   const profileRef = db.collection("pdgaProfiles").doc(String(pdgaNumber));
-  const [profileSnapshot, playerSnapshot, historySnapshot, statsSnapshot] = await Promise.all([
+  const [profileSnapshot, playerSnapshot, historySnapshot, stats2026Snapshot, stats2025Snapshot] = await Promise.all([
     profileRef.get(),
     db.collection("players").doc(`pdga-${pdgaNumber}`).get(),
     profileRef.collection("ratingHistory").orderBy("effectiveDate", "asc").get(),
     profileRef.collection("yearlyStats").doc("2026").get(),
+    profileRef.collection("yearlyStats").doc("2025").get(),
   ]);
   if (!profileSnapshot.exists && !playerSnapshot.exists) notFound();
 
@@ -136,7 +137,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   const ratingHistory: RatingHistoryPoint[] = history
     .filter((item): item is RatingHistoryDoc & { rating: number; effectiveDate: string } => Number.isFinite(item.rating) && Boolean(item.effectiveDate))
     .map((item) => ({ rating: item.rating, effectiveDate: item.effectiveDate, roundsUsed: item.roundsUsed ?? null }));
-  const stats = (statsSnapshot.data() ?? {}) as YearlyStatsDoc;
+  const stats2026 = (stats2026Snapshot.data() ?? {}) as YearlyStatsDoc;
+  const stats2025 = (stats2025Snapshot.data() ?? {}) as YearlyStatsDoc;
 
   const registrationsSnapshot = await db.collection("registrations").where("personId", "==", `pdga-${pdgaNumber}`).get();
   const registration = registrationsSnapshot.docs.map((doc) => doc.data() as RegistrationDoc).find((item) => item.role === "player");
@@ -144,7 +146,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   const team = (teamSnapshot?.data() ?? {}) as TeamDoc;
 
   const fullName = player.fullName || [profile.firstName ?? player.firstName, profile.lastName ?? player.lastName].filter(Boolean).join(" ") || `PDGA #${pdgaNumber}`;
-  const statsToShow = curatedStats(stats.payload);
+  const seasons = [
+    { year: 2026, syncedAt: stats2026.syncedAt ? formatDate(stats2026.syncedAt) : null, stats: curatedStats(stats2026.payload, 2026) },
+    { year: 2025, syncedAt: stats2025.syncedAt ? formatDate(stats2025.syncedAt) : null, stats: curatedStats(stats2025.payload, 2025) },
+  ];
 
   return (
     <main className="shell player-detail">
@@ -158,7 +163,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
         <div className="player-rating-block">
           <strong>{profile.currentRating ?? "—"}</strong>
           <span>rating actuel</span>
-          <small>{profile.ratingEffectiveDate ? `depuis le ${formatDate(profile.ratingEffectiveDate)}` : ""}</small>
+          <small>{profile.ratingEffectiveDate ? `depuis ${new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(parseFlexibleDate(profile.ratingEffectiveDate) ?? new Date())}` : ""}</small>
         </div>
       </header>
 
@@ -166,7 +171,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
         <article className="detail-card">
           <p className="eyebrow">Profil PDGA</p>
           <dl className="profile-facts">
-            <div><dt>Genre</dt><dd>{profile.gender === "M" ? "Homme" : profile.gender === "F" ? "Femme" : "—"}</dd></div>
+            <div><dt>Genre</dt><dd>{profile.gender === "M" ? "Homme" : profile.gender === "F" ? "Féminine" : "—"}</dd></div>
             <div><dt>Statut joueur</dt><dd>{translateClassification(profile.classification)}</dd></div>
             <div><dt>Adhésion PDGA</dt><dd>{translateMembership(profile.membershipStatus)}</dd></div>
             <div><dt>Localisation</dt><dd>{[profile.city, profile.stateProv, profile.country].filter(Boolean).join(", ") || "—"}</dd></div>
@@ -186,20 +191,9 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
 
       <section className="detail-card player-stats player-stats--curated">
         <div className="detail-card__heading">
-          <div><p className="eyebrow">PDGA</p><h2>Saison 2026</h2></div>
-          <span>{stats.syncedAt ? `Synchronisée le ${formatDate(stats.syncedAt)}` : ""}</span>
+          <div><p className="eyebrow">PDGA</p><h2>Statistiques saison</h2></div>
         </div>
-        {statsToShow.length ? (
-          <div className="stats-grid stats-grid--curated">
-            {statsToShow.map((stat) => (
-              <div className="stat-tile stat-tile--curated" key={stat.label}>
-                <span>{stat.label}</span>
-                <strong>{stat.value}</strong>
-                {stat.hint ? <small>{stat.hint}</small> : null}
-              </div>
-            ))}
-          </div>
-        ) : <p className="empty-state">Aucune statistique 2026 exploitable n'est encore disponible pour ce joueur.</p>}
+        <SeasonStats seasons={seasons} />
       </section>
       <footer className="pdga-attribution">Données joueurs et statistiques : Professional Disc Golf Association (PDGA).</footer>
     </main>
