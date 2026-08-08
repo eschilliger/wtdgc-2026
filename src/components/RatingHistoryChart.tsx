@@ -9,7 +9,7 @@ export type RatingHistoryPoint = {
   roundsUsed?: number | null;
 };
 
-type Period = "1y" | "3y" | "all";
+type Period = "6m" | "1y" | "3y" | "all";
 
 type Props = {
   history: RatingHistoryPoint[];
@@ -21,7 +21,7 @@ function parseDate(value: string) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function formatTooltipDate(value: string) {
+function formatFullDate(value: string) {
   const date = parseDate(value);
   if (!date) return value;
   return new Intl.DateTimeFormat("fr-FR", {
@@ -32,12 +32,12 @@ function formatTooltipDate(value: string) {
   }).format(date);
 }
 
-function formatShortDate(value: string) {
+function formatMonth(value: string) {
   const date = parseDate(value);
   if (!date) return value;
   return new Intl.DateTimeFormat("fr-FR", {
-    month: "short",
-    year: "2-digit",
+    month: "long",
+    year: "numeric",
     timeZone: "UTC",
   }).format(date);
 }
@@ -65,14 +65,23 @@ function signed(value: number | null) {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function trendLabel(value: number | null) {
+  if (value === null) return "données insuffisantes";
+  const absolute = Math.abs(value);
+  if (absolute <= 3) return "stable";
+  if (absolute <= 9) return value > 0 ? "légère hausse" : "légère baisse";
+  return value > 0 ? "hausse nette" : "baisse nette";
+}
+
 function trendClass(value: number | null) {
-  if (value === null || value === 0) return undefined;
+  if (value === null || Math.abs(value) <= 3) return undefined;
   return value > 0 ? styles.up : styles.down;
 }
 
 export default function RatingHistoryChart({ history, currentRating = null }: Props) {
   const [period, setPeriod] = useState<Period>("3y");
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [pinned, setPinned] = useState(false);
 
   const sortedHistory = useMemo(
     () => [...history].sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate)),
@@ -84,7 +93,8 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
     const latestDate = parseDate(sortedHistory[sortedHistory.length - 1].effectiveDate);
     if (!latestDate) return sortedHistory;
     const cutoff = new Date(latestDate);
-    cutoff.setUTCFullYear(cutoff.getUTCFullYear() - (period === "1y" ? 1 : 3));
+    if (period === "6m") cutoff.setUTCMonth(cutoff.getUTCMonth() - 6);
+    else cutoff.setUTCFullYear(cutoff.getUTCFullYear() - (period === "1y" ? 1 : 3));
     return sortedHistory.filter((item) => {
       const date = parseDate(item.effectiveDate);
       return date ? date >= cutoff : true;
@@ -94,20 +104,35 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
   const chart = useMemo(() => {
     if (filteredHistory.length < 2) return null;
     const ratings = filteredHistory.map((item) => item.rating);
-    const min = Math.min(...ratings);
-    const max = Math.max(...ratings);
-    const padding = Math.max(8, Math.ceil((max - min) * 0.15));
-    const chartMin = min - padding;
-    const chartMax = max + padding;
+    const rawMin = Math.min(...ratings);
+    const rawMax = Math.max(...ratings);
+    const padding = Math.max(10, Math.ceil((rawMax - rawMin) * 0.12));
+    const chartMin = Math.floor((rawMin - padding) / 10) * 10;
+    const chartMax = Math.ceil((rawMax + padding) / 10) * 10;
     const span = Math.max(1, chartMax - chartMin);
+    const dates = filteredHistory.map((item) => parseDate(item.effectiveDate)?.getTime() ?? 0);
+    const firstTime = dates[0];
+    const lastTime = dates[dates.length - 1];
+    const timeSpan = Math.max(1, lastTime - firstTime);
+
     const points = filteredHistory.map((item, index) => ({
       ...item,
-      x: (index / (filteredHistory.length - 1)) * 100,
-      y: 92 - ((item.rating - chartMin) / span) * 76,
+      x: ((dates[index] - firstTime) / timeSpan) * 100,
+      y: 92 - ((item.rating - chartMin) / span) * 80,
     }));
+
+    const tickStep = span <= 80 ? 20 : span <= 160 ? 25 : 50;
+    const ticks: number[] = [];
+    const firstTick = Math.ceil(chartMin / tickStep) * tickStep;
+    for (let value = firstTick; value <= chartMax; value += tickStep) ticks.push(value);
+
     return {
       points,
       polyline: points.map((point) => `${point.x},${point.y}`).join(" "),
+      chartMin,
+      chartMax,
+      span,
+      ticks,
     };
   }, [filteredHistory]);
 
@@ -116,13 +141,34 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
   const delta3 = deltaFromMonths(sortedHistory, current, 3);
   const delta6 = deltaFromMonths(sortedHistory, current, 6);
   const delta12 = deltaFromMonths(sortedHistory, current, 12);
-  const hovered = chart && hoveredIndex !== null ? chart.points[hoveredIndex] : null;
+  const active = chart && activeIndex !== null ? chart.points[activeIndex] : null;
+
+  const nearestIndex = (event: PointerEvent<SVGSVGElement>) => {
+    if (!chart) return null;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const xPercent = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    let nearest = 0;
+    let distance = Number.POSITIVE_INFINITY;
+    chart.points.forEach((point, index) => {
+      const candidate = Math.abs(point.x - xPercent);
+      if (candidate < distance) {
+        nearest = index;
+        distance = candidate;
+      }
+    });
+    return nearest;
+  };
 
   const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
-    if (!chart) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    setHoveredIndex(Math.round(ratio * (chart.points.length - 1)));
+    const next = nearestIndex(event);
+    if (next !== null) setActiveIndex(next);
+  };
+
+  const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const next = nearestIndex(event);
+    if (next !== null) setActiveIndex(next);
+    setPinned(true);
   };
 
   return (
@@ -130,15 +176,16 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
       <div className={styles.kpis}>
         <div><span>Rating actuel</span><strong>{current ?? "—"}</strong></div>
         <div><span>Record</span><strong>{best ?? "—"}</strong></div>
-        <div><span>3 mois</span><strong className={trendClass(delta3)}>{signed(delta3)}</strong></div>
-        <div><span>6 mois</span><strong className={trendClass(delta6)}>{signed(delta6)}</strong></div>
-        <div><span>12 mois</span><strong className={trendClass(delta12)}>{signed(delta12)}</strong></div>
+        <div><span>3 mois</span><strong className={trendClass(delta3)}>{signed(delta3)}</strong><small>{trendLabel(delta3)}</small></div>
+        <div><span>6 mois</span><strong className={trendClass(delta6)}>{signed(delta6)}</strong><small>{trendLabel(delta6)}</small></div>
+        <div><span>12 mois</span><strong className={trendClass(delta12)}>{signed(delta12)}</strong><small>{trendLabel(delta12)}</small></div>
       </div>
 
       <div className={styles.toolbar} role="group" aria-label="Période de l'historique">
-        <button className={period === "1y" ? styles.active : ""} onClick={() => setPeriod("1y")}>1 an</button>
-        <button className={period === "3y" ? styles.active : ""} onClick={() => setPeriod("3y")}>3 ans</button>
-        <button className={period === "all" ? styles.active : ""} onClick={() => setPeriod("all")}>Tout</button>
+        <button className={period === "6m" ? styles.active : ""} onClick={() => { setPeriod("6m"); setPinned(false); }}>6 mois</button>
+        <button className={period === "1y" ? styles.active : ""} onClick={() => { setPeriod("1y"); setPinned(false); }}>1 an</button>
+        <button className={period === "3y" ? styles.active : ""} onClick={() => { setPeriod("3y"); setPinned(false); }}>3 ans</button>
+        <button className={period === "all" ? styles.active : ""} onClick={() => { setPeriod("all"); setPinned(false); }}>Tout</button>
       </div>
 
       {chart ? (
@@ -148,36 +195,60 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             role="img"
-            aria-label="Courbe interactive d'évolution du rating"
+            aria-label="Courbe interactive d'évolution du rating. Sur mobile, touchez ou faites glisser le doigt pour sélectionner un relevé."
             onPointerMove={handlePointerMove}
-            onPointerLeave={() => setHoveredIndex(null)}
+            onPointerDown={handlePointerDown}
+            onPointerLeave={() => { if (!pinned) setActiveIndex(null); }}
           >
-            <line x1="0" y1="92" x2="100" y2="92" />
+            {chart.ticks.map((tick) => {
+              const y = 92 - ((tick - chart.chartMin) / chart.span) * 80;
+              return <line key={tick} className={tick % 100 === 0 ? styles.milestone : styles.gridLine} x1="0" y1={y} x2="100" y2={y} />;
+            })}
+            {current !== null ? (
+              <line
+                className={styles.currentLine}
+                x1="0"
+                y1={92 - ((current - chart.chartMin) / chart.span) * 80}
+                x2="100"
+                y2={92 - ((current - chart.chartMin) / chart.span) * 80}
+              />
+            ) : null}
             <polyline points={chart.polyline} />
-            {hovered ? (
+            {active ? (
               <>
-                <line className={styles.cursor} x1={hovered.x} y1="8" x2={hovered.x} y2="92" />
-                <circle className={styles.dot} cx={hovered.x} cy={hovered.y} r="1.8" />
+                <line className={styles.cursor} x1={active.x} y1="8" x2={active.x} y2="92" />
+                <circle className={styles.dot} cx={active.x} cy={active.y} r="1.8" />
               </>
             ) : null}
           </svg>
 
-          {hovered ? (
+          <div className={styles.yAxis} aria-hidden="true">
+            {chart.ticks.map((tick) => (
+              <span
+                key={tick}
+                className={tick % 100 === 0 ? styles.majorTick : ""}
+                style={{ top: `${92 - ((tick - chart.chartMin) / chart.span) * 80}%` }}
+              >{tick}</span>
+            ))}
+          </div>
+
+          {active ? (
             <div
-              className={`${styles.tooltip}${hovered.x > 72 ? ` ${styles.tooltipLeft}` : ""}`}
-              style={{ left: `${hovered.x}%`, top: `${hovered.y}%` }}
+              className={`${styles.tooltip}${active.x > 72 ? ` ${styles.tooltipLeft}` : ""}`}
+              style={{ left: `${active.x}%`, top: `${active.y}%` }}
               aria-live="polite"
             >
-              <strong>{hovered.rating}</strong>
-              <span>{formatTooltipDate(hovered.effectiveDate)}</span>
-              {hovered.roundsUsed != null ? <small>{hovered.roundsUsed} rounds utilisés</small> : null}
+              <strong>{active.rating}</strong>
+              <span>{formatFullDate(active.effectiveDate)}</span>
+              {active.roundsUsed != null ? <small>{active.roundsUsed} rounds utilisés</small> : null}
             </div>
           ) : null}
 
           <div className={styles.axis} aria-hidden="true">
-            <span>{formatShortDate(chart.points[0].effectiveDate)}</span>
-            <span>{formatShortDate(chart.points[chart.points.length - 1].effectiveDate)}</span>
+            <span>{formatMonth(chart.points[0].effectiveDate)}</span>
+            <span>{formatMonth(chart.points[chart.points.length - 1].effectiveDate)}</span>
           </div>
+          <p className={styles.touchHint}>Sur mobile : touchez ou glissez sur la courbe pour afficher un relevé.</p>
         </div>
       ) : (
         <p className="empty-state">Il faut au moins deux ratings historisés pour tracer une tendance.</p>
@@ -186,7 +257,7 @@ export default function RatingHistoryChart({ history, currentRating = null }: Pr
       <div className={styles.historyList}>
         {[...filteredHistory].reverse().slice(0, 8).map((item) => (
           <div key={item.effectiveDate}>
-            <span>{formatTooltipDate(item.effectiveDate)}</span>
+            <span>{formatFullDate(item.effectiveDate)}</span>
             <strong>{item.rating}</strong>
             {item.roundsUsed != null ? <small>{item.roundsUsed} rounds</small> : null}
           </div>
