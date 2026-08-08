@@ -63,7 +63,6 @@
   .player-ranks strong { font-size:1.12rem; line-height:1; }
   .player-ranks span { margin-top:1px; font-size:.56rem; text-align:center; }
 
-  /* Replace the detailed SVG with a simple monochrome head-and-shoulders silhouette. */
   .player-gender-picto {
     position:relative;
     display:block;
@@ -126,7 +125,6 @@
   .player-name-first,
   .player-name-last { display:block; }
 
-  /* Mobile status: a single compact label in the top-right corner. */
   .player-status {
     position:absolute;
     top:0;
@@ -156,7 +154,6 @@
   .player-impact,
   .player-row__actions { display:none !important; }
 
-  /* Restore the neutral hierarchy: dark primary content, grey labels. */
   .player-mobile-core {
     display:grid;
     grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);
@@ -275,4 +272,63 @@
   .player-status { max-width:76px; font-size:.55rem; padding-inline:6px; }
   .player-mobile-core { gap:9px; }
   .player-mobile-core span { font-size:.58rem; }
+}
+
+/* V4.8: explicit typography palette and status casing. */
+.player-row .player-link,
+.player-row .player-name-line > strong,
+.player-row .player-ranks > strong,
+.player-row .player-row__rating > strong,
+.player-row .player-mobile-rating > strong,
+.player-row .player-mobile-trend > strong {
+  color:#102a43 !important;
+}
+
+.player-row .player-meta-line,
+.player-row .player-impact,
+.player-row .player-ranks > span,
+.player-row .player-row__rating > span,
+.player-row .player-row__rating > small,
+.player-row .player-mobile-core > div > span {
+  color:#6f7f90 !important;
+}
+
+.player-row .player-rating-trend {
+  color:#42566d !important;
+}
+.player-row .player-rating-trend.player-trend--up { color:#166534 !important; }
+.player-row .player-rating-trend.player-trend--down { color:#9f1239 !important; }
+
+.player-status,
+.player-status__desktop,
+.player-status__mobile {
+  text-transform:none !important;
+  letter-spacing:0 !important;
+}
+
+@media (max-width:760px) {
+  .player-name-line { padding-right:92px; }
+  .player-status {
+    max-width:none !important;
+    width:auto !important;
+    padding:3px 7px !important;
+    font-size:.56rem !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+  }
+  .player-status__mobile {
+    display:inline !important;
+    text-transform:none !important;
+    white-space:nowrap !important;
+  }
+  .player-status--starter { color:#246044 !important; }
+  .player-status--substitute { color:#46576a !important; }
+  .player-status--disabled { color:#8a3b3b !important; }
+  .player-switch { color:#536578 !important; }
+}
+
+@media (max-width:380px) {
+  .player-name-line { padding-right:88px; }
+  .player-status { font-size:.53rem !important; padding-inline:5px !important; }
 }
