@@ -32,6 +32,9 @@ type PdgaProfileDoc = {
   currentRating?: number | null;
   gender?: PdgaGender | null;
   genderSource?: string | null;
+  scoutingMetrics?: {
+    trend12Months?: number | null;
+  } | null;
 };
 
 type YearlyStatsDoc = {
@@ -56,6 +59,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     return [player.id, player] as const;
   }));
   const ratings = new Map<number, number | null>();
+  const trends12Months = new Map<number, number | null>();
   const genders = new Map<number, PdgaGender>();
   const genderSources = new Map<number, GenderSource>();
 
@@ -63,6 +67,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     const profile = doc.data() as PdgaProfileDoc;
     if (!Number.isFinite(profile.pdgaNumber)) continue;
     ratings.set(profile.pdgaNumber, profile.currentRating ?? null);
+    trends12Months.set(profile.pdgaNumber, profile.scoutingMetrics?.trend12Months ?? null);
     if (profile.gender === "M" || profile.gender === "F") {
       genders.set(profile.pdgaNumber, profile.gender);
       genderSources.set(
@@ -104,6 +109,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
             lastName: player.lastName,
             pdgaNumber,
             rating: pdgaNumber ? ratings.get(pdgaNumber) ?? null : null,
+            trend12Months: pdgaNumber ? trends12Months.get(pdgaNumber) ?? null : null,
             gender,
             genderSource,
             jerseyNumber: registration.jerseyNumber ?? null,
