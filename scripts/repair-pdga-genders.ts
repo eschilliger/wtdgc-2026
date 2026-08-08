@@ -23,8 +23,9 @@ async function main() {
     const profileRef = db.collection("pdgaProfiles").doc(String(pdgaNumber));
     const profile = await profileRef.get();
     const existing = profile.data()?.gender;
+    const existingSource = profile.data()?.genderSource;
 
-    if (existing === "M" || existing === "F") {
+    if ((existing === "M" || existing === "F") && existingSource !== "default-m") {
       alreadyKnown += 1;
       continue;
     }
