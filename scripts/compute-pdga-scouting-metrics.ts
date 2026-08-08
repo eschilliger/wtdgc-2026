@@ -20,7 +20,7 @@ async function ratingAtOrBefore(profileRef: DocumentReference, date: string) {
     .limit(1)
     .get();
   const data = snapshot.docs[0]?.data() as RatingDoc | undefined;
-  return Number.isFinite(data?.rating) ? data!.rating! : null;
+  return typeof data?.rating === "number" && Number.isFinite(data.rating) ? data.rating : null;
 }
 
 async function main() {
@@ -33,31 +33,33 @@ async function main() {
     const profileRef = profileDoc.ref;
     const latestSnapshot = await profileRef.collection("ratingHistory").orderBy("effectiveDate", "desc").limit(1).get();
     const latest = latestSnapshot.docs[0]?.data() as RatingDoc | undefined;
-    if (!latest?.effectiveDate || !Number.isFinite(latest.rating)) {
+    if (!latest?.effectiveDate || typeof latest.rating !== "number" || !Number.isFinite(latest.rating)) {
       skipped += 1;
       continue;
     }
 
-    const rating3MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latest.effectiveDate, 3));
-    const rating6MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latest.effectiveDate, 6));
-    const rating12MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latest.effectiveDate, 12));
+    const latestRating = latest.rating;
+    const latestRatingDate = latest.effectiveDate;
+    const rating3MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latestRatingDate, 3));
+    const rating6MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latestRatingDate, 6));
+    const rating12MonthsAgo = await ratingAtOrBefore(profileRef, subtractMonths(latestRatingDate, 12));
 
     await profileRef.set({
       scoutingMetrics: {
         computedAt,
-        latestRatingDate: latest.effectiveDate,
-        latestRating: latest.rating,
+        latestRatingDate,
+        latestRating,
         rating3MonthsAgo,
         rating6MonthsAgo,
         rating12MonthsAgo,
-        trend3Months: rating3MonthsAgo === null ? null : latest.rating - rating3MonthsAgo,
-        trend6Months: rating6MonthsAgo === null ? null : latest.rating - rating6MonthsAgo,
-        trend12Months: rating12MonthsAgo === null ? null : latest.rating - rating12MonthsAgo,
+        trend3Months: rating3MonthsAgo === null ? null : latestRating - rating3MonthsAgo,
+        trend6Months: rating6MonthsAgo === null ? null : latestRating - rating6MonthsAgo,
+        trend12Months: rating12MonthsAgo === null ? null : latestRating - rating12MonthsAgo,
       },
     }, { merge: true });
 
     updated += 1;
-    console.log(`[${index + 1}/${profiles.size}] ${profileDoc.id}: 12m=${rating12MonthsAgo === null ? "n/a" : latest.rating - rating12MonthsAgo}`);
+    console.log(`[${index + 1}/${profiles.size}] ${profileDoc.id}: 12m=${rating12MonthsAgo === null ? "n/a" : latestRating - rating12MonthsAgo}`);
   }
 
   await db.collection("syncLogs").add({
