@@ -1,3 +1,4 @@
+import "../../player-detail-v3.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import RatingHistoryChart, { type RatingHistoryPoint } from "@/components/RatingHistoryChart";
@@ -20,45 +21,12 @@ type ProfileDoc = {
   syncedAt?: string | null;
 };
 
-type PlayerDoc = {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  pdgaNumber?: number | null;
-};
-
-type RegistrationDoc = {
-  teamId: string;
-  personId: string;
-  role: "player" | "nptm" | "npts";
-  jerseyNumber?: number | null;
-};
-
-type TeamDoc = {
-  country?: string;
-  countryCode?: string;
-  division?: "open" | "masters";
-};
-
-type RatingHistoryDoc = {
-  rating?: number;
-  effectiveDate?: string | null;
-  roundsUsed?: number | null;
-};
-
-type YearlyStatsDoc = {
-  year?: number;
-  gender?: "M" | "F" | null;
-  payload?: unknown;
-  syncedAt?: string;
-};
-
-type CuratedStat = {
-  label: string;
-  value: string;
-  hint?: string;
-};
+type PlayerDoc = { id: string; firstName?: string; lastName?: string; fullName?: string; pdgaNumber?: number | null };
+type RegistrationDoc = { teamId: string; personId: string; role: "player" | "nptm" | "npts"; jerseyNumber?: number | null };
+type TeamDoc = { country?: string; countryCode?: string; division?: "open" | "masters" };
+type RatingHistoryDoc = { rating?: number; effectiveDate?: string | null; roundsUsed?: number | null };
+type YearlyStatsDoc = { year?: number; gender?: "M" | "F" | null; payload?: unknown; syncedAt?: string };
+type CuratedStat = { label: string; value: string; hint?: string };
 
 function parseFlexibleDate(value?: string | null) {
   if (!value) return null;
@@ -70,12 +38,7 @@ function parseFlexibleDate(value?: string | null) {
 function formatDate(value?: string | null) {
   const date = parseFlexibleDate(value);
   if (!date) return value || "—";
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(date);
 }
 
 function translateClassification(value?: string | null) {
@@ -108,9 +71,7 @@ function translateDivision(value?: string | null) {
 function primitiveEntries(value: unknown, prefix = "", depth = 0): Array<[string, unknown]> {
   if (depth > 5 || value == null) return [];
   if (["string", "number", "boolean"].includes(typeof value)) return [[prefix, value]];
-  if (Array.isArray(value)) {
-    return value.flatMap((item, index) => primitiveEntries(item, `${prefix}.${index + 1}`, depth + 1));
-  }
+  if (Array.isArray(value)) return value.flatMap((item, index) => primitiveEntries(item, `${prefix}.${index + 1}`, depth + 1));
   if (typeof value === "object") {
     return Object.entries(value as Record<string, unknown>)
       .flatMap(([key, item]) => primitiveEntries(item, prefix ? `${prefix}.${key}` : key, depth + 1));
@@ -167,7 +128,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
     profileRef.collection("ratingHistory").orderBy("effectiveDate", "asc").get(),
     profileRef.collection("yearlyStats").doc("2026").get(),
   ]);
-
   if (!profileSnapshot.exists && !playerSnapshot.exists) notFound();
 
   const profile = (profileSnapshot.data() ?? {}) as ProfileDoc;
@@ -189,7 +149,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
   return (
     <main className="shell player-detail">
       <Link className="back-link" href="/">← Retour au comparateur</Link>
-
       <header className="player-hero">
         <div>
           <p className="eyebrow">{team.country ? `${team.country} · ${team.division === "masters" ? "Masters" : "Open"}` : "Profil joueur"}</p>
@@ -240,11 +199,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ pdgaNum
               </div>
             ))}
           </div>
-        ) : (
-          <p className="empty-state">Aucune statistique 2026 exploitable n'est encore disponible pour ce joueur.</p>
-        )}
+        ) : <p className="empty-state">Aucune statistique 2026 exploitable n'est encore disponible pour ce joueur.</p>}
       </section>
-
       <footer className="pdga-attribution">Données joueurs et statistiques : Professional Disc Golf Association (PDGA).</footer>
     </main>
   );
