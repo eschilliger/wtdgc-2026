@@ -3,25 +3,13 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-
 .team-depth__item { min-width: 0; }
 .team-depth__item span, .team-depth__item small { display: block; }
 .team-depth__item span { color: #748193; font-size: .68rem; font-weight: 700; }
 .team-depth__item strong { display: block; margin-top: 3px; color: #173f72; font-size: .95rem; }
 .team-depth__item small { margin-top: 2px; color: #7c8997; font-size: .62rem; line-height: 1.35; }
 
-.player-status {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  margin-top: 6px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  font-size: .58rem;
-  font-weight: 900;
-  letter-spacing: .03em;
-  text-transform: uppercase;
-}
+.player-status { display: inline-flex; align-items: center; width: fit-content; margin-top: 6px; padding: 3px 7px; border-radius: 999px; font-size: .58rem; font-weight: 900; letter-spacing: .03em; text-transform: uppercase; }
 .player-status--starter { background: #e7f4ed; color: #236746; }
 .player-status--substitute { background: #eef2f6; color: #617184; }
 .player-status--disabled { background: #f6e9e9; color: #8e4444; }
@@ -36,29 +24,29 @@
 }
 
 @media (max-width: 760px) {
-  .team-card__header { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  .team-card__header > div:first-child { align-items: center; }
-  .team-card__header-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; width: 100%; }
-  .team-card__header-actions .rating-summary { text-align: left; }
-  .team-reset { width: auto; align-self: end; }
+  .team-card.team-card .team-card__header { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .team-card .team-card__header > div:first-child { align-items: center; }
+  .team-card .team-card__header-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; width: 100%; }
+  .team-card .team-card__header-actions .rating-summary { text-align: left; }
+  .team-card .team-reset { width: auto; align-self: end; }
   .team-card__metrics--v41 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .team-card__metrics--v41 .comparison-metric { min-width: 0; }
   .team-card__metrics--v41 .comparison-metric--depth { grid-column: 1 / -1; }
   .team-depth { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .duel-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .duel-metrics .comparison-metric:last-child { grid-column: 1 / -1; }
-  .player-row--scenario { grid-template-columns: 42px minmax(0, 1fr); column-gap: 10px; padding: 12px 10px; }
-  .player-ranks { padding-right: 7px; }
+  .duel-summary .duel-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duel-summary .duel-metrics .comparison-metric:last-child { grid-column: 1 / -1; }
+  .player-row.player-row--scenario { grid-template-columns: 42px minmax(0, 1fr); column-gap: 10px; padding: 12px 10px; }
+  .player-row--scenario .player-ranks { padding-right: 7px; }
   .player-row--scenario .player-row__main { min-width: 0; }
-  .player-row__actions { grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; width: 100%; margin-top: 10px; }
-  .player-row__rating { min-width: 0; text-align: left; }
-  .player-toggle { width: auto; min-width: 86px; }
+  .player-row--scenario .player-row__actions { grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; width: 100%; margin-top: 10px; }
+  .player-row--scenario .player-row__rating { min-width: 0; text-align: left; }
+  .player-row--scenario .player-toggle { width: auto; min-width: 86px; }
   .scenario-note span, .scenario-alert span { line-height: 1.5; }
 }
 
 @media (max-width: 430px) {
-  .team-card__header-actions { grid-template-columns: 1fr; }
-  .team-reset { width: 100%; }
-  .player-row__actions { grid-template-columns: 1fr; }
-  .player-toggle { width: 100%; }
+  .team-card .team-card__header-actions { grid-template-columns: 1fr; }
+  .team-card .team-reset { width: 100%; }
+  .player-row--scenario .player-row__actions { grid-template-columns: 1fr; }
+  .player-row--scenario .player-toggle { width: 100%; }
 }
