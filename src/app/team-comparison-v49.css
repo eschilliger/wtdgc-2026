@@ -1,0 +1,54 @@
+@import "./team-comparison-v45.css";
+
+/* V4.9: player identity hierarchy. Keep primary identity dark and metadata secondary. */
+.player-row .player-link,
+.player-row .player-name-line > strong,
+.player-row .player-name-first,
+.player-row .player-name-last {
+  color:#0f2238 !important;
+  opacity:1 !important;
+}
+
+.player-row .player-meta-line {
+  color:#596b7d !important;
+  opacity:1 !important;
+}
+
+.player-row .player-impact {
+  color:#778696 !important;
+  opacity:1 !important;
+}
+
+.player-row .player-ranks > strong,
+.player-row .player-row__rating > strong,
+.player-row .player-mobile-rating > strong,
+.player-row .player-mobile-trend > strong {
+  color:#0f2d4f !important;
+  opacity:1 !important;
+}
+
+.player-row .player-row__rating > span,
+.player-row .player-row__rating > small,
+.player-row .player-ranks > span,
+.player-row .player-mobile-core > div > span {
+  color:#66788a !important;
+  opacity:1 !important;
+}
+
+/* Disabled rows may be muted, but active players must never inherit faded text. */
+.player-row:not(.player-row--disabled) .player-link,
+.player-row:not(.player-row--disabled) .player-name-line > strong {
+  color:#0f2238 !important;
+}
+
+@media (max-width:760px) {
+  .player-row .player-link,
+  .player-row .player-name-line > strong,
+  .player-row .player-name-first,
+  .player-row .player-name-last {
+    color:#0f2238 !important;
+  }
+  .player-row .player-mobile-core span { color:#66788a !important; }
+  .player-row .player-mobile-rating strong,
+  .player-row .player-mobile-trend strong { color:#0f2d4f !important; }
+}
