@@ -1,0 +1,119 @@
+.team-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-bottom: 1px solid #e8edf2;
+  background: #e8edf2;
+}
+
+.comparison-metric {
+  min-width: 0;
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.comparison-metric span,
+.comparison-metric small {
+  display: block;
+  color: #788596;
+  font-size: .68rem;
+  line-height: 1.3;
+}
+
+.comparison-metric strong {
+  display: block;
+  margin-top: 4px;
+  color: #173f72;
+  font-size: 1.05rem;
+}
+
+.comparison-metric small {
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-row--selected {
+  background: #f8fbff;
+  box-shadow: inset 3px 0 0 #7a9fc8;
+}
+
+.duel-summary {
+  margin-bottom: 22px;
+  overflow: hidden;
+  border: 1px solid #cfdbe7;
+  border-radius: 18px;
+  background: #f8fbfe;
+}
+
+.duel-summary__headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #eff5fb, #f8fbfe);
+}
+
+.duel-summary__headline h3 {
+  margin: 0;
+  color: #173f72;
+  font-size: 1.25rem;
+}
+
+.duel-gap {
+  min-width: 140px;
+  text-align: right;
+}
+
+.duel-gap strong {
+  display: block;
+  color: #123968;
+  font-size: 1.65rem;
+}
+
+.duel-gap span {
+  display: block;
+  color: #7a8796;
+  font-size: .7rem;
+}
+
+.duel-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: #dde6ee;
+  border-top: 1px solid #dde6ee;
+}
+
+.duel-metrics .comparison-metric {
+  min-height: 82px;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .duel-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .team-card__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .duel-summary__headline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .duel-gap {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .duel-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
