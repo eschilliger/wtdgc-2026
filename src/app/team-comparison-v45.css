@@ -1,4 +1,4 @@
-/* V4.6: simpler desktop player dynamics + mobile-first roster cards. */
+/* V4.7: restore restrained typography and simplify player cards. */
 .team-depth-mobile,
 .player-gender-picto,
 .player-mobile-core,
@@ -13,6 +13,13 @@
 .player-name-first,
 .player-name-last { display:inline; }
 
+/* Desktop: one status only, no gender pictogram, no descriptive trend wording. */
+@media (min-width:761px) {
+  .player-gender-picto { display:none !important; }
+  .player-status__desktop { display:inline !important; }
+  .player-status__mobile { display:none !important; }
+}
+
 @media (max-width:760px) {
   .player-list--fixed-roster {
     display:grid;
@@ -24,10 +31,10 @@
   .player-list--fixed-roster .player-row.player-row--scenario {
     position:relative;
     display:grid;
-    grid-template-columns:50px minmax(0,1fr);
+    grid-template-columns:48px minmax(0,1fr);
     gap:0 12px;
     min-height:0;
-    padding:14px 12px 12px;
+    padding:13px 12px 12px;
     border:1px solid #e1e7ed;
     border-radius:14px;
     background:#fff;
@@ -49,21 +56,47 @@
     justify-content:flex-start;
     gap:3px;
     align-self:stretch;
-    padding:6px 10px 0 0;
+    padding:6px 9px 0 0;
     border-right:1px solid #e5eaf0;
   }
 
-  .player-ranks strong { font-size:1.15rem; line-height:1; }
+  .player-ranks strong { font-size:1.12rem; line-height:1; }
   .player-ranks span { margin-top:1px; font-size:.56rem; text-align:center; }
 
+  /* Replace the detailed SVG with a simple monochrome head-and-shoulders silhouette. */
   .player-gender-picto {
+    position:relative;
     display:block;
-    width:20px;
-    height:20px;
-    margin-top:7px;
-    color:#173f72;
+    width:22px;
+    height:22px;
+    margin-top:8px;
+    color:#687789;
   }
-  .player-gender-picto svg { display:block; width:100%; height:100%; fill:currentColor; }
+  .player-gender-picto svg { display:none !important; }
+  .player-gender-picto::before {
+    content:"";
+    position:absolute;
+    left:50%;
+    top:1px;
+    width:7px;
+    height:7px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:currentColor;
+  }
+  .player-gender-picto::after {
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:1px;
+    width:16px;
+    height:10px;
+    transform:translateX(-50%);
+    border-radius:8px 8px 3px 3px;
+    background:currentColor;
+  }
+  .player-gender-picto--female::after { width:17px; border-radius:9px 9px 5px 5px; }
+  .player-gender-picto--female::before { box-shadow:-3px 2px 0 -1px currentColor, 3px 2px 0 -1px currentColor; }
 
   .player-row__main {
     grid-column:2;
@@ -74,8 +107,8 @@
     position:relative;
     display:block;
     min-width:0;
-    min-height:38px;
-    padding-right:76px;
+    min-height:40px;
+    padding-right:86px;
   }
 
   .player-name-line .player-link,
@@ -84,8 +117,7 @@
     overflow:visible;
     text-overflow:clip;
     white-space:normal;
-    color:#17202a;
-    font-size:.88rem;
+    font-size:.86rem;
     font-weight:900;
     line-height:1.15;
     text-decoration:none;
@@ -94,6 +126,7 @@
   .player-name-first,
   .player-name-last { display:block; }
 
+  /* Mobile status: a single compact label in the top-right corner. */
   .player-status {
     position:absolute;
     top:0;
@@ -101,11 +134,11 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    max-width:72px;
+    width:auto;
+    max-width:82px;
     padding:3px 7px;
-    border:1px solid currentColor !important;
+    border:0 !important;
     border-radius:999px;
-    background:#fff !important;
     font-size:.58rem;
     font-weight:800;
     letter-spacing:0;
@@ -113,22 +146,22 @@
     text-transform:none;
     white-space:nowrap;
   }
-
-  .player-status__desktop { display:none; }
-  .player-status__mobile { display:inline; }
-  .player-status--starter { color:#075985 !important; background:#eef8fc !important; }
-  .player-status--substitute { color:#475569 !important; background:#f4f6f8 !important; }
-  .player-status--disabled { color:#9a3412 !important; background:#fff5f1 !important; }
+  .player-status__desktop { display:none !important; }
+  .player-status__mobile { display:inline !important; }
+  .player-status--starter { background:#e7f4ed !important; color:#236746 !important; }
+  .player-status--substitute { background:#eef2f6 !important; color:#617184 !important; }
+  .player-status--disabled { background:#f6e9e9 !important; color:#8e4444 !important; }
 
   .player-meta-line,
   .player-impact,
   .player-row__actions { display:none !important; }
 
+  /* Restore the neutral hierarchy: dark primary content, grey labels. */
   .player-mobile-core {
     display:grid;
-    grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);
+    grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);
     gap:14px;
-    margin-top:12px;
+    margin-top:10px;
     padding-top:10px;
     border-top:1px solid #edf1f5;
   }
@@ -137,21 +170,21 @@
   .player-mobile-trend { display:grid; gap:2px; min-width:0; }
 
   .player-mobile-core span {
-    color:#718093;
+    color:#7c8794;
     font-size:.62rem;
     font-weight:700;
     line-height:1.25;
   }
 
   .player-mobile-rating strong {
-    color:#123968;
-    font-size:1.38rem;
-    font-weight:950;
+    color:#17202a;
+    font-size:1.42rem;
+    font-weight:900;
     line-height:1;
   }
 
   .player-mobile-trend strong {
-    color:#173f72;
+    color:#17202a;
     font-size:.9rem;
     font-weight:900;
     line-height:1.15;
@@ -238,8 +271,8 @@
 
 @media (max-width:380px) {
   .player-list--fixed-roster .player-row.player-row--scenario { grid-template-columns:46px minmax(0,1fr); gap:0 9px; padding-inline:10px; }
-  .player-name-line { padding-right:70px; }
-  .player-status { max-width:68px; font-size:.55rem; padding-inline:6px; }
+  .player-name-line { padding-right:78px; }
+  .player-status { max-width:76px; font-size:.55rem; padding-inline:6px; }
   .player-mobile-core { gap:9px; }
   .player-mobile-core span { font-size:.58rem; }
 }
