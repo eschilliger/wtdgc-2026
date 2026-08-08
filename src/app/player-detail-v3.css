@@ -62,6 +62,11 @@
   font-size: .7rem;
 }
 
+/* V4.10: profile values follow the same primary dark-blue as ratings. */
+.profile-facts dd {
+  color: #0f2d4f;
+}
+
 @media (max-width: 900px) {
   .stats-grid--curated {
     grid-template-columns: repeat(3, minmax(0, 1fr));
