@@ -1,3 +1,4 @@
+import type { DocumentReference } from "firebase-admin/firestore";
 import { db } from "../src/server/firebase/admin";
 
 type RatingDoc = {
@@ -11,7 +12,7 @@ function subtractMonths(dateString: string, months: number) {
   return date.toISOString().slice(0, 10);
 }
 
-async function ratingAtOrBefore(profileRef: FirebaseFirestore.DocumentReference, date: string) {
+async function ratingAtOrBefore(profileRef: DocumentReference, date: string) {
   const snapshot = await profileRef
     .collection("ratingHistory")
     .where("effectiveDate", "<=", date)
