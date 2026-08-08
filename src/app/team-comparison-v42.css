@@ -1,5 +1,9 @@
 .team-card__metrics--v42 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
+/* V4.4: keep cards allowed to shrink inside the two-column comparison grid. */
+.comparison-grid > .team-card { min-width: 0; }
+
+/* Bench depth is secondary information: keep it on one readable desktop line. */
 .team-depth-strip {
   display: flex;
   align-items: center;
@@ -8,79 +12,161 @@
   border-top: 1px solid #e8edf2;
   border-bottom: 1px solid #e8edf2;
   background: #fbfcfe;
+  min-width: 0;
 }
-.team-depth-strip > span { flex: 0 0 auto; min-width: 112px; color: #657384; font-size: .7rem; font-weight: 800; }
-.team-depth-v43 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; width: 100%; }
-.team-depth-v43 > div { display: grid; grid-template-columns: 72px minmax(100px, auto) 1fr; align-items: baseline; gap: 8px; min-width: 0; }
+.team-depth-strip > span {
+  flex: 0 0 auto;
+  color: #657384;
+  font-size: .7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.team-depth-v43 {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.team-depth-v43 > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
 .team-depth-v43 span { color: #7a8796; font-size: .64rem; font-weight: 800; }
-.team-depth-v43 strong { color: #173f72; font-size: .86rem; white-space: nowrap; }
-.team-depth-v43 small { color: #7a8796; font-size: .62rem; white-space: nowrap; }
+.team-depth-v43 strong { color: #173f72; font-size: .86rem; }
+.team-depth-v43 small { color: #7a8796; font-size: .62rem; }
 
 .player-name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .player-name-line .player-link, .player-name-line > strong { min-width: 0; }
-.player-status.player-status--starter { background: #ccebdc; color: #0e5938; border: 1px solid #9ed6bb; }
+.player-status.player-status--starter { background: #b9e7d0; color: #074d2e; border: 1px solid #75c79f; }
 .player-status.player-status--substitute { background: #edf1f5; color: #536578; border: 1px solid #d7dfe7; }
 .player-status.player-status--disabled { background: #f5dede; color: #8c3535; border: 1px solid #e7bcbc; }
 
+/* Player rows: reserve the action zone instead of letting intrinsic content push it outside the card. */
 .player-list--fixed-roster .player-row { min-height: 112px; }
-.player-row--scenario { grid-template-columns: 62px minmax(0, 1fr) minmax(170px, 205px); }
-.player-row--scenario .player-row__actions { display: grid; grid-template-columns: minmax(76px, 1fr) 96px; align-items: center; gap: 10px; min-width: 0; }
-.player-row--scenario .player-row__rating { min-width: 0; }
-.player-row--scenario .player-row__rating span { display: block; white-space: nowrap; }
-.player-row--scenario .player-toggle { width: 96px; min-width: 96px; padding-inline: 8px; }
-
-.lineup-matchups--v43 { margin-top: 22px; }
-.lineup-matchup-row--v43 {
+.player-row--scenario {
   display: grid;
-  grid-template-columns: 44px minmax(180px, 1fr) 76px 62px 76px minmax(180px, 1fr);
+  grid-template-columns: 58px minmax(0, 1fr) 184px;
+  column-gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+.player-row--scenario .player-row__main { min-width: 0; }
+.player-row--scenario .player-row__actions {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) 92px;
+  align-items: center;
+  gap: 8px;
+  width: 184px;
+  min-width: 184px;
+  max-width: 184px;
+  justify-self: end;
+}
+.player-row--scenario .player-row__rating { min-width: 0; text-align: right; }
+.player-row--scenario .player-row__rating span { display: block; white-space: nowrap; }
+.player-row--scenario .player-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  min-width: 92px;
+  max-width: 92px;
+  padding-inline: 6px;
+  white-space: nowrap;
+}
+
+/* Player-by-player reading: a true face-to-face layout, independent from the team-card grid. */
+.lineup-matchups--v43 { margin-top: 24px; }
+.lineup-matchup-row--v43 {
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr) 72px 62px 72px minmax(0, 1fr) !important;
   align-items: center;
   gap: 12px;
-  min-height: 68px;
+  min-height: 72px;
   padding: 10px 18px;
+  min-width: 0;
 }
-.lineup-matchup-row--v43 .lineup-rank { color: #173f72; font-size: .9rem; }
-.lineup-matchup-row--v43 .lineup-matchup-player { display: grid; grid-template-columns: 1fr; gap: 3px; min-width: 0; }
-.lineup-matchup-row--v43 .lineup-matchup-player--a { text-align: left; }
-.lineup-matchup-row--v43 .lineup-matchup-player--b { text-align: right; }
-.lineup-matchup-row--v43 .lineup-matchup-player span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; font-weight: 800; }
+.lineup-matchup-row--v43 .lineup-rank { grid-column: 1; color: #173f72; font-size: .9rem; }
+.lineup-matchup-row--v43 .lineup-matchup-player {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+.lineup-matchup-row--v43 .lineup-matchup-player--a { grid-column: 2; text-align: left; align-items: flex-start; }
+.lineup-matchup-row--v43 .lineup-matchup-player--b { grid-column: 6; text-align: right; align-items: flex-end; }
+.lineup-matchup-row--v43 .lineup-matchup-player span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .8rem;
+  font-weight: 800;
+}
 .lineup-matchup-row--v43 .lineup-matchup-player small { color: #7b8998; font-size: .62rem; }
-.lineup-matchup-row--v43 .lineup-rating { color: #173f72; text-align: center; font-size: .98rem; }
-.lineup-matchup-row--v43 .lineup-matchup-gap { justify-self: center; min-width: 50px; }
+.lineup-matchup-row--v43 .lineup-rating { color: #173f72; text-align: center; font-size: 1rem; }
+.lineup-matchup-row--v43 .lineup-rating:nth-of-type(1) { grid-column: 3; }
+.lineup-matchup-row--v43 .lineup-matchup-gap { grid-column: 4; justify-self: center; min-width: 50px; }
+.lineup-matchup-row--v43 .lineup-rating:nth-of-type(2) { grid-column: 5; }
 
-@media (max-width: 1050px) {
-  .player-row--scenario { grid-template-columns: 54px minmax(0, 1fr) 168px; }
-  .player-row--scenario .player-row__actions { grid-template-columns: minmax(64px, 1fr) 88px; gap: 6px; }
-  .player-row--scenario .player-toggle { width: 88px; min-width: 88px; font-size: .67rem; }
-  .lineup-matchup-row--v43 { grid-template-columns: 40px minmax(130px, 1fr) 64px 56px 64px minmax(130px, 1fr); gap: 8px; }
+@media (max-width: 1120px) {
+  .player-row--scenario { grid-template-columns: 52px minmax(0, 1fr) 164px; column-gap: 9px; }
+  .player-row--scenario .player-row__actions { grid-template-columns: minmax(60px, 1fr) 84px; width: 164px; min-width: 164px; max-width: 164px; gap: 6px; }
+  .player-row--scenario .player-toggle { width: 84px; min-width: 84px; max-width: 84px; font-size: .65rem; }
+  .player-row--scenario .player-row__rating strong { font-size: 1.05rem; }
+  .player-row--scenario .player-row__rating span, .player-row--scenario .player-row__rating small { font-size: .56rem; }
+  .team-depth-v43 { gap: 12px; }
+  .team-depth-v43 > div { gap: 4px; }
+  .team-depth-v43 small { display: none; }
 }
 
 @media (max-width: 900px) {
   .team-card__metrics--v42 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .team-depth-v43 { gap: 14px; }
-  .team-depth-v43 > div { grid-template-columns: 1fr; gap: 2px; }
-  .team-depth-v43 small { white-space: normal; }
+  .team-depth-strip { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .team-depth-v43 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 12px; }
+  .team-depth-v43 > div { display: grid; gap: 2px; white-space: normal; }
+  .team-depth-v43 small { display: block; }
 }
 
 @media (max-width: 760px) {
-  .team-depth-strip { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .team-depth-strip > span { min-width: 0; }
-  .team-depth-v43 { gap: 12px; }
-  .team-depth-v43 > div { grid-template-columns: 1fr; }
   .player-list--fixed-roster .player-row { min-height: 0; }
   .player-name-line { flex-wrap: wrap; }
-  .player-row.player-row--scenario { grid-template-columns: 42px minmax(0, 1fr); }
-  .player-row--scenario .player-row__actions { grid-column: 2; grid-template-columns: minmax(0, 1fr) auto; width: 100%; margin-top: 8px; }
-  .player-row--scenario .player-toggle { width: auto; min-width: 88px; }
+  .player-row.player-row--scenario {
+    grid-template-columns: 42px minmax(0, 1fr);
+    overflow: visible;
+  }
+  .player-row--scenario .player-row__actions {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 8px;
+  }
+  .player-row--scenario .player-row__rating { text-align: left; }
+  .player-row--scenario .player-toggle { width: auto; min-width: 88px; max-width: none; font-size: .7rem; }
+
   .lineup-matchup-row--v43 {
-    grid-template-columns: 34px minmax(0, 1fr) 58px;
+    grid-template-columns: 34px minmax(0, 1fr) 58px 54px !important;
     grid-template-rows: auto auto;
     gap: 8px 10px;
     padding: 12px;
   }
-  .lineup-matchup-row--v43 .lineup-rank { grid-row: 1 / span 2; align-self: center; }
-  .lineup-matchup-row--v43 .lineup-matchup-player--a { grid-column: 2; grid-row: 1; text-align: left; }
-  .lineup-matchup-row--v43 .lineup-matchup-player--b { grid-column: 2; grid-row: 2; text-align: left; }
+  .lineup-matchup-row--v43 .lineup-rank { grid-column: 1; grid-row: 1 / span 2; align-self: center; }
+  .lineup-matchup-row--v43 .lineup-matchup-player--a { grid-column: 2; grid-row: 1; text-align: left; align-items: flex-start; }
+  .lineup-matchup-row--v43 .lineup-matchup-player--b { grid-column: 2; grid-row: 2; text-align: left; align-items: flex-start; }
   .lineup-matchup-row--v43 .lineup-rating:nth-of-type(1) { grid-column: 3; grid-row: 1; }
   .lineup-matchup-row--v43 .lineup-rating:nth-of-type(2) { grid-column: 3; grid-row: 2; }
+  .lineup-matchup-row--v43 .lineup-matchup-gap { grid-column: 4; grid-row: 1 / span 2; align-self: center; display: block; }
+}
+
+@media (max-width: 430px) {
+  .lineup-matchup-row--v43 { grid-template-columns: 30px minmax(0, 1fr) 52px !important; }
   .lineup-matchup-row--v43 .lineup-matchup-gap { display: none; }
+  .lineup-matchup-row--v43 .lineup-rating:nth-of-type(1), .lineup-matchup-row--v43 .lineup-rating:nth-of-type(2) { grid-column: 3; }
 }
