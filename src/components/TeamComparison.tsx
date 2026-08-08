@@ -10,6 +10,7 @@ export type ComparisonPlayer = {
   pdgaNumber: number | null;
   rating: number | null;
   gender: "M" | "F" | null;
+  genderSource?: "profile" | "yearly-stats" | "default-m";
   jerseyNumber: number | null;
   referenceRating?: number | null;
   officialRank?: number | null;
@@ -24,80 +25,69 @@ export type ComparisonTeam = {
   players: ComparisonPlayer[];
 };
 
-type Props = {
-  teams: ComparisonTeam[];
-};
+type Props = { teams: ComparisonTeam[] };
 
-type TeamSummary = ReturnType<typeof teamRatingSummary>;
+type SelectedPlayer = ComparisonPlayer & { referenceRating: number };
 
 function flagEmoji(code: string) {
   if (!/^[A-Z]{2}$/.test(code)) return "🏳️";
   return String.fromCodePoint(...[...code].map((char) => 127397 + char.charCodeAt(0)));
 }
 
-function playerReferenceRating(player: ComparisonPlayer) {
+function referenceRating(player: ComparisonPlayer) {
   return player.referenceRating ?? player.rating;
 }
 
-function rankPlayers(players: ComparisonPlayer[]) {
-  return [...players].sort((a, b) => {
-    const officialA = a.officialRank ?? Number.POSITIVE_INFINITY;
-    const officialB = b.officialRank ?? Number.POSITIVE_INFINITY;
-    if (officialA !== officialB) return officialA - officialB;
-
-    const ratingA = playerReferenceRating(a) ?? -1;
-    const ratingB = playerReferenceRating(b) ?? -1;
-    if (ratingA !== ratingB) return ratingB - ratingA;
-
-    return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, "fr");
-  });
+function compareByReference(a: ComparisonPlayer, b: ComparisonPlayer) {
+  if (a.officialRank != null && b.officialRank != null && a.officialRank !== b.officialRank) {
+    return a.officialRank - b.officialRank;
+  }
+  const ratingA = referenceRating(a) ?? -1;
+  const ratingB = referenceRating(b) ?? -1;
+  if (ratingA !== ratingB) return ratingB - ratingA;
+  return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, "fr");
 }
 
 function average(values: number[]) {
-  if (!values.length) return null;
-  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+  return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
 }
 
 function median(values: number[]) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? Math.round((sorted[middle - 1] + sorted[middle]) / 2)
-    : sorted[middle];
+  return sorted.length % 2 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2);
 }
 
-function teamRatingSummary(players: ComparisonPlayer[], disabledIds = new Set<string>()) {
-  const activePlayers = players.filter((player) => !disabledIds.has(player.id));
-  const rated = activePlayers
-    .map((player) => ({ ...player, referenceRating: playerReferenceRating(player) }))
-    .filter((player): player is ComparisonPlayer & { referenceRating: number } => player.referenceRating !== null);
+function lineupSummary(players: ComparisonPlayer[], disabledIds = new Set<string>()) {
+  const activeRated = players
+    .filter((player) => !disabledIds.has(player.id))
+    .map((player) => ({ ...player, referenceRating: referenceRating(player) }))
+    .filter((player): player is SelectedPlayer => player.referenceRating !== null)
+    .sort(compareByReference);
 
-  const ranked = (gender: "M" | "F", limit: number) => rated
-    .filter((player) => player.gender === gender)
-    .sort((a, b) => b.referenceRating - a.referenceRating)
-    .slice(0, limit);
-
-  const men = ranked("M", 4);
-  const women = ranked("F", 2);
-  const selected = [...men, ...women];
-  const complete = men.length === 4 && women.length === 2;
+  const men = activeRated.filter((player) => player.gender === "M").slice(0, 4);
+  const women = activeRated.filter((player) => player.gender === "F").slice(0, 2);
+  const selected = [...men, ...women].sort(compareByReference);
+  const selectedIds = new Set(selected.map((player) => player.id));
   const selectedRatings = selected.map((player) => player.referenceRating);
-  const ratedMen = rated.filter((player) => player.gender === "M").sort((a, b) => b.referenceRating - a.referenceRating);
-  const ratedWomen = rated.filter((player) => player.gender === "F").sort((a, b) => b.referenceRating - a.referenceRating);
+  const complete = men.length === 4 && women.length === 2;
+
+  const missingRatings = players.filter((player) => !disabledIds.has(player.id) && referenceRating(player) === null);
+  const defaultedGender = players.filter((player) => player.genderSource === "default-m");
 
   return {
     average: complete ? average(selectedRatings) : null,
-    complete,
-    menCount: men.length,
-    womenCount: women.length,
-    selectedIds: new Set(selected.map((player) => player.id)),
     menAverage: average(men.map((player) => player.referenceRating)),
     womenAverage: average(women.map((player) => player.referenceRating)),
     median: median(selectedRatings),
-    bestMan: ratedMen[0] ?? null,
-    bestWoman: ratedWomen[0] ?? null,
-    selectedCount: selected.length,
+    menCount: men.length,
+    womenCount: women.length,
+    complete,
+    selected,
+    selectedIds,
+    missingRatings,
+    defaultedGender,
   };
 }
 
@@ -117,13 +107,14 @@ function Metric({ label, value, detail }: { label: string; value: string | numbe
 }
 
 function impactIfDisabled(team: ComparisonTeam, playerId: string, disabledIds: Set<string>) {
-  const nominal = teamRatingSummary(team.players, disabledIds);
-  if (disabledIds.has(playerId) || nominal.average === null) return null;
+  const current = lineupSummary(team.players, disabledIds);
+  if (!current.selectedIds.has(playerId)) return 0;
+  if (current.average === null) return null;
   const nextDisabled = new Set(disabledIds);
   nextDisabled.add(playerId);
-  const next = teamRatingSummary(team.players, nextDisabled);
+  const next = lineupSummary(team.players, nextDisabled);
   if (next.average === null) return null;
-  return next.average - nominal.average;
+  return next.average - current.average;
 }
 
 function TeamCard({
@@ -137,17 +128,12 @@ function TeamCard({
   disabledIds: Set<string>;
   onTogglePlayer: (playerId: string) => void;
 }) {
-  const nominalSummary = teamRatingSummary(team.players);
-  const scenarioSummary = teamRatingSummary(team.players, disabledIds);
-  const rankedPlayers = rankPlayers(team.players);
-  const activeRankById = new Map(
-    rankedPlayers
-      .filter((player) => !disabledIds.has(player.id))
-      .map((player, index) => [player.id, index + 1] as const),
-  );
-  const nominalDiff = nominalSummary.average !== null && scenarioSummary.average !== null
-    ? scenarioSummary.average - nominalSummary.average
-    : null;
+  const nominal = lineupSummary(team.players);
+  const scenario = lineupSummary(team.players, disabledIds);
+  const allPlayers = [...team.players].sort(compareByReference);
+  const scenarioRank = new Map(scenario.selected.map((player, index) => [player.id, index + 1] as const));
+  const rosterReferenceRank = new Map(allPlayers.map((player, index) => [player.id, player.officialRank ?? index + 1] as const));
+  const delta = nominal.average !== null && scenario.average !== null ? scenario.average - nominal.average : null;
 
   return (
     <article className={`team-card${featured ? " team-card--featured" : ""}`}>
@@ -160,41 +146,61 @@ function TeamCard({
           </div>
         </div>
         <div className="rating-summary">
-          <strong>{scenarioSummary.average ?? "—"}</strong>
+          <strong>{scenario.average ?? "—"}</strong>
           <span>rating scénario · 4H + 2F</span>
-          <small className={nominalDiff !== null && nominalDiff < 0 ? "scenario-diff scenario-diff--down" : "scenario-diff"}>
-            {nominalSummary.average === null ? "référence incomplète" : `référence ${nominalSummary.average} · ${signed(nominalDiff)}`}
+          <small className={delta !== null && delta < 0 ? "scenario-diff scenario-diff--down" : "scenario-diff"}>
+            {nominal.average === null ? "référence incomplète" : `référence ${nominal.average} · ${signed(delta)}`}
           </small>
         </div>
       </div>
 
       <div className="team-card__metrics">
-        <Metric label="Top 4 hommes" value={scenarioSummary.menAverage ?? "—"} detail={`${scenarioSummary.menCount}/4 disponibles`} />
-        <Metric label="Top 2 femmes" value={scenarioSummary.womenAverage ?? "—"} detail={`${scenarioSummary.womenCount}/2 disponibles`} />
-        <Metric label="Médiane sélection" value={scenarioSummary.median ?? "—"} detail={`${disabledIds.size} désactivé${disabledIds.size > 1 ? "s" : ""}`} />
+        <Metric label="4 hommes retenus" value={scenario.menAverage ?? "—"} detail={`${scenario.menCount}/4`} />
+        <Metric label="2 femmes retenues" value={scenario.womenAverage ?? "—"} detail={`${scenario.womenCount}/2`} />
+        <Metric label="Médiane du six" value={scenario.median ?? "—"} detail={`${disabledIds.size} désactivé${disabledIds.size > 1 ? "s" : ""}`} />
       </div>
 
-      <div className="scenario-note">
-        <strong>Classement provisoire</strong>
-        <span>En attendant le classement WTDGC officiel, l'ordre J1…Jx utilise le rating PDGA actuel. Les égalités officielles pourront ensuite être imposées par le capitaine.</span>
-      </div>
+      {!scenario.complete ? (
+        <div className="scenario-alert scenario-alert--error">
+          <strong>Rating équipe impossible à calculer</strong>
+          <span>
+            Composition disponible : {scenario.menCount}/4 hommes et {scenario.womenCount}/2 femmes.
+            {scenario.missingRatings.length
+              ? ` Rating manquant pour ${scenario.missingRatings.map((player) => `${player.firstName} ${player.lastName}`).join(", ")}.`
+              : " Il manque au moins un joueur éligible avec un rating exploitable."}
+          </span>
+        </div>
+      ) : (
+        <div className="scenario-note">
+          <strong>Classement provisoire du six actif</strong>
+          <span>J1 à J6 sont attribués uniquement aux 4 hommes + 2 femmes retenus. Les autres joueurs restent remplaçants jusqu'à leur entrée dans le six.</span>
+        </div>
+      )}
+
+      {scenario.defaultedGender.length ? (
+        <div className="scenario-alert scenario-alert--warning">
+          <strong>Genre appliqué par défaut</strong>
+          <span>{scenario.defaultedGender.map((player) => `${player.firstName} ${player.lastName}`).join(", ")} : genre PDGA non résolu, classé Homme selon la règle de fallback définie pour le scouting.</span>
+        </div>
+      ) : null}
 
       <div className="player-list player-list--scenario">
-        {rankedPlayers.map((player, index) => {
+        {allPlayers.map((player) => {
           const disabled = disabledIds.has(player.id);
-          const officialRank = player.officialRank ?? index + 1;
-          const scenarioRank = activeRankById.get(player.id) ?? null;
-          const referenceRating = playerReferenceRating(player);
+          const selected = scenario.selectedIds.has(player.id);
+          const rank = scenarioRank.get(player.id) ?? null;
+          const refRank = rosterReferenceRank.get(player.id) ?? null;
+          const rating = referenceRating(player);
           const impact = impactIfDisabled(team, player.id, disabledIds);
 
           return (
             <div
-              className={`player-row player-row--scenario${scenarioSummary.selectedIds.has(player.id) ? " player-row--selected" : ""}${disabled ? " player-row--disabled" : ""}`}
+              className={`player-row player-row--scenario${selected ? " player-row--selected" : " player-row--substitute"}${disabled ? " player-row--disabled" : ""}`}
               key={player.id}
             >
-              <div className="player-ranks" aria-label={`Rang ${disabled ? "désactivé" : `J${scenarioRank}`}`}>
-                <strong>{disabled ? "—" : `J${scenarioRank}`}</strong>
-                <span>{player.officialRank ? `off. J${officialRank}` : `prov. J${officialRank}`}</span>
+              <div className="player-ranks">
+                <strong>{disabled ? "—" : rank ? `J${rank}` : "R"}</strong>
+                <span>{disabled ? "désactivé" : rank ? (player.officialRank ? `off. J${player.officialRank}` : `réf. #${refRank}`) : `rempl. #${refRank}`}</span>
               </div>
 
               <div className="player-row__main">
@@ -204,18 +210,25 @@ function TeamCard({
                   <strong>{player.firstName} {player.lastName}</strong>
                 )}
                 <span>
-                  {player.gender === "M" ? "Homme" : player.gender === "F" ? "Femme" : "Genre ?"}
+                  {player.gender === "F" ? "Femme" : "Homme"}
+                  {player.genderSource === "default-m" ? "*" : ""}
                   {player.pdgaNumber ? ` · PDGA #${player.pdgaNumber}` : ""}
-                  {scenarioSummary.selectedIds.has(player.id) ? " · retenu 4H+2F" : ""}
+                  {selected ? " · retenu 4H+2F" : !disabled ? " · remplaçant" : ""}
                 </span>
                 <small className="player-impact">
-                  {disabled ? "hors scénario" : impact === null ? "impact indisponible" : `impact si absent : ${signed(impact)}`}
+                  {disabled
+                    ? "hors scénario"
+                    : !selected
+                      ? "aucun impact immédiat tant qu'il reste remplaçant"
+                      : impact === null
+                        ? "absence : composition 4H+2F impossible"
+                        : `impact si absent : ${signed(impact)}`}
                 </small>
               </div>
 
               <div className="player-row__actions">
                 <div className="player-row__rating">
-                  <strong>{referenceRating ?? "—"}</strong>
+                  <strong>{rating ?? "—"}</strong>
                   <span>{player.referenceRating != null ? "rating WTDGC" : "PDGA provisoire"}</span>
                 </div>
                 <button
@@ -235,49 +248,43 @@ function TeamCard({
   );
 }
 
-function ComparisonSummary({
-  teamA,
-  teamB,
-  disabledA,
-  disabledB,
-}: {
+function ComparisonSummary({ teamA, teamB, disabledA, disabledB }: {
   teamA: ComparisonTeam;
   teamB: ComparisonTeam;
   disabledA: Set<string>;
   disabledB: Set<string>;
 }) {
-  const nominalA = teamRatingSummary(teamA.players);
-  const nominalB = teamRatingSummary(teamB.players);
-  const a = teamRatingSummary(teamA.players, disabledA);
-  const b = teamRatingSummary(teamB.players, disabledB);
-  const ratingGap = a.average !== null && b.average !== null ? a.average - b.average : null;
+  const nominalA = lineupSummary(teamA.players);
+  const nominalB = lineupSummary(teamB.players);
+  const a = lineupSummary(teamA.players, disabledA);
+  const b = lineupSummary(teamB.players, disabledB);
+  const gap = a.average !== null && b.average !== null ? a.average - b.average : null;
   const nominalGap = nominalA.average !== null && nominalB.average !== null ? nominalA.average - nominalB.average : null;
   const menGap = a.menAverage !== null && b.menAverage !== null ? a.menAverage - b.menAverage : null;
   const womenGap = a.womenAverage !== null && b.womenAverage !== null ? a.womenAverage - b.womenAverage : null;
-  const leader = ratingGap === null || ratingGap === 0 ? null : ratingGap > 0 ? teamA : teamB;
-  const swing = ratingGap !== null && nominalGap !== null ? ratingGap - nominalGap : null;
+  const leader = gap === null || gap === 0 ? null : gap > 0 ? teamA : teamB;
+  const swing = gap !== null && nominalGap !== null ? gap - nominalGap : null;
 
   return (
     <div className="duel-summary duel-summary--scenario">
       <div className="duel-summary__headline">
         <div>
           <p className="eyebrow">Simulation de composition</p>
-          <h3>{leader ? `${flagEmoji(leader.countryCode)} ${leader.country} devant` : "Équilibre actuel"}</h3>
-          <p className="duel-summary__copy">Les calculs utilisent uniquement les joueurs actifs avec la règle stricte 4 hommes + 2 femmes.</p>
+          <h3>{gap === null ? "Comparaison incomplète" : leader ? `${flagEmoji(leader.countryCode)} ${leader.country} devant` : "Équilibre actuel"}</h3>
+          <p className="duel-summary__copy">J1 à J6 correspondent au six actif, toujours composé de 4 hommes et 2 femmes.</p>
         </div>
         <div className="duel-gap">
-          <strong>{ratingGap === null ? "—" : Math.abs(ratingGap)}</strong>
+          <strong>{gap === null ? "—" : Math.abs(gap)}</strong>
           <span>points d'écart</span>
           {swing !== null ? <small>mouvement vs référence : {signed(swing)}</small> : null}
         </div>
       </div>
-
       <div className="duel-metrics">
-        <Metric label="Écart scénario" value={ratingGap === null ? "—" : signed(ratingGap)} detail={`${teamA.country} - ${teamB.country}`} />
+        <Metric label="Écart scénario" value={gap === null ? "—" : signed(gap)} detail={`${teamA.country} - ${teamB.country}`} />
         <Metric label="Écart référence" value={nominalGap === null ? "—" : signed(nominalGap)} detail="sans absence" />
-        <Metric label="Écart hommes" value={menGap === null ? "—" : signed(menGap)} detail="top 4 hommes" />
-        <Metric label="Écart femmes" value={womenGap === null ? "—" : signed(womenGap)} detail="top 2 femmes" />
-        <Metric label="Joueurs désactivés" value={disabledA.size + disabledB.size} detail={`${teamA.country} ${disabledA.size} · ${teamB.country} ${disabledB.size}`} />
+        <Metric label="Écart hommes" value={menGap === null ? "—" : signed(menGap)} detail="4 hommes" />
+        <Metric label="Écart femmes" value={womenGap === null ? "—" : signed(womenGap)} detail="2 femmes" />
+        <Metric label="Désactivés" value={disabledA.size + disabledB.size} detail={`${teamA.country} ${disabledA.size} · ${teamB.country} ${disabledB.size}`} />
       </div>
     </div>
   );
@@ -285,43 +292,36 @@ function ComparisonSummary({
 
 export default function TeamComparison({ teams }: Props) {
   const [division, setDivision] = useState<"open" | "masters">("open");
-  const [teamAId, setTeamAId] = useState<string>("");
-  const [teamBId, setTeamBId] = useState<string>("");
+  const [teamAId, setTeamAId] = useState("");
+  const [teamBId, setTeamBId] = useState("");
   const [disabledByTeam, setDisabledByTeam] = useState<Record<string, string[]>>({});
 
   const divisionTeams = useMemo(
     () => teams.filter((team) => team.division === division).sort((a, b) => a.country.localeCompare(b.country, "fr")),
     [teams, division],
   );
-
   const france = divisionTeams.find((team) => team.countryCode === "FR") ?? divisionTeams[0];
   const firstOpponent = divisionTeams.find((team) => team.id !== france?.id);
   const secondOpponent = divisionTeams.find((team) => team.id !== france?.id && team.id !== firstOpponent?.id);
-
   const effectiveTeamAId = divisionTeams.some((team) => team.id === teamAId) ? teamAId : france?.id ?? "";
   const effectiveTeamBId = divisionTeams.some((team) => team.id === teamBId && team.id !== effectiveTeamAId)
     ? teamBId
     : firstOpponent?.id ?? secondOpponent?.id ?? "";
-
   const teamA = divisionTeams.find((team) => team.id === effectiveTeamAId);
   const teamB = divisionTeams.find((team) => team.id === effectiveTeamBId);
-
   const disabledFor = (teamId: string) => new Set(disabledByTeam[teamId] ?? []);
+
   const togglePlayer = (teamId: string, playerId: string) => {
     setDisabledByTeam((current) => {
       const next = new Set(current[teamId] ?? []);
-      if (next.has(playerId)) next.delete(playerId);
-      else next.add(playerId);
+      if (next.has(playerId)) next.delete(playerId); else next.add(playerId);
       return { ...current, [teamId]: [...next] };
     });
   };
 
-  const resetTeam = (teamId: string) => {
-    setDisabledByTeam((current) => ({ ...current, [teamId]: [] }));
-  };
-
-  const switchDivision = (nextDivision: "open" | "masters") => {
-    setDivision(nextDivision);
+  const resetTeam = (teamId: string) => setDisabledByTeam((current) => ({ ...current, [teamId]: [] }));
+  const switchDivision = (next: "open" | "masters") => {
+    setDivision(next);
     setTeamAId("");
     setTeamBId("");
   };
@@ -330,10 +330,7 @@ export default function TeamComparison({ teams }: Props) {
     <>
       <section className="france-section">
         <div className="section-heading">
-          <div>
-            <p className="eyebrow">Équipe de France</p>
-            <h2>France en référence</h2>
-          </div>
+          <div><p className="eyebrow">Équipe de France</p><h2>France en référence</h2></div>
           <div className="division-toggle" role="group" aria-label="Catégorie">
             <button className={division === "open" ? "active" : ""} onClick={() => switchDivision("open")}>Open</button>
             <button className={division === "masters" ? "active" : ""} onClick={() => switchDivision("masters")}>Masters</button>
@@ -341,83 +338,32 @@ export default function TeamComparison({ teams }: Props) {
         </div>
         {france ? (
           <>
-            <div className="scenario-toolbar">
-              <span>Mode simulation actif</span>
-              <button type="button" onClick={() => resetTeam(france.id)}>Réinitialiser France</button>
-            </div>
-            <TeamCard
-              team={france}
-              featured
-              disabledIds={disabledFor(france.id)}
-              onTogglePlayer={(playerId) => togglePlayer(france.id, playerId)}
-            />
+            <div className="scenario-toolbar"><span>Simulation France</span><button onClick={() => resetTeam(france.id)}>Réinitialiser</button></div>
+            <TeamCard team={france} featured disabledIds={disabledFor(france.id)} onTogglePlayer={(id) => togglePlayer(france.id, id)} />
           </>
-        ) : <p>Aucune équipe France disponible dans cette catégorie.</p>}
+        ) : <p>Aucune équipe France disponible.</p>}
       </section>
 
       <section className="comparison-section">
         <div className="section-heading">
-          <div>
-            <p className="eyebrow">Scouting</p>
-            <h2>Comparer et simuler deux équipes</h2>
-            <p className="section-copy">Désactive un joueur pour faire remonter les suivants dans l'ordre J1…Jx. Le rating scénario est recalculé immédiatement avec 4 hommes et 2 femmes.</p>
-          </div>
+          <div><p className="eyebrow">Scouting</p><h2>Comparer deux équipes</h2><p className="section-copy">Le six actif est toujours construit avec 4 hommes + 2 femmes. Les rangs J1 à J6 sont recalculés après chaque désactivation.</p></div>
         </div>
-
         <div className="comparison-controls">
-          <label>
-            Équipe A
-            <select value={effectiveTeamAId} onChange={(event) => setTeamAId(event.target.value)}>
-              {divisionTeams.map((team) => (
-                <option key={team.id} value={team.id}>{flagEmoji(team.countryCode)} {team.country}</option>
-              ))}
-            </select>
-          </label>
+          <label>Équipe A<select value={effectiveTeamAId} onChange={(event) => setTeamAId(event.target.value)}>{divisionTeams.map((team) => <option key={team.id} value={team.id}>{flagEmoji(team.countryCode)} {team.country}</option>)}</select></label>
           <div className="versus">VS</div>
-          <label>
-            Équipe B
-            <select value={effectiveTeamBId} onChange={(event) => setTeamBId(event.target.value)}>
-              {divisionTeams.filter((team) => team.id !== effectiveTeamAId).map((team) => (
-                <option key={team.id} value={team.id}>{flagEmoji(team.countryCode)} {team.country}</option>
-              ))}
-            </select>
-          </label>
+          <label>Équipe B<select value={effectiveTeamBId} onChange={(event) => setTeamBId(event.target.value)}>{divisionTeams.filter((team) => team.id !== effectiveTeamAId).map((team) => <option key={team.id} value={team.id}>{flagEmoji(team.countryCode)} {team.country}</option>)}</select></label>
         </div>
 
         {teamA && teamB ? (
           <>
-            <ComparisonSummary
-              teamA={teamA}
-              teamB={teamB}
-              disabledA={disabledFor(teamA.id)}
-              disabledB={disabledFor(teamB.id)}
-            />
-            <div className="scenario-toolbar scenario-toolbar--comparison">
-              <span>Les simulations sont indépendantes pour chaque équipe.</span>
-              <div>
-                <button type="button" onClick={() => resetTeam(teamA.id)}>Réinitialiser {teamA.country}</button>
-                <button type="button" onClick={() => resetTeam(teamB.id)}>Réinitialiser {teamB.country}</button>
-              </div>
+            <div className="scenario-toolbar scenario-toolbar--comparison"><span>Scénarios indépendants</span><div><button onClick={() => resetTeam(teamA.id)}>Réinitialiser {teamA.country}</button><button onClick={() => resetTeam(teamB.id)}>Réinitialiser {teamB.country}</button></div></div>
+            <ComparisonSummary teamA={teamA} teamB={teamB} disabledA={disabledFor(teamA.id)} disabledB={disabledFor(teamB.id)} />
+            <div className="comparison-grid">
+              <TeamCard team={teamA} disabledIds={disabledFor(teamA.id)} onTogglePlayer={(id) => togglePlayer(teamA.id, id)} />
+              <TeamCard team={teamB} disabledIds={disabledFor(teamB.id)} onTogglePlayer={(id) => togglePlayer(teamB.id, id)} />
             </div>
           </>
         ) : null}
-
-        <div className="comparison-grid">
-          {teamA && (
-            <TeamCard
-              team={teamA}
-              disabledIds={disabledFor(teamA.id)}
-              onTogglePlayer={(playerId) => togglePlayer(teamA.id, playerId)}
-            />
-          )}
-          {teamB && (
-            <TeamCard
-              team={teamB}
-              disabledIds={disabledFor(teamB.id)}
-              onTogglePlayer={(playerId) => togglePlayer(teamB.id, playerId)}
-            />
-          )}
-        </div>
       </section>
     </>
   );

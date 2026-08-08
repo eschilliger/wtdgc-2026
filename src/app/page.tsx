@@ -25,10 +25,13 @@ type PlayerDoc = {
   pdgaNumber?: number | null;
 };
 
+type GenderSource = "profile" | "yearly-stats" | "default-m";
+
 type PdgaProfileDoc = {
   pdgaNumber: number;
   currentRating?: number | null;
   gender?: PdgaGender | null;
+  genderSource?: string | null;
 };
 
 type YearlyStatsDoc = {
@@ -54,12 +57,19 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
   }));
   const ratings = new Map<number, number | null>();
   const genders = new Map<number, PdgaGender>();
+  const genderSources = new Map<number, GenderSource>();
 
   for (const doc of profilesSnapshot.docs) {
     const profile = doc.data() as PdgaProfileDoc;
     if (!Number.isFinite(profile.pdgaNumber)) continue;
     ratings.set(profile.pdgaNumber, profile.currentRating ?? null);
-    if (profile.gender === "M" || profile.gender === "F") genders.set(profile.pdgaNumber, profile.gender);
+    if (profile.gender === "M" || profile.gender === "F") {
+      genders.set(profile.pdgaNumber, profile.gender);
+      genderSources.set(
+        profile.pdgaNumber,
+        profile.genderSource === "default-m" ? "default-m" : "profile",
+      );
+    }
   }
 
   for (const doc of yearlyStatsSnapshot.docs) {
@@ -67,7 +77,10 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     const pdgaNumber = stats.pdgaNumber ?? Number.parseInt(doc.ref.parent.parent?.id ?? "", 10);
     if (!Number.isFinite(pdgaNumber) || genders.has(pdgaNumber)) continue;
     const gender = stats.gender ?? extractPdgaGender(stats.payload);
-    if (gender) genders.set(pdgaNumber, gender);
+    if (gender) {
+      genders.set(pdgaNumber, gender);
+      genderSources.set(pdgaNumber, "yearly-stats");
+    }
   }
 
   return teams
@@ -79,13 +92,20 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
           const player = players.get(registration.personId);
           if (!player) return null;
 
+          const pdgaNumber = player.pdgaNumber ?? null;
+          const gender = pdgaNumber ? genders.get(pdgaNumber) ?? "M" : "M";
+          const genderSource = pdgaNumber
+            ? genderSources.get(pdgaNumber) ?? "default-m"
+            : "default-m";
+
           return {
             id: player.id,
             firstName: player.firstName,
             lastName: player.lastName,
-            pdgaNumber: player.pdgaNumber ?? null,
-            rating: player.pdgaNumber ? ratings.get(player.pdgaNumber) ?? null : null,
-            gender: player.pdgaNumber ? genders.get(player.pdgaNumber) ?? null : null,
+            pdgaNumber,
+            rating: pdgaNumber ? ratings.get(pdgaNumber) ?? null : null,
+            gender,
+            genderSource,
             jerseyNumber: registration.jerseyNumber ?? null,
           };
         })
