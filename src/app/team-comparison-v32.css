@@ -1,0 +1,92 @@
+.team-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.team-reset,
+.duel-reset {
+  border: 1px solid #c8d5e1;
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: white;
+  color: #173f72;
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.team-reset:hover:not(:disabled),
+.duel-reset:hover:not(:disabled) {
+  border-color: #97afc8;
+  background: #f2f7fb;
+}
+
+.team-reset:disabled,
+.duel-reset:disabled {
+  cursor: default;
+  opacity: .42;
+}
+
+.player-row--scenario {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  justify-content: initial;
+  column-gap: 16px;
+}
+
+.player-row--scenario .player-row__main {
+  justify-self: start;
+  width: 100%;
+  text-align: left;
+}
+
+.player-row--scenario .player-row__actions {
+  justify-self: end;
+}
+
+.duel-summary__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.duel-reset {
+  align-self: center;
+}
+
+@media (max-width: 900px) {
+  .team-card__header-actions {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
+  .duel-summary__actions {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 760px) {
+  .team-card__header {
+    align-items: flex-start;
+  }
+
+  .team-card__header-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .team-card__header-actions .rating-summary {
+    text-align: left;
+  }
+
+  .team-reset,
+  .duel-reset {
+    width: 100%;
+  }
+
+  .duel-summary__actions {
+    width: 100%;
+    align-items: stretch;
+  }
+}
