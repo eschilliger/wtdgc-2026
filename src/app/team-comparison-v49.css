@@ -1,6 +1,6 @@
 @import "./team-comparison-v45.css";
 
-/* V4.9+: player identity hierarchy driven by semantic typography tokens. */
+/* Semantic typography layer: one role = one color across the application. */
 .player-row .player-link,
 .player-row .player-name-line > strong,
 .player-row .player-name-first,
@@ -8,7 +8,20 @@
 .player-row .player-ranks > strong,
 .player-row .player-row__rating > strong,
 .player-row .player-mobile-rating > strong,
-.player-row .player-mobile-trend > strong {
+.player-row .player-mobile-trend > strong,
+.rating-summary strong,
+.comparison-metric strong,
+.team-depth__item strong,
+.team-depth-v43 strong,
+.team-depth-desktop strong,
+.team-depth-mobile strong,
+.lineup-matchup-row > strong,
+.lineup-matchup-row .lineup-rank,
+.lineup-matchup-player b,
+.lineup-matchup-row--v43 .lineup-rating,
+.rating-history-list strong,
+.stat-tile strong,
+.profile-facts dd {
   color: var(--text-primary) !important;
   opacity: 1 !important;
 }
@@ -17,14 +30,65 @@
 .player-row .player-row__rating > span,
 .player-row .player-row__rating > small,
 .player-row .player-ranks > span,
-.player-row .player-mobile-core > div > span {
+.player-row .player-mobile-core > div > span,
+.rating-summary span,
+.comparison-metric span,
+.comparison-metric small,
+.team-card__eyebrow,
+.team-depth-strip > span,
+.team-depth__item span,
+.team-depth-v43 span,
+.team-depth-mobile span,
+.lineup-matchups__heading > span,
+.lineup-matchup-player small,
+.lineup-matchup-row--v43 .lineup-matchup-player small,
+.profile-facts dt,
+.rating-history-list span,
+.stat-tile span {
   color: var(--text-secondary) !important;
   opacity: 1 !important;
 }
 
-.player-row .player-impact {
+.player-row .player-impact,
+.team-depth__item small,
+.team-depth-v43 small,
+.team-depth-desktop small,
+.team-depth-mobile small,
+.season-sync,
+.stat-tile--curated small,
+.pdga-attribution {
   color: var(--text-muted) !important;
   opacity: 1 !important;
+}
+
+.player-link:hover,
+.back-link,
+.pdga-link {
+  color: var(--text-link) !important;
+}
+
+.player-row .player-rating-trend.player-trend--up,
+.player-trend--up,
+.rating-summary small.scenario-diff,
+.lineup-matchup-gap--a {
+  color: var(--text-positive) !important;
+}
+
+.player-row .player-rating-trend.player-trend--down,
+.player-trend--down,
+.rating-summary small.scenario-diff--down,
+.lineup-matchup-gap--b,
+.scenario-alert--error strong {
+  color: var(--text-negative) !important;
+}
+
+.scenario-alert--warning strong,
+.scenario-note strong {
+  color: var(--text-warning) !important;
+}
+
+.player-row .player-rating-trend {
+  color: var(--text-body) !important;
 }
 
 /* Disabled rows may be muted, but active players must never inherit faded text. */
