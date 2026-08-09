@@ -23,10 +23,42 @@
   margin-top: 0 !important;
 }
 
+/* Make player-to-player rating gaps immediately distinguishable. The signed value remains the primary cue; color reinforces it. */
+.lineup-matchup-gap--a {
+  background: #15803d !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+}
+
+.lineup-matchup-gap--b {
+  background: #be123c !important;
+  color: #ffffff !important;
+  border-color: #be123c !important;
+}
+
 /* Keep the rhythm around the simulation consistent on tablet/compact landscape. */
 @media (min-width: 600px) and (max-width: 1024px) {
   .comparison-section > .duel-summary {
     margin-block: 18px !important;
+  }
+
+  /* Tablet always uses one horizontal KPI row, even on the narrowest supported landscape viewport. */
+  .comparison-section .duel-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .comparison-section .duel-metrics > * {
+    min-width: 0 !important;
+  }
+
+  .comparison-section .duel-metrics .comparison-metric {
+    padding-inline: 10px !important;
+  }
+
+  .comparison-section .duel-metrics .comparison-metric > span,
+  .comparison-section .duel-metrics .comparison-metric > small {
+    font-size: .64rem !important;
   }
 }
 
