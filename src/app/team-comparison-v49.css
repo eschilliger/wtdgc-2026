@@ -97,6 +97,25 @@
   color: var(--text-primary) !important;
 }
 
+/* Statuses: one strong functional palette shared by desktop and mobile. */
+.player-status.player-status--starter {
+  background: var(--status-starter-bg) !important;
+  color: var(--status-starter-text) !important;
+  border: 1px solid var(--status-starter-border) !important;
+}
+
+.player-status.player-status--substitute {
+  background: var(--status-substitute-bg) !important;
+  color: var(--status-substitute-text) !important;
+  border: 1px solid var(--status-substitute-border) !important;
+}
+
+.player-status.player-status--disabled {
+  background: var(--status-disabled-bg) !important;
+  color: var(--status-disabled-text) !important;
+  border: 1px solid var(--status-disabled-border) !important;
+}
+
 @media (max-width:760px) {
   .player-row .player-link,
   .player-row .player-name-line > strong,
@@ -110,4 +129,83 @@
   .player-row .player-mobile-core span {
     color: var(--text-secondary) !important;
   }
+
+  /* Replace the ambiguous silhouette by a compact H/F marker with a gender-specific outline. */
+  .player-gender-picto {
+    display: grid !important;
+    place-items: center;
+    width: 24px !important;
+    height: 24px !important;
+    margin-top: 8px !important;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    background: #fff;
+    font-size: .64rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .player-gender-picto svg,
+  .player-gender-picto::after {
+    display: none !important;
+  }
+
+  .player-gender-picto::before {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .player-gender-picto--male {
+    color: var(--gender-male) !important;
+    background: var(--gender-male-bg) !important;
+  }
+  .player-gender-picto--male::before { content: "H" !important; }
+
+  .player-gender-picto--female {
+    color: var(--gender-female) !important;
+    background: var(--gender-female-bg) !important;
+  }
+  .player-gender-picto--female::before { content: "F" !important; }
+
+  /* Status and availability control form one compact action zone. */
+  .player-name-line {
+    padding-right: 136px !important;
+  }
+
+  .player-status {
+    right: 48px !important;
+  }
+
+  .player-mobile-actions {
+    position: absolute !important;
+    top: 12px;
+    right: 12px;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  .player-switch {
+    display: block !important;
+    width: 38px;
+    height: 22px;
+  }
+
+  .player-switch > span {
+    display: none !important;
+  }
+
+  .player-switch i {
+    display: block;
+  }
+}
+
+@media (max-width:380px) {
+  .player-name-line { padding-right: 130px !important; }
+  .player-status { right: 46px !important; }
+  .player-mobile-actions { right: 10px; }
 }

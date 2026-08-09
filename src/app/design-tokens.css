@@ -7,4 +7,19 @@
   --text-positive: #166534;
   --text-negative: #9f1239;
   --text-warning: #7e581c;
+
+  --status-starter-bg: #cdeedc;
+  --status-starter-text: #0b5f3a;
+  --status-starter-border: #7fcda5;
+  --status-substitute-bg: #dce5ee;
+  --status-substitute-text: #40556b;
+  --status-substitute-border: #aebdcc;
+  --status-disabled-bg: #f4d6d9;
+  --status-disabled-text: #8f2630;
+  --status-disabled-border: #df9fa6;
+
+  --gender-male: #2f6fa7;
+  --gender-male-bg: #edf5fb;
+  --gender-female: #a34f78;
+  --gender-female-bg: #fbf0f5;
 }
