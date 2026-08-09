@@ -1,5 +1,87 @@
-/* Landscape polish: simplify team summary and restore the real switch control. */
+/* Landscape polish: simplified team summary, stable scenario status, and real switch control. */
+
+/* Keep exactly one status slot visible so roster rows do not jump when the scenario changes. */
+.team-card:has(> .scenario-story) > .scenario-note {
+  display: none !important;
+}
+
+.team-card:has(> .scenario-alert--error) > .scenario-story {
+  display: none !important;
+}
+
+.team-card > .scenario-story,
+.team-card > .scenario-note,
+.team-card > .scenario-alert {
+  box-sizing: border-box;
+  min-height: 64px;
+  margin: 0 !important;
+}
+
 @media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) {
+  /* Team header: identity on the left, compact score/action block on the right. */
+  .comparison-grid .team-card__header {
+    min-height: 92px !important;
+    padding: 14px 14px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 14px !important;
+  }
+
+  .comparison-grid .team-card__header > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+  }
+
+  .comparison-grid .team-card__flag {
+    flex: 0 0 auto !important;
+    font-size: 1.6rem !important;
+  }
+
+  .comparison-grid .team-card__identity {
+    display: grid !important;
+    align-content: center !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .comparison-grid .team-card__identity .team-card__eyebrow {
+    margin: 0 !important;
+    font-size: .58rem !important;
+    line-height: 1 !important;
+  }
+
+  .comparison-grid .team-card__identity h3 {
+    margin: 0 !important;
+    font-size: 1.05rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .comparison-grid .team-card__header-actions {
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    justify-items: end !important;
+    gap: 10px !important;
+    width: auto !important;
+  }
+
+  .comparison-grid .rating-summary {
+    display: grid !important;
+    justify-items: end !important;
+    align-content: center !important;
+    gap: 2px !important;
+    min-width: 74px !important;
+    max-width: none !important;
+    text-align: right !important;
+  }
+
+  .comparison-grid .rating-summary strong {
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+  }
+
   .comparison-grid .rating-summary span {
     font-size: 0 !important;
     line-height: 1 !important;
@@ -10,7 +92,47 @@
     display: block;
     color: inherit;
     font-size: .54rem;
-    line-height: 1.2;
+    line-height: 1.15;
+  }
+
+  .comparison-grid .rating-summary small {
+    font-size: .5rem !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+  }
+
+  .comparison-grid .team-reset {
+    align-self: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 6px 8px !important;
+    font-size: .54rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Status slot: same footprint whether normal, modified or invalid. */
+  .comparison-grid .team-card > .scenario-story,
+  .comparison-grid .team-card > .scenario-note,
+  .comparison-grid .team-card > .scenario-alert {
+    min-height: 62px !important;
+    padding: 10px 12px !important;
+  }
+
+  .comparison-grid .team-card > .scenario-story > strong,
+  .comparison-grid .team-card > .scenario-note > strong,
+  .comparison-grid .team-card > .scenario-alert > strong {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-size: .62rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .comparison-grid .team-card > .scenario-story > div,
+  .comparison-grid .team-card > .scenario-note > span,
+  .comparison-grid .team-card > .scenario-alert > span {
+    font-size: .56rem !important;
+    line-height: 1.35 !important;
   }
 
   .comparison-grid .player-name-line {
@@ -69,5 +191,39 @@
   .comparison-grid .player-mobile-actions .player-switch input:focus-visible + i {
     outline: 3px solid rgba(14,116,144,.25) !important;
     outline-offset: 2px !important;
+  }
+
+  /* Player detail landscape: use the available width, not the mobile KPI stack. */
+  .player-detail [class*="RatingHistoryChart_kpis"] {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .player-detail [class*="RatingHistoryChart_kpis"] > div,
+  .player-detail [class*="_kpis_"] > div {
+    grid-column: auto !important;
+    min-height: 54px !important;
+    padding: 8px !important;
+  }
+
+  .player-detail [class*="RatingHistoryChart_root"],
+  .player-detail [class*="_root_"] {
+    gap: 9px !important;
+  }
+
+  .player-detail [class*="RatingHistoryChart_toolbar"],
+  .player-detail [class*="_toolbar_"] {
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+  }
+
+  .player-detail [class*="RatingHistoryChart_wrap"],
+  .player-detail [class*="_wrap_"] {
+    padding-bottom: 18px !important;
+  }
+
+  .player-detail [class*="RatingHistoryChart_chart"],
+  .player-detail [class*="_chart_"] {
+    height: 155px !important;
   }
 }
