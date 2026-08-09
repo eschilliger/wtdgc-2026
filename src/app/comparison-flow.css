@@ -15,8 +15,39 @@
 
 .comparison-section > .duel-summary {
   order: 2;
+  margin-block: 20px !important;
 }
 
 .comparison-section > .lineup-matchups {
   order: 3;
+  margin-top: 0 !important;
+}
+
+/* Keep the rhythm around the simulation consistent on tablet/compact landscape. */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .comparison-section > .duel-summary {
+    margin-block: 18px !important;
+  }
+}
+
+/* Mobile portrait: slightly tighter rhythm + a lightweight orientation hint. */
+@media (max-width: 599px) and (orientation: portrait) {
+  .comparison-section > .duel-summary {
+    margin-block: 16px !important;
+  }
+
+  .comparison-controls::after {
+    content: "↻ Astuce : tournez votre téléphone en paysage pour comparer les deux équipes côte à côte.";
+    display: block;
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    padding: 9px 11px;
+    border: 1px solid #d6e0e9;
+    border-radius: 10px;
+    background: #f7fafc;
+    color: #607083;
+    font-size: .72rem;
+    line-height: 1.35;
+    font-weight: 700;
+  }
 }
