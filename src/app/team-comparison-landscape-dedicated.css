@@ -1,0 +1,312 @@
+/* Dedicated landscape/tablet UI. Keep team-vs-team side by side, but use a mobile-like player card inside each team. */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) {
+  .comparison-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .comparison-grid > .team-card {
+    min-width: 0 !important;
+  }
+
+  /* Team header: compact and readable, without squeezing the country name. */
+  .comparison-grid .team-card__header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px !important;
+  }
+
+  .comparison-grid .team-card__header > div:first-child {
+    min-width: 0 !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .comparison-grid .team-card__flag { font-size: 1.55rem !important; }
+  .comparison-grid .team-card__identity h3 {
+    font-size: 1rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .comparison-grid .team-card__header-actions {
+    width: auto !important;
+    display: grid !important;
+    grid-template-columns: auto !important;
+    align-items: center !important;
+    justify-items: end !important;
+    gap: 5px !important;
+  }
+
+  .comparison-grid .rating-summary {
+    max-width: 142px !important;
+    text-align: right !important;
+  }
+  .comparison-grid .rating-summary strong { font-size: 1.18rem !important; }
+  .comparison-grid .rating-summary span { font-size: .54rem !important; line-height: 1.2 !important; }
+  .comparison-grid .rating-summary small { font-size: .5rem !important; line-height: 1.15 !important; }
+  .comparison-grid .team-reset {
+    width: auto !important;
+    padding: 5px 8px !important;
+    font-size: .55rem !important;
+  }
+
+  /* The roster itself becomes a dedicated landscape card system. */
+  .comparison-grid .player-list--fixed-roster {
+    display: grid !important;
+    gap: 7px !important;
+    padding: 7px !important;
+    background: #f6f9fc !important;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row.player-row--scenario {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 0 !important;
+    min-height: 104px !important;
+    padding: 10px 10px !important;
+    border: 1px solid #dbe5ee !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row--selected {
+    box-shadow: inset 3px 0 0 #7faed9 !important;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row--disabled {
+    background: #f4f5f6 !important;
+    opacity: .74;
+  }
+
+  /* Rank + reference at the top, H/F marker at the bottom. */
+  .comparison-grid .player-ranks {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    align-self: stretch !important;
+    gap: 3px !important;
+    padding: 4px 9px 2px 0 !important;
+    border-right: 1px solid #e4eaf0 !important;
+  }
+  .comparison-grid .player-ranks strong {
+    font-size: .98rem !important;
+    line-height: 1 !important;
+  }
+  .comparison-grid .player-ranks span {
+    margin: 0 !important;
+    font-size: .48rem !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+  }
+  .comparison-grid .player-gender-picto {
+    display: grid !important;
+    place-items: center !important;
+    margin-top: auto !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    font-size: 0 !important;
+  }
+  .comparison-grid .player-gender-picto svg { display: none !important; }
+  .comparison-grid .player-gender-picto::after {
+    font-size: .54rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+  .comparison-grid .player-gender-picto--male::after { content: "H"; }
+  .comparison-grid .player-gender-picto--female::after { content: "F"; }
+
+  .comparison-grid .player-row__main {
+    grid-column: 2 !important;
+    grid-row: 1 / span 2 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Name on the left, status + toggle on the right. */
+  .comparison-grid .player-name-line {
+    display: block !important;
+    min-height: 30px !important;
+    padding: 1px 118px 0 0 !important;
+  }
+  .comparison-grid .player-name-line .player-link,
+  .comparison-grid .player-name-line > strong {
+    display: block !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    color: var(--text-primary) !important;
+    font-size: .69rem !important;
+    font-weight: 800 !important;
+    line-height: 1.17 !important;
+  }
+  .comparison-grid .player-name-first,
+  .comparison-grid .player-name-last { display: block !important; }
+
+  /* Hide desktop-only information in landscape: it is what made the previous version unreadable. */
+  .comparison-grid .player-name-line .player-status--desktop-only,
+  .comparison-grid .player-meta-line,
+  .comparison-grid .player-impact,
+  .comparison-grid .player-row__actions {
+    display: none !important;
+  }
+
+  /* Rating and trend reuse the mobile visual hierarchy. */
+  .comparison-grid .player-mobile-core {
+    display: grid !important;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) !important;
+    gap: 10px !important;
+    margin-top: 7px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #e8edf2 !important;
+  }
+  .comparison-grid .player-mobile-core > div { min-width: 0 !important; }
+  .comparison-grid .player-mobile-core span {
+    display: block !important;
+    margin: 0 !important;
+    color: var(--text-secondary) !important;
+    font-size: .56rem !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+  }
+  .comparison-grid .player-mobile-core strong {
+    display: block !important;
+    margin-top: 3px !important;
+    color: var(--text-primary) !important;
+    font-size: 1.02rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+  }
+
+  /* One action group, truly horizontal. */
+  .comparison-grid .player-mobile-actions {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 3 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    width: auto !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .comparison-grid .player-mobile-actions .player-status {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+    padding: 0 7px !important;
+    font-size: .5rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+  .comparison-grid .player-status__desktop { display: none !important; }
+  .comparison-grid .player-status__mobile { display: inline !important; }
+  .comparison-grid .player-mobile-actions .player-switch {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+  .comparison-grid .player-mobile-actions .player-switch > span { display: none !important; }
+  .comparison-grid .player-mobile-actions .player-switch i {
+    position: relative !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  /* Profile page: a more compact landscape scale so the chart remains dominant. */
+  .player-detail .player-hero {
+    padding: 16px 20px !important;
+    border-radius: 18px !important;
+  }
+  .player-detail .player-hero h1 {
+    font-size: clamp(1.55rem, 4vw, 2.25rem) !important;
+    line-height: 1 !important;
+  }
+  .player-detail .player-meta { margin-top: 6px !important; font-size: .72rem !important; }
+  .player-detail .player-rating-block {
+    min-width: 132px !important;
+    padding: 10px 12px !important;
+  }
+  .player-detail .player-rating-block strong { font-size: 1.7rem !important; }
+  .player-detail .player-rating-block span,
+  .player-detail .player-rating-block small { font-size: .58rem !important; }
+
+  .player-detail .player-detail-grid {
+    grid-template-columns: minmax(210px, .66fr) minmax(0, 1.6fr) !important;
+    gap: 12px !important;
+    margin-top: 12px !important;
+  }
+  .player-detail .detail-card {
+    padding: 14px !important;
+    border-radius: 15px !important;
+  }
+  .player-detail .detail-card h2 { font-size: 1.02rem !important; }
+  .player-detail .detail-card__heading { gap: 8px !important; margin-bottom: 8px !important; }
+  .player-detail .detail-card__heading > strong,
+  .player-detail .detail-card__heading > span { font-size: .61rem !important; }
+
+  .player-detail .profile-facts { margin: 4px 0 10px !important; }
+  .player-detail .profile-facts div {
+    grid-template-columns: 92px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 6px 0 !important;
+  }
+  .player-detail .profile-facts dt {
+    font-size: .61rem !important;
+    line-height: 1.15 !important;
+  }
+  .player-detail .profile-facts dd {
+    font-size: .73rem !important;
+    line-height: 1.12 !important;
+  }
+  .player-detail .pdga-link { font-size: .69rem !important; }
+
+  .player-detail .rating-history-list { gap: 5px !important; margin-top: 8px !important; }
+  .player-detail .rating-history-list div { padding: 7px !important; }
+  .player-detail .rating-history-list span { font-size: .55rem !important; }
+  .player-detail .rating-history-list strong { font-size: .84rem !important; }
+
+  .player-detail .stats-grid { gap: 7px !important; }
+  .player-detail .stat-tile { min-height: 68px !important; padding: 8px !important; }
+  .player-detail .stat-tile span { font-size: .56rem !important; }
+  .player-detail .stat-tile strong { margin-top: 4px !important; font-size: .88rem !important; }
+}
