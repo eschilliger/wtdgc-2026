@@ -1,0 +1,301 @@
+/* Compact landscape/tablet mode: preserve the desktop face-to-face comparison. */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) and (max-height: 600px) {
+  .shell {
+    max-width: none;
+    padding: 12px 12px 32px;
+  }
+
+  .hero {
+    padding: 18px 20px;
+    gap: 18px;
+    border-radius: 18px;
+  }
+
+  .hero-copy { margin-top: 10px; font-size: .86rem; line-height: 1.45; }
+  .hero-badge { min-width: 110px; padding: 12px 14px; border-radius: 14px; }
+  .hero-badge strong { font-size: 1.5rem; }
+
+  .france-section,
+  .comparison-section {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .section-heading {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .section-heading h2 { font-size: 1.3rem; }
+  .division-toggle button { padding: 7px 11px; }
+
+  .comparison-controls {
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .comparison-controls select {
+    min-height: 40px;
+    padding-inline: 10px;
+    border-radius: 10px;
+  }
+
+  .versus {
+    width: 36px;
+    height: 36px;
+  }
+
+  .duel-summary--scenario { margin-bottom: 12px; }
+  .duel-summary__headline { padding: 12px 14px; }
+  .duel-summary__actions {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .duel-reset { width: auto; }
+  .duel-metrics { grid-template-columns: repeat(5,minmax(0,1fr)); }
+  .duel-metrics .comparison-metric { padding: 9px 10px; }
+
+  /* Core requirement: keep both opponents visible left/right. */
+  .comparison-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 10px;
+  }
+
+  .comparison-grid > .team-card { min-width: 0; }
+
+  .team-card { border-radius: 14px; }
+  .team-card__header {
+    align-items: center;
+    padding: 10px 11px;
+    gap: 8px;
+  }
+  .team-card__header > div:first-child { gap: 7px; }
+  .team-card__flag { font-size: 1.55rem; }
+  .team-card__identity h3 { font-size: .95rem; }
+  .team-card__eyebrow { font-size: .58rem; }
+
+  .team-card__header-actions {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .team-card__header-actions .rating-summary { text-align: right; }
+  .rating-summary strong { font-size: 1.18rem; }
+  .rating-summary span { font-size: .54rem; }
+  .rating-summary small { font-size: .5rem; }
+  .team-reset {
+    width: auto;
+    padding: 6px 7px;
+    font-size: .55rem;
+  }
+
+  .team-card__metrics--v42,
+  .team-card__metrics--v4 {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .comparison-metric { padding: 8px 9px; }
+  .comparison-metric span { font-size: .56rem; }
+  .comparison-metric strong { font-size: .9rem; }
+  .comparison-metric small { font-size: .52rem; }
+
+  .team-depth-strip {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .team-depth-strip > span { font-size: .56rem; }
+  .team-depth-desktop { display: flex !important; gap: 10px; }
+  .team-depth-desktop > span { gap: 3px; font-size: .54rem; }
+  .team-depth-desktop strong { font-size: .7rem; }
+  .team-depth-desktop small { display: none; }
+  .team-depth-mobile { display: none !important; }
+
+  .scenario-story {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .scenario-story > strong { font-size: .58rem; }
+  .scenario-story > div { gap: 4px 8px; font-size: .55rem; }
+  .scenario-note,
+  .scenario-alert { padding: 8px 10px; }
+  .scenario-note strong,
+  .scenario-alert strong { font-size: .62rem; }
+  .scenario-note span,
+  .scenario-alert span { font-size: .55rem; }
+
+  /* Restore a compact desktop-style roster even when landscape width is <=760px. */
+  .player-list--fixed-roster {
+    display: grid;
+    gap: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .player-list--fixed-roster .player-row.player-row--scenario {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px minmax(0,1fr) 112px;
+    gap: 0 7px;
+    min-height: 76px;
+    padding: 8px 9px;
+    border: 0;
+    border-top: 1px solid #eef2f5;
+    border-radius: 0;
+    background: #fff;
+    overflow: hidden;
+  }
+  .player-list--fixed-roster .player-row.player-row--scenario:first-child { border-top: 0; }
+  .player-list--fixed-roster .player-row--disabled { background: #f4f5f6; }
+
+  .player-ranks {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    gap: 3px;
+    padding: 0 6px 0 0;
+    border-right: 1px solid #e5eaf0;
+  }
+  .player-ranks strong { font-size: .9rem; line-height: 1; }
+  .player-ranks span { margin-top: 0; font-size: .47rem; text-align: center; }
+  .player-gender-picto { display: none !important; }
+
+  .player-row__main {
+    grid-column: 2;
+    min-width: 0;
+  }
+  .player-name-line {
+    position: static;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    min-height: 0;
+    padding-right: 0 !important;
+  }
+  .player-name-line .player-link,
+  .player-name-line > strong {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    font-size: .64rem;
+    line-height: 1.12;
+  }
+  .player-name-first,
+  .player-name-last { display: inline; }
+
+  .player-name-line .player-status--desktop-only {
+    position: static !important;
+    display: inline-flex !important;
+  }
+  .player-status__desktop { display: inline !important; }
+  .player-status__mobile { display: none !important; }
+  .player-status {
+    position: static !important;
+    max-width: none;
+    padding: 2px 5px;
+    font-size: .46rem;
+    line-height: 1;
+  }
+
+  .player-meta-line {
+    display: block !important;
+    margin-top: 4px !important;
+    font-size: .53rem !important;
+    line-height: 1.2;
+  }
+  .player-impact {
+    display: block !important;
+    margin-top: 3px;
+    font-size: .5rem;
+    line-height: 1.2;
+  }
+  .player-mobile-core,
+  .player-mobile-actions { display: none !important; }
+
+  .player-row__actions {
+    grid-column: 3;
+    display: grid !important;
+    grid-template-columns: minmax(44px,1fr) 56px !important;
+    align-items: center;
+    gap: 4px !important;
+    width: 112px !important;
+    min-width: 112px !important;
+    max-width: 112px !important;
+    margin: 0 !important;
+    justify-self: end;
+  }
+  .player-row__rating { min-width: 0; text-align: right !important; }
+  .player-row__rating strong { font-size: .9rem !important; }
+  .player-row__rating span,
+  .player-row__rating small { font-size: .46rem !important; line-height: 1.15; }
+  .player-row__rating .player-rating-trend { margin-top: 3px; }
+  .player-toggle--desktop {
+    display: inline-flex !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    padding: 5px 3px !important;
+    font-size: .5rem !important;
+  }
+
+  /* Keep the six reading face-to-face as on desktop. */
+  .lineup-matchups--v43 { margin-top: 14px; }
+  .lineup-matchups__heading {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+  }
+  .lineup-matchups__heading > span { text-align: right; font-size: .58rem; }
+  .lineup-matchup-row--v43 {
+    grid-template-columns: 30px minmax(0,1fr) 48px 44px 48px minmax(0,1fr) !important;
+    grid-template-rows: auto !important;
+    gap: 6px !important;
+    min-height: 54px;
+    padding: 7px 9px;
+  }
+  .lineup-matchup-row--v43 .lineup-rank {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: .68rem;
+  }
+  .lineup-matchup-row--v43 .lineup-matchup-player--a {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .lineup-matchup-row--v43 .lineup-matchup-player--b {
+    grid-column: 6;
+    grid-row: 1;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .lineup-matchup-row--v43 .lineup-matchup-player span { font-size: .6rem; }
+  .lineup-matchup-row--v43 .lineup-matchup-player small { font-size: .48rem; }
+  .lineup-matchup-row--v43 .lineup-rating { font-size: .78rem; }
+  .lineup-matchup-row--v43 .lineup-rating:nth-of-type(1) { grid-column: 3; grid-row: 1; }
+  .lineup-matchup-row--v43 .lineup-matchup-gap {
+    grid-column: 4;
+    grid-row: 1;
+    display: block;
+    min-width: 38px;
+    padding: 4px;
+    font-size: .55rem;
+  }
+  .lineup-matchup-row--v43 .lineup-rating:nth-of-type(2) { grid-column: 5; grid-row: 1; }
+}
