@@ -235,14 +235,42 @@
   .historyRow small { display: none; }
 }
 
-/* Dedicated landscape/tablet sizing: keep the graph useful but less dominant vertically. */
+/* Landscape phone/tablet: use the available width instead of inheriting portrait stacking. */
 @media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) {
-  .root { gap: 10px; }
-  .kpis { gap: 6px; }
-  .kpis > div { padding: 8px; }
-  .toolbar button { padding: 5px 9px; }
-  .wrap { padding-bottom: 18px; }
-  .chart { height: 190px; }
-  .yAxis { bottom: 18px; }
-  .axis { margin-top: 5px; }
+  .root { gap: 9px; }
+
+  .kpis {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .kpis > div,
+  .kpis > div:first-child {
+    grid-column: auto;
+    min-height: 54px;
+    padding: 8px;
+  }
+
+  .kpis span,
+  .kpis small { font-size: .58rem; }
+  .kpis strong { margin-top: 3px; font-size: .92rem; }
+
+  .toolbar {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
+
+  .toolbar button {
+    padding: 5px 9px;
+    font-size: .66rem;
+  }
+
+  .wrap {
+    padding: 0 0 18px 42px;
+  }
+
+  .chart { height: 155px; }
+  .yAxis { bottom: 18px; width: 38px; }
+  .axis { margin-top: 4px; }
+  .touchHint { display: none; }
 }
