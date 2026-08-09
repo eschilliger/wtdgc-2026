@@ -214,9 +214,8 @@ function PlayerRow({ player, team, disabledIds, rank, refRank, selected, divisio
       <div className="player-row__main">
         <div className="player-name-line">
           <PlayerName player={player} division={division} />
-          <span className={`player-status player-status--${statusClass}`}>
+          <span className={`player-status player-status--${statusClass} player-status--desktop-only`}>
             <span className="player-status__desktop">{desktopStatusLabel}</span>
-            <span className="player-status__mobile">{mobileStatusLabel}</span>
           </span>
         </div>
         <span className="player-meta-line">{player.gender === "F" ? "Féminine" : "Homme"}{player.pdgaNumber ? ` · PDGA #${player.pdgaNumber}` : ""}</span>
@@ -238,8 +237,10 @@ function PlayerRow({ player, team, disabledIds, rank, refRank, selected, divisio
       </div>
 
       <div className="player-mobile-actions">
+        <span className={`player-status player-status--${statusClass}`}>
+          <span className="player-status__mobile">{mobileStatusLabel}</span>
+        </span>
         <label className="player-switch">
-          <span>{disabled ? "Indispo" : "Actif"}</span>
           <input type="checkbox" checked={!disabled} onChange={onToggle} aria-label={`${disabled ? "Réactiver" : "Désactiver"} ${player.firstName} ${player.lastName}`} />
           <i aria-hidden="true" />
         </label>

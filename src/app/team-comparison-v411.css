@@ -1,34 +1,67 @@
 @import "./team-comparison-v410.css";
 
-/* Mobile: put status and switch on the exact same visual baseline. */
+/* Mobile: status and switch are rendered in one shared action group. */
 @media (max-width:760px) {
-  .player-status {
-    top: 13px !important;
-    right: 60px !important;
-    box-sizing: border-box !important;
-    height: 24px !important;
-    min-height: 24px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    line-height: 22px !important;
+  .player-name-line .player-status--desktop-only {
+    display: none !important;
+  }
+
+  .player-name-line {
+    padding-right: 132px !important;
   }
 
   .player-mobile-actions {
+    position: absolute !important;
     top: 13px !important;
     right: 12px !important;
+    z-index: 2;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  .player-mobile-actions .player-status {
+    position: static !important;
+    inset: auto !important;
     box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     height: 24px !important;
     min-height: 24px !important;
     margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
   }
 
-  .player-switch,
-  .player-switch i {
+  .player-mobile-actions .player-status__mobile {
+    display: inline !important;
+  }
+
+  .player-mobile-actions .player-switch {
+    position: static !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto;
+    width: 40px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+  }
+
+  .player-mobile-actions .player-switch > span {
+    display: none !important;
+  }
+
+  .player-mobile-actions .player-switch i {
     box-sizing: border-box !important;
     width: 40px !important;
     height: 24px !important;
@@ -38,6 +71,12 @@
 }
 
 @media (max-width:380px) {
-  .player-status { right: 58px !important; }
-  .player-mobile-actions { right: 10px !important; }
+  .player-name-line {
+    padding-right: 126px !important;
+  }
+
+  .player-mobile-actions {
+    right: 10px !important;
+    gap: 6px !important;
+  }
 }
