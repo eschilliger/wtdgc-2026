@@ -21,7 +21,7 @@
   /* Team header: identity on the left, compact score/action block on the right. */
   .comparison-grid .team-card__header {
     min-height: 92px !important;
-    padding: 14px 14px !important;
+    padding: 14px !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     align-items: center !important;
     column-gap: 14px !important;
@@ -60,7 +60,6 @@
   .comparison-grid .team-card__header-actions {
     display: grid !important;
     grid-template-columns: auto auto !important;
-    grid-template-rows: auto !important;
     align-items: center !important;
     justify-items: end !important;
     gap: 10px !important;
@@ -191,39 +190,5 @@
   .comparison-grid .player-mobile-actions .player-switch input:focus-visible + i {
     outline: 3px solid rgba(14,116,144,.25) !important;
     outline-offset: 2px !important;
-  }
-
-  /* Player detail landscape: use the available width, not the mobile KPI stack. */
-  .player-detail [class*="RatingHistoryChart_kpis"] {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 6px !important;
-  }
-
-  .player-detail [class*="RatingHistoryChart_kpis"] > div,
-  .player-detail [class*="_kpis_"] > div {
-    grid-column: auto !important;
-    min-height: 54px !important;
-    padding: 8px !important;
-  }
-
-  .player-detail [class*="RatingHistoryChart_root"],
-  .player-detail [class*="_root_"] {
-    gap: 9px !important;
-  }
-
-  .player-detail [class*="RatingHistoryChart_toolbar"],
-  .player-detail [class*="_toolbar_"] {
-    flex-wrap: nowrap !important;
-    justify-content: flex-end !important;
-  }
-
-  .player-detail [class*="RatingHistoryChart_wrap"],
-  .player-detail [class*="_wrap_"] {
-    padding-bottom: 18px !important;
-  }
-
-  .player-detail [class*="RatingHistoryChart_chart"],
-  .player-detail [class*="_chart_"] {
-    height: 155px !important;
   }
 }
