@@ -28,7 +28,6 @@
     align-items: center !important;
   }
 
-  /* Row padding is 13px: align the switch baseline with the status inside player-name-line. */
   .player-mobile-actions {
     top: 13px !important;
     right: 12px !important;
@@ -56,54 +55,135 @@
   .player-mobile-actions { right: 10px !important; }
 }
 
-/* Lightweight simulation explainer without adding visual weight to every metric. */
-.duel-summary .eyebrow {
-  position: relative;
-  width: fit-content;
-  padding-right: 24px;
+.duel-summary--scenario { position: relative; }
+
+.duel-summary__title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.duel-summary .eyebrow::after {
-  content: "i";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  display: grid;
+.duel-summary__title-row .eyebrow {
+  margin: 0;
+  padding: 0;
+}
+
+.duel-info {
+  display: inline-grid;
   place-items: center;
-  width: 17px;
-  height: 17px;
-  transform: translateY(-50%);
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
   border: 1px solid #9fb0c2;
   border-radius: 50%;
   background: #fff;
   color: var(--text-link);
-  font-size: .66rem;
+  font-size: .72rem;
   font-weight: 900;
   line-height: 1;
 }
 
-.duel-summary .eyebrow::before {
-  content: "Scénario : écart avec les compositions actuellement simulées. Référence : écart sans absence. Hommes/Féminines : comparaison des moyennes retenues. Dynamique 12 mois : différence de tendance récente entre les deux équipes.";
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 8px);
-  left: 0;
-  display: none;
-  width: min(360px, 78vw);
-  padding: 10px 12px;
-  border: 1px solid #cbd6e1;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(20,43,68,.12);
-  color: var(--text-body);
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1.45;
-  text-transform: none;
+.duel-info-backdrop {
+  position: fixed;
+  z-index: 39;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
 }
 
-.duel-summary .eyebrow:hover::before,
-.duel-summary .eyebrow:active::before {
-  display: block;
+.duel-info-popover {
+  position: absolute;
+  z-index: 40;
+  top: 44px;
+  left: 16px;
+  width: min(390px, calc(100% - 32px));
+  padding: 14px;
+  border: 1px solid #cbd6e1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(20,43,68,.16);
+  color: var(--text-body);
+}
+
+.duel-info-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.duel-info-popover__header > strong {
+  color: var(--text-primary);
+  font-size: .82rem;
+}
+
+.duel-info-popover__header button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #d4dde6;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.duel-info-popover dl { margin: 0; }
+
+.duel-info-popover dl > div {
+  padding: 8px 0;
+  border-top: 1px solid #edf1f5;
+}
+
+.duel-info-popover dl > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.duel-info-popover dt {
+  margin: 0 0 2px;
+  color: var(--text-primary);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.duel-info-popover dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: .7rem;
+  line-height: 1.4;
+}
+
+.duel-info-popover__rule {
+  display: grid;
+  gap: 3px;
+  margin: 10px 0 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #f4f7fa;
+  font-size: .7rem;
+  line-height: 1.35;
+}
+
+.duel-info-popover__rule strong { color: var(--text-positive); }
+.duel-info-popover__rule span { color: var(--text-negative); }
+
+@media (max-width:760px) {
+  .duel-info-popover {
+    top: 42px;
+    left: 12px;
+    width: calc(100% - 24px);
+    padding: 13px;
+  }
+
+  .duel-info-popover__header > strong { font-size: .78rem; }
+  .duel-info-popover dt { font-size: .7rem; }
+  .duel-info-popover dd,
+  .duel-info-popover__rule { font-size: .68rem; }
 }
