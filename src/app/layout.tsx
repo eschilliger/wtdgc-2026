@@ -4,6 +4,7 @@ import "./team-comparison-landscape.css";
 import "./team-comparison-landscape-hybrid.css";
 import "./team-comparison-landscape-dedicated.css";
 import "./team-comparison-landscape-polish.css";
+import "./comparison-flow.css";
 
 export const metadata: Metadata = {
   title: "WTDGC 2026 Scout",
