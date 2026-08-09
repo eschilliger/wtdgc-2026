@@ -1,6 +1,6 @@
 @import "./team-comparison-v410.css";
 
-/* Mobile: the status and toggle share one deterministic two-column control group. */
+/* Latest mobile control override. Loaded after the comparison base chain. */
 @media (max-width:760px) {
   .player-name-line .player-status--desktop-only {
     display: none !important;
@@ -15,14 +15,13 @@
     top: 13px !important;
     right: 12px !important;
     z-index: 2;
-    display: grid !important;
-    grid-template-columns: max-content 40px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
-    justify-items: center !important;
-    justify-content: end !important;
-    column-gap: 10px !important;
-    row-gap: 0 !important;
-    width: max-content !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    width: auto !important;
     height: 24px !important;
     min-height: 24px !important;
     margin: 0 !important;
@@ -32,27 +31,28 @@
 
   .player-mobile-actions > .player-status {
     position: static !important;
-    inset: auto !important;
-    align-self: center !important;
-    justify-self: end !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    flex: 0 0 auto !important;
     box-sizing: border-box !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: max-content !important;
+    width: auto !important;
     max-width: none !important;
     height: 24px !important;
     min-height: 24px !important;
     margin: 0 !important;
     padding: 0 8px !important;
     transform: none !important;
-    vertical-align: middle !important;
     line-height: 1 !important;
     white-space: nowrap !important;
   }
 
   .player-mobile-actions > .player-status .player-status__mobile {
-    display: block !important;
+    display: inline !important;
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
@@ -60,9 +60,11 @@
 
   .player-mobile-actions > .player-switch {
     position: static !important;
-    inset: auto !important;
-    align-self: center !important;
-    justify-self: start !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    flex: 0 0 40px !important;
     box-sizing: border-box !important;
     display: block !important;
     width: 40px !important;
@@ -102,6 +104,6 @@
 
   .player-mobile-actions {
     right: 10px !important;
-    column-gap: 8px !important;
+    gap: 8px !important;
   }
 }
