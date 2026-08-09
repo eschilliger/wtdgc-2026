@@ -184,16 +184,7 @@ function PlayerName({ player, division }: { player: ComparisonPlayer; division: 
     : <strong>{content}</strong>;
 }
 
-function PlayerRow({
-  player,
-  team,
-  disabledIds,
-  rank,
-  refRank,
-  selected,
-  division,
-  onToggle,
-}: {
+function PlayerRow({ player, team, disabledIds, rank, refRank, selected, division, onToggle }: {
   player: ComparisonPlayer;
   team: ComparisonTeam;
   disabledIds: Set<string>;
@@ -293,17 +284,7 @@ function TeamCard({ team, featured = false, disabledIds, onTogglePlayer, onReset
         : <div className="scenario-note"><strong>Six actif</strong><span>Les rangs J1 à J6 sont recalculés dans le scénario, sans déplacer les joueurs dans la liste.</span></div>}
 
       <div className="player-list player-list--fixed-roster">
-        {allPlayers.map((player) => <PlayerRow
-          key={player.id}
-          player={player}
-          team={team}
-          disabledIds={disabledIds}
-          rank={scenarioRank.get(player.id) ?? null}
-          refRank={rosterReferenceRank.get(player.id) ?? null}
-          selected={scenario.selectedIds.has(player.id)}
-          division={team.division}
-          onToggle={() => onTogglePlayer(player.id)}
-        />)}
+        {allPlayers.map((player) => <PlayerRow key={player.id} player={player} team={team} disabledIds={disabledIds} rank={scenarioRank.get(player.id) ?? null} refRank={rosterReferenceRank.get(player.id) ?? null} selected={scenario.selectedIds.has(player.id)} division={team.division} onToggle={() => onTogglePlayer(player.id)} />)}
       </div>
     </article>
   );
@@ -338,6 +319,7 @@ function LineupMatchups({ teamA, teamB, disabledA, disabledB }: { teamA: Compari
 }
 
 function ComparisonSummary({ teamA, teamB, disabledA, disabledB, onResetDuel }: { teamA: ComparisonTeam; teamB: ComparisonTeam; disabledA: Set<string>; disabledB: Set<string>; onResetDuel: () => void }) {
+  const [helpOpen, setHelpOpen] = useState(false);
   const nominalA = lineupSummary(teamA.players);
   const nominalB = lineupSummary(teamB.players);
   const a = lineupSummary(teamA.players, disabledA);
@@ -352,7 +334,32 @@ function ComparisonSummary({ teamA, teamB, disabledA, disabledB, onResetDuel }: 
 
   return (
     <div className="duel-summary duel-summary--scenario">
-      <div className="duel-summary__headline"><div><p className="eyebrow">Simulation de composition</p><h3>{gap === null ? "Comparaison incomplète" : leader ? `${flagEmoji(leader.countryCode)} ${leader.country} devant` : "Équilibre actuel"}</h3></div><div className="duel-summary__actions"><div className="duel-gap"><strong>{gap === null ? "—" : Math.abs(gap)}</strong><span>points d'écart</span>{swing !== null ? <small>mouvement vs référence : {signed(swing)}</small> : null}</div><button type="button" className="duel-reset" onClick={onResetDuel} disabled={disabledA.size + disabledB.size === 0}>Réinitialiser le duel</button></div></div>
+      <div className="duel-summary__headline">
+        <div>
+          <div className="duel-summary__title-row">
+            <p className="eyebrow">Simulation de composition</p>
+            <button type="button" className="duel-info" aria-label="Comprendre les statistiques de simulation" aria-expanded={helpOpen} onClick={() => setHelpOpen((open) => !open)}>i</button>
+          </div>
+          <h3>{gap === null ? "Comparaison incomplète" : leader ? `${flagEmoji(leader.countryCode)} ${leader.country} devant` : "Équilibre actuel"}</h3>
+        </div>
+        <div className="duel-summary__actions"><div className="duel-gap"><strong>{gap === null ? "—" : Math.abs(gap)}</strong><span>points d'écart</span>{swing !== null ? <small>mouvement vs référence : {signed(swing)}</small> : null}</div><button type="button" className="duel-reset" onClick={onResetDuel} disabled={disabledA.size + disabledB.size === 0}>Réinitialiser le duel</button></div>
+      </div>
+
+      {helpOpen ? <>
+        <button type="button" className="duel-info-backdrop" aria-label="Fermer l'aide" onClick={() => setHelpOpen(false)} />
+        <aside className="duel-info-popover" role="dialog" aria-label="Comprendre la simulation">
+          <div className="duel-info-popover__header"><strong>Comprendre la simulation</strong><button type="button" aria-label="Fermer" onClick={() => setHelpOpen(false)}>×</button></div>
+          <dl>
+            <div><dt>Écart scénario</dt><dd>Différence entre les deux équipes avec les absences actuellement simulées.</dd></div>
+            <div><dt>Écart référence</dt><dd>Différence entre les deux équipes sans aucune absence.</dd></div>
+            <div><dt>Écart hommes</dt><dd>Comparaison des moyennes des 4 hommes retenus.</dd></div>
+            <div><dt>Écart féminines</dt><dd>Comparaison des moyennes des 2 féminines retenues.</dd></div>
+            <div><dt>Dynamique 12 mois</dt><dd>Différence entre les évolutions moyennes récentes des deux équipes.</dd></div>
+          </dl>
+          <p className="duel-info-popover__rule"><strong>+ = avantage {teamA.country}</strong><span>− = avantage {teamB.country}</span></p>
+        </aside>
+      </> : null}
+
       <div className="duel-metrics"><Metric label="Écart scénario" value={gap === null ? "—" : signed(gap)} detail={`${teamA.country} - ${teamB.country}`} /><Metric label="Écart référence" value={nominalGap === null ? "—" : signed(nominalGap)} detail="sans absence" /><Metric label="Écart hommes" value={menGap === null ? "—" : signed(menGap)} detail="4 hommes" /><Metric label="Écart féminines" value={womenGap === null ? "—" : signed(womenGap)} detail="2 féminines" /><Metric label="Dynamique 12 mois" value={trendGap === null ? "—" : signed(trendGap)} detail={`${teamA.country} - ${teamB.country}`} /></div>
     </div>
   );
