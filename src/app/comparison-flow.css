@@ -1,0 +1,22 @@
+/* Comparison flow: configure both team scenarios first, then show the duel summary and six reading. */
+.comparison-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-section > .section-heading,
+.comparison-section > .comparison-controls {
+  order: 0;
+}
+
+.comparison-section > .comparison-grid {
+  order: 1;
+}
+
+.comparison-section > .duel-summary {
+  order: 2;
+}
+
+.comparison-section > .lineup-matchups {
+  order: 3;
+}
