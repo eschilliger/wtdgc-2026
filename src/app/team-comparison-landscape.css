@@ -113,7 +113,7 @@
     padding: 8px 10px;
   }
   .team-depth-strip > span { font-size: .56rem; }
-  .team-depth-desktop { gap: 10px; }
+  .team-depth-desktop { display: flex !important; gap: 10px; }
   .team-depth-desktop > span { gap: 3px; font-size: .54rem; }
   .team-depth-desktop strong { font-size: .7rem; }
   .team-depth-desktop small { display: none; }
