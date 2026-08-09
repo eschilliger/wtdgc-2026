@@ -19,40 +19,10 @@
   .player-gender-picto--female { border-radius: 50% !important; }
 
   .player-name-line { padding-right: 142px !important; }
-
-  .player-status {
-    top: 0 !important;
-    right: 48px !important;
-    height: 24px;
-    display: inline-flex !important;
-    align-items: center !important;
-  }
-
-  .player-mobile-actions {
-    top: 13px !important;
-    right: 12px !important;
-    height: 24px;
-    display: flex !important;
-    align-items: center !important;
-  }
-
-  .player-switch {
-    width: 40px !important;
-    height: 24px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-  }
-
-  .player-switch i {
-    width: 40px !important;
-    height: 24px !important;
-  }
 }
 
 @media (max-width:380px) {
   .player-name-line { padding-right: 136px !important; }
-  .player-status { right: 46px !important; }
-  .player-mobile-actions { right: 10px !important; }
 }
 
 .duel-summary--scenario { position: relative; }
