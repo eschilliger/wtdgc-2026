@@ -1,5 +1,6 @@
 @import "./team-comparison-v41.css";
 @import "./team-comparison-v411.css";
+@import "./team-comparison-landscape.css";
 
 .team-card__header-actions {
   display: flex;
