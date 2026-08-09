@@ -16,11 +16,26 @@
 .comparison-section > .duel-summary {
   order: 2;
   margin-block: 20px !important;
+  overflow: visible !important;
+  position: relative;
+  z-index: 2;
 }
 
 .comparison-section > .lineup-matchups {
   order: 3;
   margin-top: 0 !important;
+}
+
+/* Keep simulation help above surrounding cards and inside the viewport instead of clipping it at the summary boundary. */
+.comparison-section .duel-info-popover {
+  z-index: 40 !important;
+  max-width: min(420px, calc(100vw - 32px)) !important;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+}
+
+.comparison-section .duel-info-backdrop {
+  z-index: 39 !important;
 }
 
 /* Make player-to-player rating gaps immediately distinguishable. The signed value remains the primary cue; color reinforces it. */
@@ -60,12 +75,27 @@
   .comparison-section .duel-metrics .comparison-metric > small {
     font-size: .64rem !important;
   }
+
+  .comparison-section .duel-info-popover {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(420px, calc(100vw - 36px)) !important;
+  }
 }
 
 /* Mobile portrait: slightly tighter rhythm + a lightweight orientation hint. */
 @media (max-width: 599px) and (orientation: portrait) {
   .comparison-section > .duel-summary {
     margin-block: 16px !important;
+  }
+
+  .comparison-section .duel-info-popover {
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
   }
 
   .comparison-controls::after {
