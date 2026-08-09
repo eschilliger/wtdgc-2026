@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./team-comparison-landscape.css";
+import "./team-comparison-landscape-hybrid.css";
 
 export const metadata: Metadata = {
   title: "WTDGC 2026 Scout",

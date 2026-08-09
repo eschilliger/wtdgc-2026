@@ -1,0 +1,265 @@
+/* Landscape/tablet refinement: keep the two-team desktop confrontation,
+   but use the mobile information hierarchy inside each player card. */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) and (max-height: 600px) {
+  /* Team header: less horizontal compression. */
+  .comparison-grid .team-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .comparison-grid .team-card__header-actions {
+    display: grid;
+    grid-template-columns: auto;
+    justify-items: end;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .comparison-grid .rating-summary {
+    text-align: right;
+    max-width: 148px;
+  }
+
+  .comparison-grid .rating-summary strong { font-size: 1.15rem; }
+  .comparison-grid .rating-summary span { font-size: .53rem; line-height: 1.2; }
+  .comparison-grid .rating-summary small { font-size: .49rem; line-height: 1.15; }
+  .comparison-grid .team-reset { padding: 5px 7px; }
+
+  /* Player roster: compact cards inspired by the mobile layout. */
+  .comparison-grid .player-list--fixed-roster {
+    display: grid;
+    gap: 6px;
+    padding: 6px;
+    background: #f6f9fc;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row.player-row--scenario {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 6px 9px;
+    min-height: 96px;
+    padding: 9px 10px;
+    border: 1px solid #dbe5ee;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row--selected {
+    box-shadow: inset 3px 0 0 #7faed9;
+  }
+
+  .comparison-grid .player-list--fixed-roster .player-row--disabled {
+    background: #f4f5f6;
+    opacity: .72;
+  }
+
+  .comparison-grid .player-ranks {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3px;
+    padding: 4px 7px 2px 0;
+    border-right: 1px solid #e4eaf0;
+  }
+
+  .comparison-grid .player-ranks strong {
+    font-size: .92rem;
+    line-height: 1;
+  }
+
+  .comparison-grid .player-ranks span {
+    margin-top: 0;
+    font-size: .47rem;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .comparison-grid .player-gender-picto {
+    display: grid !important;
+    place-items: center;
+    margin-top: auto !important;
+    width: 19px !important;
+    height: 19px !important;
+    min-width: 19px !important;
+    min-height: 19px !important;
+    font-size: 0 !important;
+  }
+
+  .comparison-grid .player-gender-picto svg { display: none !important; }
+  .comparison-grid .player-gender-picto::after {
+    font-size: .52rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .comparison-grid .player-gender-picto--male::after { content: "H"; }
+  .comparison-grid .player-gender-picto--female::after { content: "F"; }
+
+  .comparison-grid .player-row__main {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-width: 0;
+    padding-right: 0;
+  }
+
+  .comparison-grid .player-name-line {
+    display: block;
+    min-height: 28px;
+    padding-right: 112px !important;
+  }
+
+  .comparison-grid .player-name-line .player-link,
+  .comparison-grid .player-name-line > strong {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    font-size: .66rem;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: normal;
+  }
+
+  .comparison-grid .player-name-first,
+  .comparison-grid .player-name-last { display: block; }
+
+  /* Desktop meta/action details are too dense at this width. */
+  .comparison-grid .player-name-line .player-status--desktop-only,
+  .comparison-grid .player-meta-line,
+  .comparison-grid .player-impact,
+  .comparison-grid .player-row__actions {
+    display: none !important;
+  }
+
+  /* Reuse the mobile Rating / Evolution block. */
+  .comparison-grid .player-mobile-core {
+    display: grid !important;
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+    gap: 8px;
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px solid #e8edf2;
+  }
+
+  .comparison-grid .player-mobile-core > div { min-width: 0; }
+  .comparison-grid .player-mobile-core span {
+    display: block;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .52rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .comparison-grid .player-mobile-core strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-primary);
+    font-size: .92rem;
+    line-height: 1.05;
+  }
+
+  /* Mobile-style status + toggle in one compact horizontal group. */
+  .comparison-grid .player-mobile-actions {
+    position: absolute !important;
+    top: 9px !important;
+    right: 9px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    height: 22px !important;
+    margin: 0 !important;
+  }
+
+  .comparison-grid .player-mobile-actions .player-status {
+    position: static !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    font-size: .48rem !important;
+    line-height: 1 !important;
+  }
+
+  .comparison-grid .player-status__desktop { display: none !important; }
+  .comparison-grid .player-status__mobile { display: inline !important; }
+
+  .comparison-grid .player-mobile-actions .player-switch {
+    position: static !important;
+    display: inline-flex !important;
+    width: 34px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+  }
+
+  .comparison-grid .player-mobile-actions .player-switch > span { display: none !important; }
+  .comparison-grid .player-mobile-actions .player-switch i {
+    width: 34px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+  }
+
+  /* Player profile: landscape/tablet typography must not compete with the chart. */
+  .player-detail .player-hero { padding: 20px 24px; border-radius: 20px; }
+  .player-detail .player-hero h1 { font-size: clamp(1.85rem, 5vw, 2.8rem); }
+  .player-detail .player-meta { margin-top: 8px; font-size: .82rem; }
+  .player-detail .player-rating-block { min-width: 150px; padding: 13px 15px; }
+  .player-detail .player-rating-block strong { font-size: 2rem; }
+  .player-detail .player-rating-block span,
+  .player-detail .player-rating-block small { font-size: .65rem; }
+
+  .player-detail .player-detail-grid {
+    grid-template-columns: minmax(230px, .72fr) minmax(0, 1.55fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .player-detail .detail-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .player-detail .detail-card h2 { font-size: 1.18rem; }
+  .player-detail .detail-card__heading { gap: 10px; margin-bottom: 10px; }
+  .player-detail .detail-card__heading > strong,
+  .player-detail .detail-card__heading > span { font-size: .68rem; }
+
+  .player-detail .profile-facts { margin: 6px 0 12px; }
+  .player-detail .profile-facts div {
+    grid-template-columns: 100px minmax(0,1fr);
+    gap: 10px;
+    padding: 8px 0;
+  }
+  .player-detail .profile-facts dt {
+    font-size: .68rem;
+    line-height: 1.2;
+  }
+  .player-detail .profile-facts dd {
+    font-size: .82rem;
+    line-height: 1.18;
+  }
+  .player-detail .pdga-link { font-size: .78rem; }
+
+  .player-detail .rating-history-list { gap: 6px; margin-top: 10px; }
+  .player-detail .rating-history-list div { padding: 8px; }
+  .player-detail .rating-history-list span { font-size: .6rem; }
+  .player-detail .rating-history-list strong { font-size: .92rem; }
+
+  .player-detail .stats-grid { gap: 8px; }
+  .player-detail .stat-tile { min-height: 76px; padding: 10px; }
+  .player-detail .stat-tile span { font-size: .62rem; }
+  .player-detail .stat-tile strong { margin-top: 5px; font-size: .95rem; }
+}
