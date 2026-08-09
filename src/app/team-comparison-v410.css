@@ -1,0 +1,109 @@
+/* Mobile card alignment + accessible gender shape distinction + simulation help. */
+@media (max-width:760px) {
+  .player-ranks {
+    position: relative;
+    justify-content: flex-start;
+    padding-bottom: 8px;
+  }
+
+  .player-gender-picto {
+    margin-top: auto !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-width: 2px !important;
+    font-size: .66rem !important;
+  }
+
+  /* Shape remains readable without relying on color: H = rounded square, F = circle. */
+  .player-gender-picto--male { border-radius: 7px !important; }
+  .player-gender-picto--female { border-radius: 50% !important; }
+
+  .player-name-line { padding-right: 142px !important; }
+
+  .player-status {
+    top: 0 !important;
+    right: 48px !important;
+    height: 24px;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Row padding is 13px: align the switch baseline with the status inside player-name-line. */
+  .player-mobile-actions {
+    top: 13px !important;
+    right: 12px !important;
+    height: 24px;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .player-switch {
+    width: 40px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  .player-switch i {
+    width: 40px !important;
+    height: 24px !important;
+  }
+}
+
+@media (max-width:380px) {
+  .player-name-line { padding-right: 136px !important; }
+  .player-status { right: 46px !important; }
+  .player-mobile-actions { right: 10px !important; }
+}
+
+/* Lightweight simulation explainer without adding visual weight to every metric. */
+.duel-summary .eyebrow {
+  position: relative;
+  width: fit-content;
+  padding-right: 24px;
+}
+
+.duel-summary .eyebrow::after {
+  content: "i";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  border: 1px solid #9fb0c2;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--text-link);
+  font-size: .66rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.duel-summary .eyebrow::before {
+  content: "Scénario : écart avec les compositions actuellement simulées. Référence : écart sans absence. Hommes/Féminines : comparaison des moyennes retenues. Dynamique 12 mois : différence de tendance récente entre les deux équipes.";
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  display: none;
+  width: min(360px, 78vw);
+  padding: 10px 12px;
+  border: 1px solid #cbd6e1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(20,43,68,.12);
+  color: var(--text-body);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.duel-summary .eyebrow:hover::before,
+.duel-summary .eyebrow:active::before {
+  display: block;
+}
