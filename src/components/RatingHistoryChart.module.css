@@ -234,3 +234,15 @@
   .historyRow { grid-template-columns: minmax(0, 1fr) auto auto; }
   .historyRow small { display: none; }
 }
+
+/* Dedicated landscape/tablet sizing: keep the graph useful but less dominant vertically. */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) {
+  .root { gap: 10px; }
+  .kpis { gap: 6px; }
+  .kpis > div { padding: 8px; }
+  .toolbar button { padding: 5px 9px; }
+  .wrap { padding-bottom: 18px; }
+  .chart { height: 190px; }
+  .yAxis { bottom: 18px; }
+  .axis { margin-top: 5px; }
+}
