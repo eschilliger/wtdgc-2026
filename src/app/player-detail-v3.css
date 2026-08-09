@@ -16,14 +16,14 @@
   border-radius: 9px;
   padding: 7px 12px;
   background: transparent;
-  color: #607083;
+  color: var(--text-secondary);
   font-size: .75rem;
   font-weight: 800;
 }
 
 .season-toolbar button.active {
   background: white;
-  color: #123968;
+  color: var(--text-primary);
   box-shadow: 0 2px 8px rgba(20,43,68,.12);
 }
 
@@ -44,6 +44,7 @@
 }
 
 .stat-tile--curated strong {
+  color: var(--text-primary);
   font-size: 1.3rem;
   line-height: 1.1;
 }
@@ -51,20 +52,19 @@
 .stat-tile--curated small {
   display: block;
   margin-top: 5px;
-  color: #7a8796;
+  color: var(--text-muted);
   font-size: .65rem;
   line-height: 1.3;
 }
 
 .season-sync {
   margin: 12px 0 0;
-  color: #7a8796;
+  color: var(--text-muted);
   font-size: .7rem;
 }
 
-/* V4.10: profile values follow the same primary dark-blue as ratings. */
 .profile-facts dd {
-  color: #0f2d4f;
+  color: var(--text-primary);
 }
 
 @media (max-width: 900px) {

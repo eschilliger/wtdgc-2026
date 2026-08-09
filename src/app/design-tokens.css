@@ -1,0 +1,10 @@
+:root {
+  --text-primary: #123968;
+  --text-body: #17202a;
+  --text-secondary: #748193;
+  --text-muted: #8995a3;
+  --text-link: #1d4f8c;
+  --text-positive: #166534;
+  --text-negative: #9f1239;
+  --text-warning: #7e581c;
+}
