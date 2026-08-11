@@ -55,9 +55,10 @@ async function main() {
     else if (delta !== null) changed += 1;
     const registration = registrationMap.get(pdgaNumber);
     const data = profile.data() as { firstName?: string; lastName?: string };
+    const profileName = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
     deltas.push({
       pdgaNumber,
-      name: registration?.name ?? `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim() || `PDGA #${pdgaNumber}`,
+      name: registration?.name ?? (profileName || `PDGA #${pdgaNumber}`),
       team: registration?.team ?? null,
       current: latest.rating,
       previous: previousRating,
