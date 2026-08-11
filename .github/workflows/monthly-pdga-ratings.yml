@@ -34,13 +34,13 @@ jobs:
         id: mail
         shell: bash
         env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: |
-          if [ -n "$RESEND_API_KEY" ]; then
+          if [ -n "$GMAIL_APP_PASSWORD" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "RESEND_API_KEY is not configured yet; monthly data sync will stay idle to preserve atomic update + confirmation."
+            echo "GMAIL_APP_PASSWORD is not configured yet; monthly data sync will stay idle to preserve update + confirmation."
           fi
 
       - name: Prepare Firebase service account
@@ -71,7 +71,7 @@ jobs:
 
       - name: Stop until email delivery is configured
         if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured != 'true'
-        run: echo "PDGA release detected, but RESEND_API_KEY is missing. No Firestore mutation performed."
+        run: echo "PDGA release detected, but GMAIL_APP_PASSWORD is missing. No Firestore mutation performed."
 
       - name: Selectively sync monthly ratings and history
         if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured == 'true' && steps.release.outputs.needs_sync == 'true'
@@ -108,9 +108,9 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
           GOOGLE_CLOUD_PROJECT: wtdgc-2026
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_SMTP_USERNAME: eschilliger@gmail.com
           PDGA_REPORT_TO: eschilliger@gmail.com
-          PDGA_REPORT_FROM: ${{ vars.PDGA_REPORT_FROM }}
         run: |
           npx tsx scripts/send-pdga-monthly-report.ts \
             --json "$RUNNER_TEMP/pdga-monthly-report.json" \
