@@ -73,7 +73,7 @@ jobs:
         if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured != 'true'
         run: echo "PDGA release detected, but RESEND_API_KEY is missing. No Firestore mutation performed."
 
-      - name: Enrich all PDGA profiles
+      - name: Selectively sync monthly ratings and history
         if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured == 'true' && steps.release.outputs.needs_sync == 'true'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
@@ -81,22 +81,9 @@ jobs:
           PDGA_API_USERNAME: ${{ secrets.PDGA_API_USERNAME }}
           PDGA_API_PASSWORD: ${{ secrets.PDGA_API_PASSWORD }}
           PDGA_API_BASE_URL: https://api.pdga.com
-        shell: bash
         run: |
-          for offset in 0 100 200 300; do
-            npx tsx scripts/enrich-all-pdga.ts --offset "$offset" --limit 100
-          done
-
-      - name: Import current rating history for all players
-        if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured == 'true' && steps.release.outputs.needs_sync == 'true'
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-          GOOGLE_CLOUD_PROJECT: wtdgc-2026
-        shell: bash
-        run: |
-          for offset in 0 50 100 150 200 250 300 350; do
-            npx tsx scripts/import-all-pdga-rating-history.ts --offset "$offset" --limit 50 --delay-ms 900 --force
-          done
+          npx tsx scripts/sync-pdga-monthly-selective.ts \
+            --effective-date "${{ steps.release.outputs.effective_date }}"
 
       - name: Recompute scouting metrics
         if: steps.release.outputs.released == 'true' && steps.mail.outputs.configured == 'true' && steps.release.outputs.needs_sync == 'true'
