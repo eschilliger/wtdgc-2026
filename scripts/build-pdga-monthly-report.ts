@@ -3,6 +3,17 @@ import { db } from "../src/server/firebase/admin";
 
 type RegistrationRow = [string, string, "player" | "nptm" | "npts", string, string, number | null, number | null, string, string | null, string];
 type PlayerDelta = { pdgaNumber: number; name: string; team: string | null; current: number; previous: number | null; delta: number | null };
+type SelectiveSync = {
+  totalPlayers?: number;
+  checked?: number;
+  alreadyUpToDate?: number;
+  updatedProfiles?: number;
+  createdHistoryEntries?: number;
+  repairedHistoryEntries?: number;
+  notInCurrentRelease?: number;
+  unrated?: number;
+  failureCount?: number;
+};
 
 function arg(name: string, fallback?: string) {
   const index = process.argv.indexOf(name);
@@ -73,6 +84,8 @@ async function main() {
   const franceOpen = france.filter((item) => item.team === "fr-open").sort((a, b) => b.current - a.current);
   const franceMasters = france.filter((item) => item.team === "fr-masters").sort((a, b) => b.current - a.current);
   const syncId = `pdga-monthly-${effectiveDate}`;
+  const syncSnapshot = await db.collection("syncLogs").doc(syncId).get();
+  const selectiveSync = (syncSnapshot.data()?.selectiveSync ?? null) as SelectiveSync | null;
   const completedAt = new Date().toISOString();
 
   const report = {
@@ -88,6 +101,7 @@ async function main() {
     decreases: decreases.length,
     biggestIncrease: increases[0] ?? null,
     biggestDecrease: decreases[0] ?? null,
+    selectiveSync,
     franceOpen,
     franceMasters,
   };
@@ -96,7 +110,10 @@ async function main() {
   await writeFile(outJson, JSON.stringify(report, null, 2), "utf8");
 
   const rows = (players: PlayerDelta[]) => players.map((p) => `<tr><td>${esc(p.name)}</td><td>#${p.pdgaNumber}</td><td>${p.current}</td><td>${p.delta === null ? "—" : `${p.delta > 0 ? "+" : ""}${p.delta}`}</td></tr>`).join("");
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#17202a"><h2>WTDGC 2026 — mise à jour ratings PDGA</h2><p><strong>Date effective :</strong> ${esc(effectiveDate)}</p><p>${withCurrentRelease} profils avec la nouvelle date sur ${profiles.size}. ${changed} ratings modifiés, ${unchanged} inchangés. ${increases.length} hausses, ${decreases.length} baisses.</p><p><strong>Plus forte hausse :</strong> ${report.biggestIncrease ? `${esc(report.biggestIncrease.name)} ${report.biggestIncrease.delta > 0 ? "+" : ""}${report.biggestIncrease.delta}` : "n/a"}<br><strong>Plus forte baisse :</strong> ${report.biggestDecrease ? `${esc(report.biggestDecrease.name)} ${report.biggestDecrease.delta}` : "n/a"}</p><h3>France Open</h3><table cellpadding="6" cellspacing="0" border="1"><tr><th>Joueur</th><th>PDGA</th><th>Rating</th><th>Δ</th></tr>${rows(franceOpen)}</table><h3>France Masters</h3><table cellpadding="6" cellspacing="0" border="1"><tr><th>Joueur</th><th>PDGA</th><th>Rating</th><th>Δ</th></tr>${rows(franceMasters)}</table><p style="color:#748193">Rapport généré ${esc(completedAt)}.</p></body></html>`;
+  const selectiveSummary = selectiveSync
+    ? `<p><strong>Synchronisation :</strong> ${selectiveSync.checked ?? 0} joueurs contrôlés, ${selectiveSync.alreadyUpToDate ?? 0} déjà à jour, ${selectiveSync.updatedProfiles ?? 0} profils mis à jour, ${selectiveSync.createdHistoryEntries ?? 0} historiques créés, ${selectiveSync.repairedHistoryEntries ?? 0} historiques réparés, ${selectiveSync.failureCount ?? 0} erreur(s).</p>`
+    : "";
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#17202a"><h2>WTDGC 2026 — mise à jour ratings PDGA</h2><p><strong>Date effective :</strong> ${esc(effectiveDate)}</p>${selectiveSummary}<p>${withCurrentRelease} profils avec la nouvelle date sur ${profiles.size}. ${changed} ratings modifiés, ${unchanged} inchangés. ${increases.length} hausses, ${decreases.length} baisses.</p><p><strong>Plus forte hausse :</strong> ${report.biggestIncrease ? `${esc(report.biggestIncrease.name)} ${report.biggestIncrease.delta > 0 ? "+" : ""}${report.biggestIncrease.delta}` : "n/a"}<br><strong>Plus forte baisse :</strong> ${report.biggestDecrease ? `${esc(report.biggestDecrease.name)} ${report.biggestDecrease.delta}` : "n/a"}</p><h3>France Open</h3><table cellpadding="6" cellspacing="0" border="1"><tr><th>Joueur</th><th>PDGA</th><th>Rating</th><th>Δ</th></tr>${rows(franceOpen)}</table><h3>France Masters</h3><table cellpadding="6" cellspacing="0" border="1"><tr><th>Joueur</th><th>PDGA</th><th>Rating</th><th>Δ</th></tr>${rows(franceMasters)}</table><p style="color:#748193">Rapport généré ${esc(completedAt)}.</p></body></html>`;
   await writeFile(outHtml, html, "utf8");
   console.log(JSON.stringify(report));
 }
