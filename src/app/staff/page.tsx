@@ -6,6 +6,7 @@ import roundStyles from "../../components/staff/StaffRounds.module.css";
 import { requireStaffAccess, roleFromClaims } from "../../server/auth/session";
 import { loadFranceOpenRosterData } from "../../server/repositories/france-roster.repository";
 import { listOpenRoundsForStaff } from "../../server/repositories/round-management.repository";
+import { loadScoutingTeams } from "../../server/repositories/scouting.repository";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,13 @@ function statusClass(status: "draft" | "ready" | "published") {
 export default async function StaffPage() {
   const claims = await requireStaffAccess();
   const role = roleFromClaims(claims);
-  const [{ players, roster }, rounds] = await Promise.all([
+  const [{ roster }, rounds, openTeams] = await Promise.all([
     loadFranceOpenRosterData(),
     listOpenRoundsForStaff(),
+    loadScoutingTeams("open"),
   ]);
+  const franceTeam = openTeams.find((team) => team.country.trim().toLowerCase() === "france");
+  if (!franceTeam) throw new Error("France Open scouting team not found.");
 
   return (
     <main className={authStyles.area}>
@@ -46,7 +50,7 @@ export default async function StaffPage() {
           <p>Le Default Match Roster et les rounds en brouillon/prêts restent réservés au Staff/Admin. Seul un round explicitement publié pourra ensuite alimenter l’espace joueur.</p>
         </section>
 
-        <DefaultOpenRoster players={players} roster={roster} />
+        <DefaultOpenRoster team={franceTeam} roster={roster} />
 
         <section className={roundStyles.section}>
           <div className={roundStyles.header}>
