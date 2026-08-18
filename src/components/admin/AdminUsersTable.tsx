@@ -75,7 +75,7 @@ export function AdminUsersTable({ users, currentUid }: Props) {
                     <div className={styles.meta}>{user.displayName || user.uid}</div>
                   </td>
                   <td>
-                    <span className={styles.badge}>{user.providers.length ? user.providers.join(" + ") : "email"}</span>
+                    <span className={styles.badge}>{user.providers.length ? user.providers.join(" + ") : "Email"}</span>
                   </td>
                   <td>
                     <span className={`${styles.badge} ${user.disabled ? styles.disabled : ""}`}>
@@ -93,10 +93,14 @@ export function AdminUsersTable({ users, currentUid }: Props) {
                         <div className={styles.roleControl}>
                           <select
                             aria-label={`Rôle de ${user.email}`}
-                            value={user.role ?? "player"}
+                            value={user.role ?? ""}
                             disabled={busyUid === user.uid}
-                            onChange={(event) => updateRole(user.uid, event.target.value as "admin" | "staff" | "player")}
+                            onChange={(event) => {
+                              const role = event.target.value;
+                              if (role === "admin" || role === "staff" || role === "player") updateRole(user.uid, role);
+                            }}
                           >
+                            <option value="" disabled>Sans rôle</option>
                             <option value="player">Joueur</option>
                             <option value="staff">Staff</option>
                             <option value="admin">Admin</option>
