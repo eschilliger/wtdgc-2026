@@ -1,4 +1,5 @@
 import TeamComparison, { type ComparisonTeam } from "@/components/TeamComparison";
+import { WTDGC_REFERENCE_RATING_DATE } from "@/domain/wtdgc/competition";
 import { db } from "@/server/firebase/admin";
 import { extractPdgaGender, type PdgaGender } from "@/server/pdga/statistics";
 
@@ -43,13 +44,27 @@ type YearlyStatsDoc = {
   payload?: unknown;
 };
 
+type RatingHistoryDoc = {
+  pdgaNumber?: number;
+  rating?: number | null;
+  effectiveDate?: string | null;
+};
+
 async function loadTeams(): Promise<ComparisonTeam[]> {
-  const [teamsSnapshot, registrationsSnapshot, playersSnapshot, profilesSnapshot, yearlyStatsSnapshot] = await Promise.all([
+  const [
+    teamsSnapshot,
+    registrationsSnapshot,
+    playersSnapshot,
+    profilesSnapshot,
+    yearlyStatsSnapshot,
+    referenceRatingsSnapshot,
+  ] = await Promise.all([
     db.collection("teams").get(),
     db.collection("registrations").get(),
     db.collection("players").get(),
     db.collection("pdgaProfiles").get(),
     db.collectionGroup("yearlyStats").get(),
+    db.collectionGroup("ratingHistory").where("effectiveDate", "==", WTDGC_REFERENCE_RATING_DATE).get(),
   ]);
 
   const teams = teamsSnapshot.docs.map((doc) => doc.data() as TeamDoc);
@@ -59,6 +74,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     return [player.id, player] as const;
   }));
   const ratings = new Map<number, number | null>();
+  const referenceRatings = new Map<number, number>();
   const trends12Months = new Map<number, number | null>();
   const genders = new Map<number, PdgaGender>();
   const genderSources = new Map<number, GenderSource>();
@@ -75,6 +91,13 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
         profile.genderSource === "default-m" ? "default-m" : "profile",
       );
     }
+  }
+
+  for (const doc of referenceRatingsSnapshot.docs) {
+    const history = doc.data() as RatingHistoryDoc;
+    const pdgaNumber = history.pdgaNumber ?? Number.parseInt(doc.ref.parent.parent?.id ?? "", 10);
+    if (!Number.isFinite(pdgaNumber) || typeof history.rating !== "number") continue;
+    referenceRatings.set(pdgaNumber, history.rating);
   }
 
   for (const doc of yearlyStatsSnapshot.docs) {
@@ -102,6 +125,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
           const genderSource = pdgaNumber
             ? genderSources.get(pdgaNumber) ?? "default-m"
             : "default-m";
+          const referenceRating = pdgaNumber ? referenceRatings.get(pdgaNumber) ?? null : null;
 
           return {
             id: player.id,
@@ -113,6 +137,8 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
             gender,
             genderSource,
             jerseyNumber: registration.jerseyNumber ?? null,
+            referenceRating,
+            ratingSource: referenceRating !== null ? "pdga" as const : null,
           };
         })
         .filter((player): player is NonNullable<typeof player> => player !== null);
