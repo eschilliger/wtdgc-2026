@@ -38,10 +38,8 @@ export async function POST(request: NextRequest) {
       expiresIn: SESSION_MAX_AGE_SECONDS * 1000,
     });
 
-    const response = NextResponse.json({
-      ok: true,
-      role: claims.role === "staff" || claims.role === "player" ? claims.role : null,
-    });
+    const role = claims.role === "admin" || claims.role === "staff" || claims.role === "player" ? claims.role : null;
+    const response = NextResponse.json({ ok: true, role });
     response.cookies.set(SESSION_COOKIE_NAME, sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
