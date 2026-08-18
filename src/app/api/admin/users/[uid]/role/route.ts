@@ -37,6 +37,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ u
   try {
     const user = await auth.getUser(uid);
     await auth.setCustomUserClaims(uid, { ...(user.customClaims ?? {}), role });
+    await auth.revokeRefreshTokens(uid);
     await db.collection("appUsers").doc(uid).set({
       uid,
       email: user.email ?? null,
