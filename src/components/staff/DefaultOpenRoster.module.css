@@ -1,0 +1,35 @@
+.card {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid #d6e0eb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 18px; }
+.header h2 { margin: 0 0 6px; color: #123968; font-size: 22px; }
+.header p { margin: 0; color: #748193; line-height: 1.45; }
+.status { display: inline-flex; align-items: center; min-height: 30px; padding: 0 11px; border-radius: 999px; background: #fff4cc; color: #6d5117; font-size: 12px; font-weight: 750; white-space: nowrap; }
+.statusConfirmed { background: #cdeedc; color: #0b5f3a; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.slot { padding: 14px; border: 1px solid #dce5ee; border-radius: 12px; background: #f9fbfd; }
+.slot label { display: grid; gap: 7px; color: #123968; font-weight: 750; }
+.slot small { color: #748193; font-weight: 500; line-height: 1.35; }
+.slot select { width: 100%; min-height: 42px; padding: 0 10px; border: 1px solid #b7c9dc; border-radius: 9px; background: #fff; color: #17202a; font: inherit; }
+
+.legend { margin: 16px 0 0; padding: 12px 14px; border-radius: 10px; background: #f3f7fb; color: #40556b; font-size: 13px; line-height: 1.45; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.actions button { min-height: 42px; padding: 0 15px; border-radius: 10px; font-weight: 750; cursor: pointer; }
+.save { border: 1px solid #b7c9dc; background: #fff; color: #123968; }
+.confirm { border: 1px solid #123968; background: #123968; color: #fff; }
+.actions button:disabled { opacity: .55; cursor: not-allowed; }
+.message { margin: 12px 0 0; font-size: 13px; }
+.success { color: #166534; }
+.error { color: #9f1239; }
+
+@media (max-width: 720px) {
+  .card { padding: 16px; }
+  .header { flex-direction: column; }
+  .grid { grid-template-columns: 1fr; }
+}
