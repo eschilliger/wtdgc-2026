@@ -12,6 +12,8 @@ import {
 import { firebaseAuth } from "../../lib/firebase/client";
 import styles from "./Auth.module.css";
 
+type LoginRole = "admin" | "staff" | "player" | null;
+
 async function establishServerSession() {
   const user = firebaseAuth.currentUser;
   if (!user) throw new Error("Aucun utilisateur Firebase connecté.");
@@ -21,10 +23,14 @@ async function establishServerSession() {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ idToken }),
   });
-  const payload = await response.json().catch(() => ({})) as { role?: "staff" | "player" | null; error?: string };
+  const payload = await response.json().catch(() => ({})) as { role?: LoginRole; error?: string };
   if (!response.ok) throw new Error(payload.error || "Impossible de créer la session.");
   await signOut(firebaseAuth);
   return payload.role ?? null;
+}
+
+function destinationForRole(role: LoginRole) {
+  return role === "admin" ? "/admin" : role === "staff" ? "/staff" : role === "player" ? "/player-area" : "/login?status=role-required";
 }
 
 export function LoginPanel() {
@@ -40,7 +46,7 @@ export function LoginPanel() {
       await setPersistence(firebaseAuth, browserSessionPersistence);
       await action();
       const role = await establishServerSession();
-      window.location.assign(role === "staff" ? "/staff" : role === "player" ? "/player-area" : "/login?status=role-required");
+      window.location.assign(destinationForRole(role));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Connexion impossible.";
       setError(message);
@@ -77,7 +83,7 @@ export function LoginPanel() {
         <button className={styles.submit} type="submit" disabled={busy}>Se connecter</button>
       </form>
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
-      <p className={styles.help}>L’accès Staff et Joueur dépend du rôle attribué au compte Firebase.</p>
+      <p className={styles.help}>L’accès Admin, Staff et Joueur dépend du rôle attribué au compte Firebase.</p>
     </div>
   );
 }
