@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OPEN_ROSTER_SLOTS, type OpenRosterSlot, type WtdgcRoundNumber, type WtdgcRoundPublicationStatus } from "../../../../../../../domain/wtdgc/competition";
-import { getSessionClaims, roleFromClaims } from "../../../../../../../server/auth/session";
-import { loadOpenRoundManagement, saveOpenRoundManagement } from "../../../../../../../server/repositories/round-management.repository";
+import { OPEN_ROSTER_SLOTS, type OpenRosterSlot, type WtdgcRoundNumber, type WtdgcRoundPublicationStatus } from "../../../../../../domain/wtdgc/competition";
+import { getSessionClaims, roleFromClaims } from "../../../../../../server/auth/session";
+import { loadOpenRoundManagement, saveOpenRoundManagement } from "../../../../../../server/repositories/round-management.repository";
 
 function publicOrigin(request: NextRequest) {
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
