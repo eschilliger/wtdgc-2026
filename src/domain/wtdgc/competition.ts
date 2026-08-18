@@ -2,7 +2,7 @@ export const WTDGC_REFERENCE_RATING_DATE = "2026-08-11" as const;
 
 export type WtdgcDivision = "open" | "masters";
 export type WtdgcRoundNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-export type WtdgcUserRole = "staff" | "player";
+export type WtdgcUserRole = "admin" | "staff" | "player";
 export type WtdgcRoundPublicationStatus = "draft" | "ready" | "published";
 
 export type WtdgcRoundStage =
