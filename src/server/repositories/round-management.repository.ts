@@ -1,12 +1,8 @@
 import type { OpenRosterSlot, WtdgcRoundNumber, WtdgcRoundPublicationStatus } from "../../domain/wtdgc/competition";
+import type { ComparisonTeam } from "../../components/TeamComparison";
 import { db } from "../firebase/admin";
 import { competitionRoundRef, getDefaultMatchRoster, WTDGC_EVENT_ID } from "./competition.repository";
-import { loadFranceOpenRosterData, type FranceOpenRosterPlayer } from "./france-roster.repository";
-
-export type OpenRoundTeamOption = {
-  id: string;
-  country: string;
-};
+import { loadScoutingTeams } from "./scouting.repository";
 
 export type OpenRoundRoster = {
   slotAssignments: Partial<Record<OpenRosterSlot, string>>;
@@ -24,15 +20,9 @@ export type OpenRoundManagementData = {
   publishedAt: string | null;
   publishedBy: string | null;
   internalNote: string;
-  players: FranceOpenRosterPlayer[];
-  teams: OpenRoundTeamOption[];
+  franceTeam: ComparisonTeam;
+  teams: ComparisonTeam[];
   defaultSlotAssignments: Partial<Record<OpenRosterSlot, string>>;
-};
-
-type TeamDoc = {
-  id: string;
-  country: string;
-  division: "open" | "masters";
 };
 
 type RoundDoc = {
@@ -42,10 +32,7 @@ type RoundDoc = {
   scheduledStart?: string | null;
   course?: string | null;
   startingHole?: string | null;
-  roster?: {
-    slotAssignments?: Partial<Record<OpenRosterSlot, string>>;
-    selectedPlayerIds?: string[];
-  } | null;
+  roster?: { slotAssignments?: Partial<Record<OpenRosterSlot, string>>; selectedPlayerIds?: string[] } | null;
   publishedAt?: string | null;
   publishedBy?: string | null;
 };
@@ -54,7 +41,6 @@ export async function listOpenRoundsForStaff() {
   const snapshot = await db.collection("events").doc(WTDGC_EVENT_ID).collection("competitionRounds")
     .where("division", "==", "open")
     .get();
-
   return snapshot.docs
     .map((doc) => {
       const data = doc.data() as RoundDoc;
@@ -71,22 +57,18 @@ export async function listOpenRoundsForStaff() {
 }
 
 export async function loadOpenRoundManagement(roundNumber: WtdgcRoundNumber): Promise<OpenRoundManagementData> {
-  const [roundSnapshot, teamsSnapshot, franceData, defaultRoster, noteSnapshot] = await Promise.all([
+  const [roundSnapshot, openTeams, defaultRoster, noteSnapshot] = await Promise.all([
     competitionRoundRef("open", roundNumber).get(),
-    db.collection("teams").where("division", "==", "open").get(),
-    loadFranceOpenRosterData(),
+    loadScoutingTeams("open"),
     getDefaultMatchRoster("open"),
     competitionRoundRef("open", roundNumber).collection("staffNotes").doc("france").get(),
   ]);
 
   if (!roundSnapshot.exists) throw new Error(`Open round ${roundNumber} not found.`);
   const round = roundSnapshot.data() as RoundDoc;
-
-  const teams = teamsSnapshot.docs
-    .map((doc) => doc.data() as TeamDoc)
-    .filter((team) => team.id !== franceData.teamId)
-    .map((team) => ({ id: team.id, country: team.country }))
-    .sort((a, b) => a.country.localeCompare(b.country, "fr"));
+  const franceTeam = openTeams.find((team) => team.country.trim().toLowerCase() === "france");
+  if (!franceTeam) throw new Error("France Open scouting team not found.");
+  const teams = openTeams.filter((team) => team.id !== franceTeam.id).sort((a, b) => a.country.localeCompare(b.country, "fr"));
 
   const roster = round.roster?.slotAssignments
     ? {
@@ -106,7 +88,7 @@ export async function loadOpenRoundManagement(roundNumber: WtdgcRoundNumber): Pr
     publishedAt: round.publishedAt ?? null,
     publishedBy: round.publishedBy ?? null,
     internalNote: noteSnapshot.exists ? String(noteSnapshot.data()?.text ?? "") : "",
-    players: franceData.players,
+    franceTeam,
     teams,
     defaultSlotAssignments: (defaultRoster?.slotAssignments ?? {}) as Partial<Record<OpenRosterSlot, string>>,
   };
@@ -147,7 +129,6 @@ export async function saveOpenRoundManagement(input: {
     updatedBy: input.actorUid,
     updatedByEmail: input.actorEmail,
   };
-
   if (input.publicationStatus === "published") {
     roundUpdate.publishedAt = now;
     roundUpdate.publishedBy = input.actorUid;
@@ -155,7 +136,6 @@ export async function saveOpenRoundManagement(input: {
     roundUpdate.publishedAt = null;
     roundUpdate.publishedBy = null;
   }
-
   await roundRef.set(roundUpdate, { merge: true });
   await roundRef.collection("staffNotes").doc("france").set({
     text: input.internalNote,

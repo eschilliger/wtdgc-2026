@@ -38,7 +38,6 @@ type Body = {
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ round: string }> }) {
   if (!sameOrigin(request)) return NextResponse.json({ error: "invalid-origin" }, { status: 403 });
-
   const claims = await getSessionClaims();
   const role = roleFromClaims(claims);
   if (!claims) return NextResponse.json({ error: "authentication-required" }, { status: 401 });
@@ -47,7 +46,6 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
   const { round: rawRound } = await context.params;
   const roundNumber = parseRound(rawRound);
   if (!roundNumber) return NextResponse.json({ error: "invalid-round" }, { status: 400 });
-
   const body = await request.json().catch(() => null) as Body | null;
   if (!body) return NextResponse.json({ error: "invalid-body" }, { status: 400 });
 
@@ -57,41 +55,26 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
   }
 
   const data = await loadOpenRoundManagement(roundNumber);
-  const playersById = new Map(data.players.map((player) => [player.id, player] as const));
+  const playersById = new Map(data.franceTeam.players.map((player) => [player.id, player] as const));
   const assignments: Partial<Record<OpenRosterSlot, string>> = {};
-
   for (const slot of OPEN_ROSTER_SLOTS) {
     const value = body.slotAssignments?.[slot];
     if (!value) continue;
     const player = playersById.get(value);
     if (!player) return NextResponse.json({ error: `invalid-player-${slot}` }, { status: 400 });
-    if (slot.startsWith("FPO") && player.gender !== "F") {
-      return NextResponse.json({ error: `female-player-required-${slot}` }, { status: 400 });
-    }
+    if (slot.startsWith("FPO") && player.gender !== "F") return NextResponse.json({ error: `female-player-required-${slot}` }, { status: 400 });
     assignments[slot] = value;
   }
 
   const selectedIds = Object.values(assignments).filter((value): value is string => Boolean(value));
-  if (new Set(selectedIds).size !== selectedIds.length) {
-    return NextResponse.json({ error: "duplicate-player" }, { status: 400 });
-  }
-
+  if (new Set(selectedIds).size !== selectedIds.length) return NextResponse.json({ error: "duplicate-player" }, { status: 400 });
   const complete = OPEN_ROSTER_SLOTS.every((slot) => Boolean(assignments[slot]));
   const opponentTeamId = cleanString(body.opponentTeamId);
   const scheduledStart = cleanString(body.scheduledStart);
-
-  if (publicationStatus !== "draft" && !complete) {
-    return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
-  }
-  if (publicationStatus !== "draft" && !opponentTeamId) {
-    return NextResponse.json({ error: "opponent-required" }, { status: 400 });
-  }
-  if (publicationStatus === "published" && !scheduledStart) {
-    return NextResponse.json({ error: "scheduled-start-required" }, { status: 400 });
-  }
-  if (opponentTeamId && !data.teams.some((team) => team.id === opponentTeamId)) {
-    return NextResponse.json({ error: "invalid-opponent" }, { status: 400 });
-  }
+  if (publicationStatus !== "draft" && !complete) return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
+  if (publicationStatus !== "draft" && !opponentTeamId) return NextResponse.json({ error: "opponent-required" }, { status: 400 });
+  if (publicationStatus === "published" && !scheduledStart) return NextResponse.json({ error: "scheduled-start-required" }, { status: 400 });
+  if (opponentTeamId && !data.teams.some((team) => team.id === opponentTeamId)) return NextResponse.json({ error: "invalid-opponent" }, { status: 400 });
 
   await saveOpenRoundManagement({
     roundNumber,
@@ -105,6 +88,5 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
     actorUid: claims.uid,
     actorEmail: claims.email ?? null,
   });
-
   return NextResponse.json({ ok: true, publicationStatus });
 }
