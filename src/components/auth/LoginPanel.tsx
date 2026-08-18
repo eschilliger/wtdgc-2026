@@ -10,6 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { firebaseAuth } from "../../lib/firebase/client";
+import styles from "./Auth.module.css";
 
 async function establishServerSession() {
   const user = firebaseAuth.currentUser;
@@ -59,12 +60,12 @@ export function LoginPanel() {
   }
 
   return (
-    <div className="auth-card">
-      <button className="auth-google" type="button" disabled={busy} onClick={loginWithGoogle}>
+    <div className={styles.card}>
+      <button className={styles.google} type="button" disabled={busy} onClick={loginWithGoogle}>
         Continuer avec Google
       </button>
-      <div className="auth-separator"><span>ou</span></div>
-      <form onSubmit={loginWithEmail} className="auth-form">
+      <div className={styles.separator}><span>ou</span></div>
+      <form onSubmit={loginWithEmail} className={styles.form}>
         <label>
           Adresse e-mail
           <input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
@@ -73,10 +74,10 @@ export function LoginPanel() {
           Mot de passe
           <input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
         </label>
-        <button type="submit" disabled={busy}>Se connecter</button>
+        <button className={styles.submit} type="submit" disabled={busy}>Se connecter</button>
       </form>
-      {error ? <p className="auth-error" role="alert">{error}</p> : null}
-      <p className="auth-help">L’accès Staff et Joueur dépend du rôle attribué au compte Firebase.</p>
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <p className={styles.help}>L’accès Staff et Joueur dépend du rôle attribué au compte Firebase.</p>
     </div>
   );
 }
