@@ -1,51 +1,74 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { FranceOpenRosterPlayer } from "../../server/repositories/france-roster.repository";
+import type { ComparisonPlayer, ComparisonTeam } from "../TeamComparison";
+import { ScoutingRosterPanel } from "../scouting/ScoutingRosterPanel";
 import type { DefaultMatchRosterDoc } from "../../server/repositories/competition.repository";
 import styles from "./DefaultOpenRoster.module.css";
 
-const SLOTS = ["MPO1", "MPO2", "MPO3", "MPO4", "FPO1", "FPO2"] as const;
-type OpenSlot = typeof SLOTS[number];
-
-type Props = {
-  players: FranceOpenRosterPlayer[];
-  roster: DefaultMatchRosterDoc | null;
-};
-
-function playerLabel(player: FranceOpenRosterPlayer) {
-  const rating = player.wtdgcRating ?? "—";
-  const pdga = player.pdgaNumber ? ` · PDGA #${player.pdgaNumber}` : "";
-  return `${player.firstName} ${player.lastName} · WTDGC ${rating}${pdga}`;
+function playerRating(player: ComparisonPlayer) {
+  return player.referenceRating ?? player.rating ?? -1;
 }
 
-export function DefaultOpenRoster({ players, roster }: Props) {
-  const initialAssignments = useMemo(() => {
-    const source = roster?.slotAssignments ?? {};
-    return Object.fromEntries(SLOTS.map((slot) => [slot, source[slot] ?? ""])) as Record<OpenSlot, string>;
-  }, [roster]);
+function assignmentsFromSelection(team: ComparisonTeam, selectedIds: Set<string>) {
+  const selected = team.players.filter((player) => selectedIds.has(player.id));
+  const men = selected.filter((player) => player.gender === "M").sort((a, b) => playerRating(b) - playerRating(a));
+  const women = selected.filter((player) => player.gender === "F").sort((a, b) => playerRating(b) - playerRating(a));
+  return {
+    MPO1: men[0]?.id ?? "",
+    MPO2: men[1]?.id ?? "",
+    MPO3: men[2]?.id ?? "",
+    MPO4: men[3]?.id ?? "",
+    FPO1: women[0]?.id ?? "",
+    FPO2: women[1]?.id ?? "",
+  };
+}
 
-  const [assignments, setAssignments] = useState<Record<OpenSlot, string>>(initialAssignments);
+export function DefaultOpenRoster({ team, roster }: { team: ComparisonTeam; roster: DefaultMatchRosterDoc | null }) {
+  const initialSelected = useMemo(() => new Set(
+    (roster?.selectedPlayerIds?.length ? roster.selectedPlayerIds : Object.values(roster?.slotAssignments ?? {})).filter(Boolean) as string[],
+  ), [roster]);
+  const [selectedIds, setSelectedIds] = useState(initialSelected);
   const [confirmed, setConfirmed] = useState(Boolean(roster?.confirmed));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
-  const selectedIds = Object.values(assignments).filter(Boolean);
-  const duplicate = new Set(selectedIds).size !== selectedIds.length;
-  const complete = SLOTS.every((slot) => Boolean(assignments[slot]));
+  const selectedPlayers = team.players.filter((player) => selectedIds.has(player.id));
+  const menCount = selectedPlayers.filter((player) => player.gender === "M").length;
+  const womenCount = selectedPlayers.filter((player) => player.gender === "F").length;
+  const complete = menCount === 4 && womenCount === 2;
 
-  function candidatesFor(slot: OpenSlot) {
-    return slot.startsWith("FPO") ? players.filter((player) => player.gender === "F") : players;
+  function toggle(player: ComparisonPlayer) {
+    if (busy) return;
+    setMessage(null);
+    setConfirmed(false);
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(player.id)) {
+        next.delete(player.id);
+        return next;
+      }
+      const currentPlayers = team.players.filter((candidate) => next.has(candidate.id));
+      const genderCount = currentPlayers.filter((candidate) => candidate.gender === player.gender).length;
+      const limit = player.gender === "F" ? 2 : 4;
+      if (genderCount >= limit) {
+        setMessage({ kind: "error", text: player.gender === "F" ? "Le roster Open contient 2 féminines maximum." : "Le roster Open contient 4 hommes maximum." });
+        return current;
+      }
+      next.add(player.id);
+      return next;
+    });
   }
 
   async function save(nextConfirmed: boolean) {
+    const slotAssignments = assignmentsFromSelection(team, selectedIds);
     setBusy(true);
     setMessage(null);
     try {
       const response = await fetch("/api/staff/default-roster/open", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slotAssignments: assignments, confirmed: nextConfirmed }),
+        body: JSON.stringify({ slotAssignments, confirmed: nextConfirmed }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Enregistrement impossible.");
@@ -63,42 +86,25 @@ export function DefaultOpenRoster({ players, roster }: Props) {
       <div className={styles.header}>
         <div>
           <h2>Default Match Roster · Open</h2>
-          <p>Sélection staff privée. Les slots MPO peuvent recevoir tout joueur Open ; les slots FPO proposent uniquement les joueuses identifiées FPO-éligibles via le genre PDGA connu.</p>
+          <p>Même lecture que dans le scouting : sélectionne directement les 4 hommes et 2 féminines. Le joueur restant devient remplaçant.</p>
         </div>
         <span className={`${styles.status} ${confirmed ? styles.statusConfirmed : ""}`}>{confirmed ? "Confirmé" : "Brouillon"}</span>
       </div>
 
-      <div className={styles.grid}>
-        {SLOTS.map((slot) => (
-          <div className={styles.slot} key={slot}>
-            <label>
-              {slot}
-              <select
-                value={assignments[slot]}
-                disabled={busy}
-                onChange={(event) => {
-                  setAssignments((current) => ({ ...current, [slot]: event.target.value }));
-                  setConfirmed(false);
-                }}
-              >
-                <option value="">Non attribué</option>
-                {candidatesFor(slot).map((player) => (
-                  <option key={player.id} value={player.id}>{playerLabel(player)}</option>
-                ))}
-              </select>
-              <small>{slot.startsWith("FPO") ? "Slot FPO : joueuse requise." : "Slot MPO : sélection libre parmi le roster Open."}</small>
-            </label>
-          </div>
-        ))}
-      </div>
+      <ScoutingRosterPanel
+        team={team}
+        selectedIds={selectedIds}
+        editable
+        onToggle={toggle}
+        title="France · roster de référence"
+        helper="Clique sur Sélectionner/Retirer (ou le switch sur mobile). Les rangs J1 à J6 suivent automatiquement le rating WTDGC."
+      />
 
-      <p className={styles.legend}>Le rating affiché est le rating WTDGC figé au 11/08/2026. Un même joueur ne peut pas occuper deux slots. La confirmation exige les 6 slots complets ; le brouillon peut rester incomplet.</p>
-
+      <p className={styles.legend}>{menCount}/4 hommes · {womenCount}/2 féminines. Le rating affiché est le rating WTDGC figé au 11/08/2026.</p>
       <div className={styles.actions}>
-        <button className={styles.save} type="button" disabled={busy || duplicate} onClick={() => save(false)}>Enregistrer le brouillon</button>
-        <button className={styles.confirm} type="button" disabled={busy || duplicate || !complete} onClick={() => save(true)}>Confirmer le roster</button>
+        <button className={styles.save} type="button" disabled={busy} onClick={() => save(false)}>Enregistrer le brouillon</button>
+        <button className={styles.confirm} type="button" disabled={busy || !complete} onClick={() => save(true)}>Confirmer le roster</button>
       </div>
-      {duplicate ? <p className={`${styles.message} ${styles.error}`}>Un même joueur est sélectionné plusieurs fois.</p> : null}
       {message ? <p className={`${styles.message} ${message.kind === "success" ? styles.success : styles.error}`}>{message.text}</p> : null}
     </section>
   );
