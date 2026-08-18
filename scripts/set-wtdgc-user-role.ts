@@ -23,6 +23,7 @@ async function main() {
     ...existingClaims,
     role,
   });
+  await auth.revokeRefreshTokens(user.uid);
 
   await db.collection("appUsers").doc(user.uid).set({
     uid: user.uid,
@@ -32,7 +33,7 @@ async function main() {
   }, { merge: true });
 
   console.log(`Role '${role}' assigned to ${email} (${user.uid}).`);
-  console.log("The user must refresh/re-authenticate for the new custom claim to appear in their ID token.");
+  console.log("Existing sessions were revoked. The user must re-authenticate to receive the new role.");
 }
 
 main().catch((error) => {
