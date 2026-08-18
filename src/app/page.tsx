@@ -31,6 +31,9 @@ type GenderSource = "profile" | "yearly-stats" | "default-m";
 type PdgaProfileDoc = {
   pdgaNumber: number;
   currentRating?: number | null;
+  ratingEffectiveDate?: string | null;
+  wtdgcReferenceRating?: number | null;
+  wtdgcReferenceRatingDate?: string | null;
   gender?: PdgaGender | null;
   genderSource?: string | null;
   scoutingMetrics?: {
@@ -44,27 +47,13 @@ type YearlyStatsDoc = {
   payload?: unknown;
 };
 
-type RatingHistoryDoc = {
-  pdgaNumber?: number;
-  rating?: number | null;
-  effectiveDate?: string | null;
-};
-
 async function loadTeams(): Promise<ComparisonTeam[]> {
-  const [
-    teamsSnapshot,
-    registrationsSnapshot,
-    playersSnapshot,
-    profilesSnapshot,
-    yearlyStatsSnapshot,
-    referenceRatingsSnapshot,
-  ] = await Promise.all([
+  const [teamsSnapshot, registrationsSnapshot, playersSnapshot, profilesSnapshot, yearlyStatsSnapshot] = await Promise.all([
     db.collection("teams").get(),
     db.collection("registrations").get(),
     db.collection("players").get(),
     db.collection("pdgaProfiles").get(),
     db.collectionGroup("yearlyStats").get(),
-    db.collectionGroup("ratingHistory").where("effectiveDate", "==", WTDGC_REFERENCE_RATING_DATE).get(),
   ]);
 
   const teams = teamsSnapshot.docs.map((doc) => doc.data() as TeamDoc);
@@ -84,6 +73,20 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     if (!Number.isFinite(profile.pdgaNumber)) continue;
     ratings.set(profile.pdgaNumber, profile.currentRating ?? null);
     trends12Months.set(profile.pdgaNumber, profile.scoutingMetrics?.trend12Months ?? null);
+
+    if (
+      profile.wtdgcReferenceRatingDate === WTDGC_REFERENCE_RATING_DATE &&
+      typeof profile.wtdgcReferenceRating === "number"
+    ) {
+      referenceRatings.set(profile.pdgaNumber, profile.wtdgcReferenceRating);
+    } else if (
+      profile.ratingEffectiveDate === WTDGC_REFERENCE_RATING_DATE &&
+      typeof profile.currentRating === "number"
+    ) {
+      // Safe transition fallback while the one-time August snapshot is being persisted.
+      referenceRatings.set(profile.pdgaNumber, profile.currentRating);
+    }
+
     if (profile.gender === "M" || profile.gender === "F") {
       genders.set(profile.pdgaNumber, profile.gender);
       genderSources.set(
@@ -91,13 +94,6 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
         profile.genderSource === "default-m" ? "default-m" : "profile",
       );
     }
-  }
-
-  for (const doc of referenceRatingsSnapshot.docs) {
-    const history = doc.data() as RatingHistoryDoc;
-    const pdgaNumber = history.pdgaNumber ?? Number.parseInt(doc.ref.parent.parent?.id ?? "", 10);
-    if (!Number.isFinite(pdgaNumber) || typeof history.rating !== "number") continue;
-    referenceRatings.set(pdgaNumber, history.rating);
   }
 
   for (const doc of yearlyStatsSnapshot.docs) {
