@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../server/firebase/admin";
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "../../../../server/auth/session";
 
+function publicOrigin(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host");
+  if (!host) return request.nextUrl.origin;
+
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto || request.nextUrl.protocol.replace(":", "") || "https";
+  return `${protocol}://${host}`;
+}
+
 function sameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
-  return origin === request.nextUrl.origin;
+  return origin === publicOrigin(request);
 }
 
 export async function POST(request: NextRequest) {
