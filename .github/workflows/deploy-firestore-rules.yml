@@ -27,5 +27,10 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
+      - name: Show authenticated service account
+        shell: bash
+        run: |
+          node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS,"utf8")); if (!p.client_email) process.exit(1); console.log(`Authenticated service account: ${p.client_email}`);'
+
       - name: Deploy Firestore rules
         run: npx --yes firebase-tools@latest deploy --only firestore:rules --project wtdgc-2026 --non-interactive
