@@ -1,0 +1,110 @@
+import { NextRequest, NextResponse } from "next/server";
+import { OPEN_ROSTER_SLOTS, type OpenRosterSlot, type WtdgcRoundNumber, type WtdgcRoundPublicationStatus } from "../../../../../../domain/wtdgc/competition";
+import { getSessionClaims, roleFromClaims } from "../../../../../../server/auth/session";
+import { loadOpenRoundManagement, saveOpenRoundManagement } from "../../../../../../server/repositories/round-management.repository";
+
+function publicOrigin(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host");
+  if (!host) return request.nextUrl.origin;
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto || request.nextUrl.protocol.replace(":", "") || "https";
+  return `${protocol}://${host}`;
+}
+
+function sameOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  return !origin || origin === publicOrigin(request);
+}
+
+function parseRound(value: string): WtdgcRoundNumber | null {
+  const round = Number.parseInt(value, 10);
+  return round >= 1 && round <= 8 ? round as WtdgcRoundNumber : null;
+}
+
+function cleanString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+type Body = {
+  publicationStatus?: WtdgcRoundPublicationStatus;
+  opponentTeamId?: string | null;
+  scheduledStart?: string | null;
+  course?: string | null;
+  startingHole?: string | null;
+  slotAssignments?: Partial<Record<OpenRosterSlot, string>>;
+  internalNote?: string;
+};
+
+export async function PUT(request: NextRequest, context: { params: Promise<{ round: string }> }) {
+  if (!sameOrigin(request)) return NextResponse.json({ error: "invalid-origin" }, { status: 403 });
+
+  const claims = await getSessionClaims();
+  const role = roleFromClaims(claims);
+  if (!claims) return NextResponse.json({ error: "authentication-required" }, { status: 401 });
+  if (role !== "staff" && role !== "admin") return NextResponse.json({ error: "staff-required" }, { status: 403 });
+
+  const { round: rawRound } = await context.params;
+  const roundNumber = parseRound(rawRound);
+  if (!roundNumber) return NextResponse.json({ error: "invalid-round" }, { status: 400 });
+
+  const body = await request.json().catch(() => null) as Body | null;
+  if (!body) return NextResponse.json({ error: "invalid-body" }, { status: 400 });
+
+  const publicationStatus = body.publicationStatus;
+  if (publicationStatus !== "draft" && publicationStatus !== "ready" && publicationStatus !== "published") {
+    return NextResponse.json({ error: "invalid-publication-status" }, { status: 400 });
+  }
+
+  const data = await loadOpenRoundManagement(roundNumber);
+  const playersById = new Map(data.players.map((player) => [player.id, player] as const));
+  const assignments: Partial<Record<OpenRosterSlot, string>> = {};
+
+  for (const slot of OPEN_ROSTER_SLOTS) {
+    const value = body.slotAssignments?.[slot];
+    if (!value) continue;
+    const player = playersById.get(value);
+    if (!player) return NextResponse.json({ error: `invalid-player-${slot}` }, { status: 400 });
+    if (slot.startsWith("FPO") && player.gender !== "F") {
+      return NextResponse.json({ error: `female-player-required-${slot}` }, { status: 400 });
+    }
+    assignments[slot] = value;
+  }
+
+  const selectedIds = Object.values(assignments).filter((value): value is string => Boolean(value));
+  if (new Set(selectedIds).size !== selectedIds.length) {
+    return NextResponse.json({ error: "duplicate-player" }, { status: 400 });
+  }
+
+  const complete = OPEN_ROSTER_SLOTS.every((slot) => Boolean(assignments[slot]));
+  const opponentTeamId = cleanString(body.opponentTeamId);
+  const scheduledStart = cleanString(body.scheduledStart);
+
+  if (publicationStatus !== "draft" && !complete) {
+    return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
+  }
+  if (publicationStatus !== "draft" && !opponentTeamId) {
+    return NextResponse.json({ error: "opponent-required" }, { status: 400 });
+  }
+  if (publicationStatus === "published" && !scheduledStart) {
+    return NextResponse.json({ error: "scheduled-start-required" }, { status: 400 });
+  }
+  if (opponentTeamId && !data.teams.some((team) => team.id === opponentTeamId)) {
+    return NextResponse.json({ error: "invalid-opponent" }, { status: 400 });
+  }
+
+  await saveOpenRoundManagement({
+    roundNumber,
+    publicationStatus,
+    opponentTeamId,
+    scheduledStart,
+    course: cleanString(body.course),
+    startingHole: cleanString(body.startingHole),
+    slotAssignments: assignments,
+    internalNote: typeof body.internalNote === "string" ? body.internalNote.trim() : "",
+    actorUid: claims.uid,
+    actorEmail: claims.email ?? null,
+  });
+
+  return NextResponse.json({ ok: true, publicationStatus });
+}
