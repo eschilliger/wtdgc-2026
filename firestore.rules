@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return signedIn() && request.auth.token.role == 'staff';
+    }
+
+    function isPlayer() {
+      return signedIn() && request.auth.token.role == 'player';
+    }
+
+    function isPublishedRound() {
+      return resource.data.publicationStatus == 'published';
+    }
+
+    // Existing public scouting data remains readable. Client-side writes are blocked.
+    match /teams/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /players/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /registrations/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /pdgaProfiles/{pdgaNumber} {
+      allow read: if true;
+      allow write: if false;
+
+      match /ratingHistory/{entryId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      match /yearlyStats/{entryId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /competitionRounds/{roundId} {
+        // Staff can prepare every round. Players can only read rounds explicitly published.
+        allow read: if isStaff() || (isPlayer() && isPublishedRound());
+        allow create, update, delete: if isStaff();
+
+        // Round-specific roster shown to players only after parent round publication.
+        match /rosters/{rosterId} {
+          allow read: if isStaff() || (isPlayer() &&
+            get(/databases/$(database)/documents/events/$(eventId)/competitionRounds/$(roundId)).data.publicationStatus == 'published');
+          allow create, update, delete: if isStaff();
+        }
+
+        // Internal notes are staff-only, even after the round has been published.
+        match /staffNotes/{noteId} {
+          allow read, create, update, delete: if isStaff();
+        }
+      }
+
+      // Default rosters are preparation data and never player-readable directly.
+      match /defaultMatchRosters/{division} {
+        allow read, create, update, delete: if isStaff();
+      }
+    }
+
+    // Sync logs and all other unlisted documents are not exposed to clients.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

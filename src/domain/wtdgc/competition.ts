@@ -2,6 +2,8 @@ export const WTDGC_REFERENCE_RATING_DATE = "2026-08-11" as const;
 
 export type WtdgcDivision = "open" | "masters";
 export type WtdgcRoundNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type WtdgcUserRole = "staff" | "player";
+export type WtdgcRoundPublicationStatus = "draft" | "ready" | "published";
 
 export type WtdgcRoundStage =
   | "swiss"
@@ -92,6 +94,19 @@ export type WtdgcRoundMatch = {
   course: string | null;
   startingHole: string | null;
   roster: WtdgcMatchRoster | null;
+};
+
+export type WtdgcRoundPublication = {
+  publicationStatus: WtdgcRoundPublicationStatus;
+  publishedAt: string | null;
+  publishedBy: string | null;
+};
+
+export type WtdgcStaffNote = {
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  authorUid: string;
 };
 
 export function requiredRosterSlots(division: WtdgcDivision): readonly WtdgcRosterSlot[] {
