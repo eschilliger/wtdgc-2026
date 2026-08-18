@@ -1,4 +1,5 @@
 import TeamComparison, { type ComparisonTeam } from "@/components/TeamComparison";
+import { WTDGC_REFERENCE_RATING_DATE } from "@/domain/wtdgc/competition";
 import { db } from "@/server/firebase/admin";
 import { extractPdgaGender, type PdgaGender } from "@/server/pdga/statistics";
 
@@ -30,6 +31,9 @@ type GenderSource = "profile" | "yearly-stats" | "default-m";
 type PdgaProfileDoc = {
   pdgaNumber: number;
   currentRating?: number | null;
+  ratingEffectiveDate?: string | null;
+  wtdgcReferenceRating?: number | null;
+  wtdgcReferenceRatingDate?: string | null;
   gender?: PdgaGender | null;
   genderSource?: string | null;
   scoutingMetrics?: {
@@ -59,6 +63,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     return [player.id, player] as const;
   }));
   const ratings = new Map<number, number | null>();
+  const referenceRatings = new Map<number, number>();
   const trends12Months = new Map<number, number | null>();
   const genders = new Map<number, PdgaGender>();
   const genderSources = new Map<number, GenderSource>();
@@ -68,6 +73,20 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
     if (!Number.isFinite(profile.pdgaNumber)) continue;
     ratings.set(profile.pdgaNumber, profile.currentRating ?? null);
     trends12Months.set(profile.pdgaNumber, profile.scoutingMetrics?.trend12Months ?? null);
+
+    if (
+      profile.wtdgcReferenceRatingDate === WTDGC_REFERENCE_RATING_DATE &&
+      typeof profile.wtdgcReferenceRating === "number"
+    ) {
+      referenceRatings.set(profile.pdgaNumber, profile.wtdgcReferenceRating);
+    } else if (
+      profile.ratingEffectiveDate === WTDGC_REFERENCE_RATING_DATE &&
+      typeof profile.currentRating === "number"
+    ) {
+      // Safe transition fallback while the one-time August snapshot is being persisted.
+      referenceRatings.set(profile.pdgaNumber, profile.currentRating);
+    }
+
     if (profile.gender === "M" || profile.gender === "F") {
       genders.set(profile.pdgaNumber, profile.gender);
       genderSources.set(
@@ -102,6 +121,7 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
           const genderSource = pdgaNumber
             ? genderSources.get(pdgaNumber) ?? "default-m"
             : "default-m";
+          const referenceRating = pdgaNumber ? referenceRatings.get(pdgaNumber) ?? null : null;
 
           return {
             id: player.id,
@@ -113,6 +133,8 @@ async function loadTeams(): Promise<ComparisonTeam[]> {
             gender,
             genderSource,
             jerseyNumber: registration.jerseyNumber ?? null,
+            referenceRating,
+            ratingSource: referenceRating !== null ? "pdga" as const : null,
           };
         })
         .filter((player): player is NonNullable<typeof player> => player !== null);
