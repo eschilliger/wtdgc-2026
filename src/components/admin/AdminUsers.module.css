@@ -1,0 +1,81 @@
+.panel {
+  display: grid;
+  gap: 18px;
+}
+
+.summary {
+  padding: 18px 20px;
+  border: 1px solid #d6e0eb;
+  border-radius: 16px;
+  background: #fff;
+  color: #17202a;
+}
+
+.summary h2 { margin: 0 0 6px; color: #123968; font-size: 20px; }
+.summary p { margin: 0; color: #748193; line-height: 1.45; }
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #d6e0eb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.users {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.users th,
+.users td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4eaf0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.users th {
+  color: #40556b;
+  background: #f7f9fb;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.users tr:last-child td { border-bottom: 0; }
+.email { color: #123968; font-weight: 700; }
+.meta { margin-top: 4px; color: #748193; font-size: 12px; }
+.badge { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px; background: #eaf1f8; color: #123968; font-size: 12px; font-weight: 750; }
+.disabled { background: #fbe8ea; color: #8f2630; }
+
+.roleControl { display: flex; align-items: center; gap: 8px; }
+.roleControl select {
+  min-height: 38px;
+  padding: 0 32px 0 10px;
+  border: 1px solid #b7c9dc;
+  border-radius: 9px;
+  background: #fff;
+  color: #17202a;
+  font: inherit;
+}
+.roleControl button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #123968;
+  border-radius: 9px;
+  background: #123968;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.roleControl button:disabled,
+.roleControl select:disabled { opacity: .55; cursor: not-allowed; }
+
+.message { margin: 6px 0 0; font-size: 12px; }
+.success { color: #166534; }
+.error { color: #9f1239; }
+.self { color: #7e581c; font-size: 12px; font-weight: 650; }
+
+@media (max-width: 700px) {
+  .summary { padding: 16px; }
+}

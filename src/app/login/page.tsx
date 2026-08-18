@@ -6,6 +6,7 @@ import { getSessionClaims, roleFromClaims } from "../../server/auth/session";
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const claims = await getSessionClaims();
   const role = roleFromClaims(claims);
+  if (role === "admin") redirect("/admin");
   if (role === "staff") redirect("/staff");
   if (role === "player") redirect("/player-area");
 
@@ -18,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p>Connexion à l’espace Équipe de France.</p>
         </header>
         {params.status === "role-required" ? (
-          <p className={styles.notice}>Ton compte est bien créé, mais aucun rôle WTDGC ne lui est encore attribué. Un membre habilité doit lui attribuer le rôle Staff ou Joueur.</p>
+          <p className={styles.notice}>Ton compte est bien créé, mais aucun rôle WTDGC ne lui est encore attribué. Un administrateur doit lui attribuer le rôle Admin, Staff ou Joueur.</p>
         ) : null}
         <LoginPanel />
       </div>

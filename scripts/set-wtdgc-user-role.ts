@@ -1,7 +1,7 @@
 import { getAuth } from "firebase-admin/auth";
 import { db } from "../src/server/firebase/admin";
 
-type Role = "staff" | "player";
+type Role = "admin" | "staff" | "player";
 
 function readArg(name: string) {
   const prefix = `--${name}=`;
@@ -13,7 +13,7 @@ async function main() {
   const role = readArg("role") as Role | null;
 
   if (!email) throw new Error("Missing --email=<address>.");
-  if (role !== "staff" && role !== "player") throw new Error("--role must be staff or player.");
+  if (role !== "admin" && role !== "staff" && role !== "player") throw new Error("--role must be admin, staff or player.");
 
   const auth = getAuth();
   const user = await auth.getUserByEmail(email);
@@ -23,6 +23,7 @@ async function main() {
     ...existingClaims,
     role,
   });
+  await auth.revokeRefreshTokens(user.uid);
 
   await db.collection("appUsers").doc(user.uid).set({
     uid: user.uid,
@@ -32,7 +33,7 @@ async function main() {
   }, { merge: true });
 
   console.log(`Role '${role}' assigned to ${email} (${user.uid}).`);
-  console.log("The user must refresh/re-authenticate for the new custom claim to appear in their ID token.");
+  console.log("Existing sessions were revoked. The user must re-authenticate to receive the new role.");
 }
 
 main().catch((error) => {

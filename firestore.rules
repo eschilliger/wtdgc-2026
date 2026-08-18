@@ -6,8 +6,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isStaff() {
-      return signedIn() && request.auth.token.role == 'staff';
+    function isAdmin() {
+      return signedIn() && request.auth.token.role == 'admin';
+    }
+
+    function hasStaffAccess() {
+      return signedIn() && (request.auth.token.role == 'staff' || request.auth.token.role == 'admin');
     }
 
     function isPlayer() {
@@ -54,26 +58,26 @@ service cloud.firestore {
       allow write: if false;
 
       match /competitionRounds/{roundId} {
-        // Staff can prepare every round. Players can only read rounds explicitly published.
-        allow read: if isStaff() || (isPlayer() && isPublishedRound());
-        allow create, update, delete: if isStaff();
+        // Staff and admins can prepare every round. Players can only read rounds explicitly published.
+        allow read: if hasStaffAccess() || (isPlayer() && isPublishedRound());
+        allow create, update, delete: if hasStaffAccess();
 
         // Round-specific roster shown to players only after parent round publication.
         match /rosters/{rosterId} {
-          allow read: if isStaff() || (isPlayer() &&
+          allow read: if hasStaffAccess() || (isPlayer() &&
             get(/databases/$(database)/documents/events/$(eventId)/competitionRounds/$(roundId)).data.publicationStatus == 'published');
-          allow create, update, delete: if isStaff();
+          allow create, update, delete: if hasStaffAccess();
         }
 
-        // Internal notes are staff-only, even after the round has been published.
+        // Internal notes are staff/admin-only, even after the round has been published.
         match /staffNotes/{noteId} {
-          allow read, create, update, delete: if isStaff();
+          allow read, create, update, delete: if hasStaffAccess();
         }
       }
 
       // Default rosters are preparation data and never player-readable directly.
       match /defaultMatchRosters/{division} {
-        allow read, create, update, delete: if isStaff();
+        allow read, create, update, delete: if hasStaffAccess();
       }
     }
 
