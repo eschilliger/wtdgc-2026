@@ -1,21 +1,67 @@
 import styles from "../../components/auth/Auth.module.css";
+import matchStyles from "../../components/player/PlayerMatches.module.css";
 import { requirePlayerAccess } from "../../server/auth/session";
+import { loadPlayerArea } from "../../server/repositories/player-area.repository";
+
+function divisionLabel(division: "open" | "masters") {
+  return division === "open" ? "Open" : "Masters";
+}
+
+function formatStart(value: string | null) {
+  if (!value) return "Horaire à confirmer";
+  const [date, time] = value.split("T");
+  if (!date) return value;
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}${time ? ` · ${time.slice(0, 5)}` : ""}`;
+}
 
 export default async function PlayerAreaPage() {
   const claims = await requirePlayerAccess();
+  const { association, matches } = await loadPlayerArea(claims.uid);
+
   return (
     <main className={styles.area}>
       <div className={styles.areaInner}>
         <header className={styles.areaHeader}>
           <div>
             <h1>Mes matchs</h1>
-            <p>{claims.email ?? "Compte WTDGC"}</p>
+            <p>{association?.playerDisplayName ?? claims.email ?? "Compte WTDGC"}</p>
           </div>
         </header>
-        <section className={styles.placeholder}>
-          <strong>Aucun match publié pour le moment.</strong>
-          <p>Les prochains matchs apparaîtront ici dès qu’ils seront disponibles.</p>
-        </section>
+
+        {!association ? (
+          <section className={styles.placeholder}>
+            <strong>Aucun joueur associé à ce compte.</strong>
+            <p>Ton profil joueur doit être associé avant que tes matchs puissent apparaître ici.</p>
+          </section>
+        ) : matches.length === 0 ? (
+          <section className={styles.placeholder}>
+            <strong>Aucun match publié pour le moment.</strong>
+            <p>{divisionLabel(association.division)} · les prochains matchs apparaîtront ici dès leur publication.</p>
+          </section>
+        ) : (
+          <section className={matchStyles.section}>
+            <div className={matchStyles.heading}>
+              <div><span>{divisionLabel(association.division)}</span><h2>Matchs publiés</h2></div>
+              <strong>{matches.length}</strong>
+            </div>
+            <div className={matchStyles.grid}>
+              {matches.map((match, index) => (
+                <article className={`${matchStyles.card} ${index === 0 ? matchStyles.next : ""}`} key={match.id}>
+                  <div className={matchStyles.cardTop}>
+                    <div><span className={matchStyles.round}>Round {match.roundNumber}</span><h3>France · {match.opponentCountry}</h3></div>
+                    {index === 0 ? <span className={matchStyles.nextBadge}>Prochain</span> : null}
+                  </div>
+                  <dl className={matchStyles.facts}>
+                    <div><dt>Départ</dt><dd>{formatStart(match.scheduledStart)}</dd></div>
+                    <div><dt>Parcours</dt><dd>{match.course || "À confirmer"}</dd></div>
+                    <div><dt>Trou</dt><dd>{match.startingHole || "À confirmer"}</dd></div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
