@@ -10,11 +10,11 @@ function parseRound(value: string): WtdgcRoundNumber | null {
   return round >= 1 && round <= 8 ? round as WtdgcRoundNumber : null;
 }
 
-export default async function StaffOpenRoundPage({ params }: { params: Promise<{ round: string }> }) {
+export default async function StaffMastersRoundPage({ params }: { params: Promise<{ round: string }> }) {
   await requireStaffAccess();
   const { round: rawRound } = await params;
   const roundNumber = parseRound(rawRound);
   if (!roundNumber) notFound();
-  const data = await loadRoundManagement("open", roundNumber);
+  const data = await loadRoundManagement("masters", roundNumber);
   return <main className={authStyles.area}><div className={authStyles.areaInner}><OpenRoundEditor data={data} /></div></main>;
 }
