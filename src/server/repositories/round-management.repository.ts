@@ -9,6 +9,14 @@ export type RoundRoster = {
   selectedPlayerIds: string[];
 };
 
+export type RoundMatchup = {
+  id: string;
+  order: number;
+  format: "single" | "double";
+  francePlayerIds: string[];
+  opponentPlayerIds: string[];
+};
+
 export type RoundManagementData = {
   division: WtdgcDivision;
   roundNumber: WtdgcRoundNumber;
@@ -19,6 +27,7 @@ export type RoundManagementData = {
   course: string | null;
   startingHole: string | null;
   roster: RoundRoster | null;
+  matchups: RoundMatchup[];
   publishedAt: string | null;
   publishedBy: string | null;
   internalNote: string;
@@ -39,9 +48,27 @@ type RoundDoc = {
   course?: string | null;
   startingHole?: string | null;
   roster?: { slotAssignments?: Partial<Record<WtdgcRosterSlot, string>>; selectedPlayerIds?: string[] } | null;
+  matchups?: RoundMatchup[] | null;
   publishedAt?: string | null;
   publishedBy?: string | null;
 };
+
+function normalizeMatchups(value: unknown): RoundMatchup[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry, index) => {
+    if (!entry || typeof entry !== "object") return [];
+    const raw = entry as Partial<RoundMatchup>;
+    if (raw.format !== "single" && raw.format !== "double") return [];
+    const size = raw.format === "single" ? 1 : 2;
+    return [{
+      id: typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : `match-${index + 1}`,
+      order: Number.isFinite(raw.order) ? Number(raw.order) : index + 1,
+      format: raw.format,
+      francePlayerIds: Array.isArray(raw.francePlayerIds) ? raw.francePlayerIds.filter((id): id is string => typeof id === "string").slice(0, size) : [],
+      opponentPlayerIds: Array.isArray(raw.opponentPlayerIds) ? raw.opponentPlayerIds.filter((id): id is string => typeof id === "string").slice(0, size) : [],
+    }];
+  }).sort((a, b) => a.order - b.order);
+}
 
 export async function listRoundsForStaff(division: WtdgcDivision) {
   const snapshot = await db.collection("events").doc(WTDGC_EVENT_ID).collection("competitionRounds").where("division", "==", division).get();
@@ -79,6 +106,7 @@ export async function loadRoundManagement(division: WtdgcDivision, roundNumber: 
     course: round.course ?? null,
     startingHole: round.startingHole ?? null,
     roster: selectedPlayerIds.length ? { slotAssignments, selectedPlayerIds } : null,
+    matchups: normalizeMatchups(round.matchups),
     publishedAt: round.publishedAt ?? null,
     publishedBy: round.publishedBy ?? null,
     internalNote: noteSnapshot.exists ? String(noteSnapshot.data()?.text ?? "") : "",
@@ -102,6 +130,7 @@ export async function saveRoundManagement(input: {
   startingHole: string | null;
   selectedPlayerIds: string[];
   slotAssignments?: Partial<Record<OpenRosterSlot, string>>;
+  matchups: RoundMatchup[];
   internalNote: string;
   actorUid: string;
   actorEmail: string | null;
@@ -125,6 +154,7 @@ export async function saveRoundManagement(input: {
       submissionDeadline: null,
       confirmed: input.publicationStatus !== "draft",
     },
+    matchups: input.matchups.map((matchup, index) => ({ ...matchup, order: index + 1 })),
     updatedAt: now,
     updatedBy: input.actorUid,
     updatedByEmail: input.actorEmail,
