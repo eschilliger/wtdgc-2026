@@ -18,6 +18,7 @@ export type PublishedPlayerMatch = {
   course: string | null;
   startingHole: string | null;
   publishedAt: string | null;
+  playerStatus: "starter" | "substitute";
 };
 
 type AppUserDoc = {
@@ -69,7 +70,7 @@ export async function loadPlayerArea(uid: string) {
 
   const matches = roundsSnapshot.docs
     .map((doc) => ({ id: doc.id, data: doc.data() as RoundDoc }))
-    .filter(({ data }) => data.division === association.division && data.roster?.selectedPlayerIds?.includes(association.personId))
+    .filter(({ data }) => data.division === association.division)
     .map(({ id, data }) => ({
       id,
       division: association.division,
@@ -79,6 +80,7 @@ export async function loadPlayerArea(uid: string) {
       course: data.course ?? null,
       startingHole: data.startingHole ?? null,
       publishedAt: data.publishedAt ?? null,
+      playerStatus: data.roster?.selectedPlayerIds?.includes(association.personId) ? "starter" as const : "substitute" as const,
     }))
     .filter((match) => match.roundNumber >= 1 && match.roundNumber <= 8)
     .sort((a, b) => a.roundNumber - b.roundNumber);
