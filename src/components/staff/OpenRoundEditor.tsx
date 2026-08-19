@@ -6,6 +6,7 @@ import type { ComparisonPlayer } from "../TeamComparison";
 import { ComparisonTeamCard } from "../comparison/ComparisonTeamCard";
 import { ComparisonSummary, LineupMatchups } from "../comparison/ComparisonDuel";
 import { nominalSixIds } from "../scouting/ScoutingRosterPanel";
+import { StaffDivisionSwitch } from "./StaffDivisionSwitch";
 import { type OpenRosterSlot, type WtdgcRoundPublicationStatus } from "../../domain/wtdgc/competition";
 import type { RoundManagementData } from "../../server/repositories/round-management.repository";
 import styles from "./OpenRoundEditor.module.css";
@@ -108,8 +109,8 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
 
   return <div className={styles.page}>
     <div className={styles.topbar}>
-      <Link className={styles.back} href="/staff">← Staff</Link>
-      <div className="division-toggle"><Link className={data.division === "open" ? "active" : ""} href={`/staff/rounds/open/${data.roundNumber}`}>Open</Link><Link className={data.division === "masters" ? "active" : ""} href={`/staff/rounds/masters/${data.roundNumber}`}>Masters</Link></div>
+      <Link className={styles.back} href={`/staff?division=${data.division}`}>← Staff</Link>
+      <StaffDivisionSwitch division={data.division} roundNumber={data.roundNumber} />
       <nav className={styles.roundNav} aria-label={`Rounds ${divisionLabel}`}>{Array.from({ length: 8 }, (_, index) => index + 1).map((round) => <Link key={round} href={`/staff/rounds/${data.division}/${round}`} aria-current={round === data.roundNumber ? "page" : undefined}>R{round}</Link>)}</nav>
     </div>
 
