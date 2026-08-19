@@ -1,0 +1,39 @@
+.switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #edf2f7;
+}
+
+.switch a {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 9px;
+  color: #748193;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.switch a:hover {
+  color: #123968;
+}
+
+.switch .active {
+  background: #fff;
+  color: #123968;
+  box-shadow: 0 2px 8px rgba(20,43,68,.12);
+}
+
+@media (max-width: 560px) {
+  .switch {
+    width: 100%;
+  }
+  .switch a {
+    flex: 1 1 50%;
+  }
+}
