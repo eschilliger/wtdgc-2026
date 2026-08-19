@@ -1,4 +1,5 @@
 import type { WtdgcDivision, WtdgcRoundNumber } from "../../domain/wtdgc/competition";
+import type { RoundMatchup } from "./round-management.repository";
 import { db } from "../firebase/admin";
 import { WTDGC_EVENT_ID } from "./competition.repository";
 
@@ -7,6 +8,14 @@ export type PlayerAssociation = {
   pdgaNumber: number | null;
   division: WtdgcDivision;
   playerDisplayName: string | null;
+};
+
+export type PublishedPlayerMatchup = {
+  id: string;
+  order: number;
+  format: "single" | "double";
+  francePlayers: string[];
+  opponentPlayers: string[];
 };
 
 export type PublishedPlayerMatch = {
@@ -19,6 +28,7 @@ export type PublishedPlayerMatch = {
   startingHole: string | null;
   publishedAt: string | null;
   playerStatus: "starter" | "substitute";
+  matchups: PublishedPlayerMatchup[];
 };
 
 type AppUserDoc = {
@@ -38,9 +48,17 @@ type RoundDoc = {
   startingHole?: string | null;
   publishedAt?: string | null;
   roster?: { selectedPlayerIds?: string[] } | null;
+  matchups?: RoundMatchup[] | null;
 };
 
 type TeamDoc = { id?: string; country?: string };
+type PlayerDoc = { id?: string; firstName?: string; lastName?: string };
+
+function displayName(player: PlayerDoc | undefined, fallback: string) {
+  if (!player) return fallback;
+  const value = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim();
+  return value || fallback;
+}
 
 export async function loadPlayerArea(uid: string) {
   const profileSnapshot = await db.collection("appUsers").doc(uid).get();
@@ -56,9 +74,10 @@ export async function loadPlayerArea(uid: string) {
     playerDisplayName: typeof profile.playerDisplayName === "string" ? profile.playerDisplayName : null,
   };
 
-  const [roundsSnapshot, teamsSnapshot] = await Promise.all([
+  const [roundsSnapshot, teamsSnapshot, playersSnapshot] = await Promise.all([
     db.collection("events").doc(WTDGC_EVENT_ID).collection("competitionRounds").where("publicationStatus", "==", "published").get(),
     db.collection("teams").get(),
+    db.collection("players").get(),
   ]);
   const countryByTeamId = new Map<string, string>();
   teamsSnapshot.docs.forEach((doc) => {
@@ -67,21 +86,40 @@ export async function loadPlayerArea(uid: string) {
     countryByTeamId.set(doc.id, country);
     if (typeof team.id === "string") countryByTeamId.set(team.id, country);
   });
+  const playersById = new Map<string, PlayerDoc>();
+  playersSnapshot.docs.forEach((doc) => {
+    const player = doc.data() as PlayerDoc;
+    playersById.set(doc.id, player);
+    if (typeof player.id === "string") playersById.set(player.id, player);
+  });
 
   const matches = roundsSnapshot.docs
     .map((doc) => ({ id: doc.id, data: doc.data() as RoundDoc }))
     .filter(({ data }) => data.division === association.division)
-    .map(({ id, data }) => ({
-      id,
-      division: association.division,
-      roundNumber: Number(data.roundNumber) as WtdgcRoundNumber,
-      opponentCountry: data.opponentTeamId ? countryByTeamId.get(data.opponentTeamId) ?? "Adversaire" : "Adversaire",
-      scheduledStart: data.scheduledStart ?? null,
-      course: data.course ?? null,
-      startingHole: data.startingHole ?? null,
-      publishedAt: data.publishedAt ?? null,
-      playerStatus: data.roster?.selectedPlayerIds?.includes(association.personId) ? "starter" as const : "substitute" as const,
-    }))
+    .map(({ id, data }) => {
+      const relevantMatchups: PublishedPlayerMatchup[] = (Array.isArray(data.matchups) ? data.matchups : [])
+        .filter((matchup) => Array.isArray(matchup.francePlayerIds) && matchup.francePlayerIds.includes(association.personId))
+        .map((matchup, index) => ({
+          id: matchup.id || `match-${index + 1}`,
+          order: Number.isFinite(matchup.order) ? matchup.order : index + 1,
+          format: matchup.format === "double" ? "double" as const : "single" as const,
+          francePlayers: matchup.francePlayerIds.map((playerId) => displayName(playersById.get(playerId), "Joueur France")),
+          opponentPlayers: matchup.opponentPlayerIds.map((playerId) => displayName(playersById.get(playerId), "Adversaire")),
+        }))
+        .sort((a, b) => a.order - b.order);
+      return {
+        id,
+        division: association.division,
+        roundNumber: Number(data.roundNumber) as WtdgcRoundNumber,
+        opponentCountry: data.opponentTeamId ? countryByTeamId.get(data.opponentTeamId) ?? "Adversaire" : "Adversaire",
+        scheduledStart: data.scheduledStart ?? null,
+        course: data.course ?? null,
+        startingHole: data.startingHole ?? null,
+        publishedAt: data.publishedAt ?? null,
+        playerStatus: data.roster?.selectedPlayerIds?.includes(association.personId) ? "starter" as const : "substitute" as const,
+        matchups: relevantMatchups,
+      };
+    })
     .filter((match) => match.roundNumber >= 1 && match.roundNumber <= 8)
     .sort((a, b) => a.roundNumber - b.roundNumber);
 
