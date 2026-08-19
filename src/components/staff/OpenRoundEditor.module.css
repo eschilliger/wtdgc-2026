@@ -2,6 +2,8 @@
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 .back { color: #1d4f8c; font-weight: 700; text-decoration: none; }
+.topbar :global(.division-toggle) a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 9px; color: #748193; font-size: 13px; font-weight: 750; text-decoration: none; }
+.topbar :global(.division-toggle) a:global(.active) { background: #fff; color: #123968; box-shadow: 0 2px 8px rgba(20,43,68,.12); }
 .roundNav { display: flex; gap: 6px; flex-wrap: wrap; }
 .roundNav a { min-width: 34px; min-height: 34px; display: inline-grid; place-items: center; border: 1px solid #c9d6e3; border-radius: 9px; color: #123968; text-decoration: none; font-size: 13px; font-weight: 750; background: #fff; }
 .roundNav a[aria-current="page"] { background: #123968; color: #fff; border-color: #123968; }
@@ -41,51 +43,31 @@
 .success { color: #166534; }
 .error { color: #9f1239; }
 
-@media (max-width: 1024px) {
-  .metaGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+@media (max-width: 1024px) { .metaGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 @media (max-width: 599px) and (orientation: portrait) {
   .page { gap: 10px; }
-  .topbar { gap: 8px; }
+  .topbar { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; }
   .back { font-size: 13px; }
-  .roundNav { gap: 4px; overflow-x: auto; flex-wrap: nowrap; max-width: 100%; padding-bottom: 2px; }
+  .topbar :global(.division-toggle) { justify-self: end; }
+  .topbar :global(.division-toggle) a { min-height: 31px; padding-inline: 10px; font-size: 11px; }
+  .roundNav { grid-column: 1 / -1; gap: 4px; overflow-x: auto; flex-wrap: nowrap; max-width: 100%; padding-bottom: 2px; }
   .roundNav a { min-width: 31px; min-height: 31px; font-size: 11px; border-radius: 8px; }
-
   .card { padding: 12px; border-radius: 13px; }
   .header { margin-bottom: 12px; }
   .header h2 { font-size: 18px; }
   .status { min-height: 25px; padding-inline: 8px; font-size: 10px; }
-
   .metaGrid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .field { gap: 4px; font-size: 11px; }
   .field input, .field select { min-height: 38px; padding-inline: 8px; font-size: 12px; }
-
   .rosterActions { margin: 12px 0 8px; gap: 8px; font-size: 11px; }
   .secondary { min-height: 34px; padding-inline: 9px; font-size: 11px; }
-
   .comparison { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
-
   .notes { margin-top: 12px; }
   .notes summary { padding: 10px 12px; font-size: 12px; }
   .notes .field { padding: 9px; }
   .field textarea { min-height: 90px; font-size: 12px; }
-
-  .actions {
-    position: sticky;
-    bottom: 8px;
-    z-index: 30;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin: 12px -4px 0;
-    padding: 8px;
-    border: 1px solid #d6e0eb;
-    border-radius: 12px;
-    background: rgba(255,255,255,.96);
-    box-shadow: 0 10px 24px rgba(18,57,104,.12);
-    backdrop-filter: blur(10px);
-  }
+  .actions { position: sticky; bottom: 8px; z-index: 30; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px -4px 0; padding: 8px; border: 1px solid #d6e0eb; border-radius: 12px; background: rgba(255,255,255,.96); box-shadow: 0 10px 24px rgba(18,57,104,.12); backdrop-filter: blur(10px); }
   .actions button { min-height: 38px; padding-inline: 6px; font-size: 11px; }
 }
 
