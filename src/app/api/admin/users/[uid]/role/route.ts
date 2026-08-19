@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ u
       uid,
       email: user.email ?? null,
       role,
+      authorizationStatus: "active",
       updatedAt: new Date().toISOString(),
       updatedBy: claims.uid,
     }, { merge: true });

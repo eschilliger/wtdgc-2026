@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../server/firebase/admin";
+import { auth, db } from "../../../../server/firebase/admin";
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "../../../../server/auth/session";
 
 function publicOrigin(request: NextRequest) {
@@ -39,6 +39,16 @@ export async function POST(request: NextRequest) {
     });
 
     const role = claims.role === "admin" || claims.role === "staff" || claims.role === "player" ? claims.role : null;
+    await db.collection("appUsers").doc(claims.uid).set({
+      uid: claims.uid,
+      email: claims.email ?? null,
+      emailVerified: claims.email_verified ?? false,
+      authorizationStatus: role ? "active" : "pending",
+      role,
+      lastLoginAt: new Date().toISOString(),
+      signInProvider: claims.firebase?.sign_in_provider ?? null,
+    }, { merge: true });
+
     const response = NextResponse.json({ ok: true, role });
     response.cookies.set(SESSION_COOKIE_NAME, sessionCookie, {
       httpOnly: true,

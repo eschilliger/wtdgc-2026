@@ -20,6 +20,30 @@
   box-shadow: 0 14px 34px rgba(18, 57, 104, .08);
 }
 
+.modeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #eef3f8;
+}
+.modeSwitch button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #40556b;
+  font-weight: 750;
+  cursor: pointer;
+}
+.modeSwitch .modeActive {
+  background: #fff;
+  color: #123968;
+  box-shadow: 0 1px 5px rgba(18, 57, 104, .08);
+}
+
 .google,
 .submit,
 .logout {
@@ -43,9 +67,23 @@
 .form input { min-height: 44px; border: 1px solid #b7c9dc; border-radius: 10px; padding: 0 12px; font: inherit; color: #17202a; }
 .form input:focus { outline: 2px solid #91b4db; outline-offset: 1px; }
 
-.error, .notice { margin: 16px 0 0; padding: 11px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; }
+.linkButton {
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1d4f8c;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.linkButton:disabled { opacity: .55; cursor: wait; }
+
+.error, .notice, .success { margin: 16px 0 0; padding: 11px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; }
 .error { background: #fbe8ea; color: #8f2630; }
 .notice { margin-bottom: 16px; background: #fff4cc; color: #6d5117; }
+.success { background: #e2f3e8; color: #166534; }
 .help { margin: 16px 0 0; color: #748193; font-size: 13px; line-height: 1.4; }
 
 .area { min-height: 100vh; padding: 32px 20px; background: #f5f8fb; }

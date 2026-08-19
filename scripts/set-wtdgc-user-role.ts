@@ -29,6 +29,7 @@ async function main() {
     uid: user.uid,
     email,
     role,
+    authorizationStatus: "active",
     updatedAt: new Date().toISOString(),
   }, { merge: true });
 

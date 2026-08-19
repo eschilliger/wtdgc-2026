@@ -25,7 +25,15 @@ export function roleFromClaims(claims: DecodedIdToken | null): WtdgcRole | null 
 }
 
 function homeForRole(role: WtdgcRole | null) {
-  return role === "admin" ? "/admin" : role === "staff" ? "/staff" : role === "player" ? "/player-area" : "/login?status=role-required";
+  return role === "admin" || role === "staff" || role === "player" ? "/" : "/";
+}
+
+export async function requireAuthorizedAccess() {
+  const claims = await getSessionClaims();
+  const role = roleFromClaims(claims);
+  if (!claims) redirect("/login");
+  if (!role) redirect("/");
+  return claims;
 }
 
 export async function requireRole(role: WtdgcRole) {
