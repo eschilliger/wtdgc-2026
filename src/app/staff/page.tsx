@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { DefaultOpenRoster } from "../../components/staff/DefaultOpenRoster";
 import { StaffDivisionSwitch } from "../../components/staff/StaffDivisionSwitch";
+import { ScoutingRosterPanel } from "../../components/scouting/ScoutingRosterPanel";
 import authStyles from "../../components/auth/Auth.module.css";
 import roundStyles from "../../components/staff/StaffRounds.module.css";
 import type { WtdgcDivision } from "../../domain/wtdgc/competition";
@@ -56,12 +57,10 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
     ?? parseDivision(cookieStore.get("wtdgc_staff_division")?.value)
     ?? "open";
 
-  const roundsPromise = listRoundsForStaff(division);
-
   if (division === "open") {
     const [{ roster }, rounds, openTeams] = await Promise.all([
       loadFranceOpenRosterData(),
-      roundsPromise,
+      listRoundsForStaff("open"),
       loadScoutingTeams("open"),
     ]);
     const franceTeam = openTeams.find((team) => team.country.trim().toLowerCase() === "france");
@@ -81,7 +80,13 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
     );
   }
 
-  const rounds = await roundsPromise;
+  const [rounds, mastersTeams] = await Promise.all([
+    listRoundsForStaff("masters"),
+    loadScoutingTeams("masters"),
+  ]);
+  const franceMasters = mastersTeams.find((team) => team.country.trim().toLowerCase() === "france");
+  if (!franceMasters) throw new Error("France Masters scouting team not found.");
+
   return (
     <main className={authStyles.area}>
       <div className={authStyles.areaInner}>
@@ -89,6 +94,13 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           <div><h1>Espace Staff</h1><p>{claims.email ?? "Compte staff"}</p></div>
         </header>
         <StaffDivisionSwitch division={division} />
+        <section className={roundStyles.section}>
+          <div className={roundStyles.header}>
+            <h2>Équipe de France · Masters</h2>
+            <p>Roster inscrit et données de référence de la division Masters.</p>
+          </div>
+          <ScoutingRosterPanel team={franceMasters} />
+        </section>
         <RoundsSection division={division} rounds={rounds} />
       </div>
     </main>
