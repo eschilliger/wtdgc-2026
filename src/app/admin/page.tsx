@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { LogoutButton } from "../../components/auth/LogoutButton";
 import { AdminUsersTable, type AdminUserRow } from "../../components/admin/AdminUsersTable";
 import authStyles from "../../components/auth/Auth.module.css";
 import { requireRole } from "../../server/auth/session";
@@ -35,12 +33,10 @@ export default async function AdminPage() {
             <h1>Administration</h1>
             <p>{claims.email ?? "Compte administrateur"} · gestion des accès WTDGC</p>
           </div>
-          <LogoutButton />
         </header>
         <section className={authStyles.placeholder} style={{ marginBottom: 18 }}>
           <strong>Accès administrateur validé.</strong>
-          <p>Attribue les rôles Joueur, Staff ou Admin. Un changement de rôle prend effet lors du prochain renouvellement de session de l’utilisateur.</p>
-          <p><Link href="/staff">Accéder à l’espace Staff</Link></p>
+          <p>Attribue les rôles Joueur, Staff ou Admin. Les accès Comparateur, Mes matchs, Staff et Administration sont maintenant présentés dans la navigation selon les capacités du compte.</p>
         </section>
         <AdminUsersTable users={users} currentUid={claims.uid} />
       </div>
