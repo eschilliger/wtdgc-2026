@@ -50,7 +50,12 @@ export default async function PlayerAreaPage() {
                 <article className={`${matchStyles.card} ${index === 0 ? matchStyles.next : ""}`} key={match.id}>
                   <div className={matchStyles.cardTop}>
                     <div><span className={matchStyles.round}>Round {match.roundNumber}</span><h3>France · {match.opponentCountry}</h3></div>
-                    {index === 0 ? <span className={matchStyles.nextBadge}>Prochain</span> : null}
+                    <div className={matchStyles.badges}>
+                      <span className={`${matchStyles.playerStatus} ${match.playerStatus === "starter" ? matchStyles.starter : matchStyles.substitute}`}>
+                        {match.playerStatus === "starter" ? "Titulaire" : "Remplaçant"}
+                      </span>
+                      {index === 0 ? <span className={matchStyles.nextBadge}>Prochain</span> : null}
+                    </div>
                   </div>
                   <dl className={matchStyles.facts}>
                     <div><dt>Départ</dt><dd>{formatStart(match.scheduledStart)}</dd></div>
