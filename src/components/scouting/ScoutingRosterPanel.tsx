@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ComparisonPlayer, ComparisonTeam } from "../TeamComparison";
+import styles from "./ScoutingRosterPanel.module.css";
 
 function rating(player: ComparisonPlayer) {
   return player.referenceRating ?? player.rating;
@@ -60,7 +61,7 @@ export function ScoutingRosterPanel({
   const average = selectedRatings.length === 6 ? Math.round(selectedRatings.reduce((sum, value) => sum + value, 0) / 6) : null;
 
   return (
-    <article className="team-card team-card--v42">
+    <article className={`team-card team-card--v42 ${styles.panel}`}>
       <div className="team-card__header">
         <div>
           <span className="team-country-kicker">{flagEmoji(team.countryCode)} {team.country}</span>
