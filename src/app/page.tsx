@@ -73,11 +73,13 @@ export default async function HomePage() {
             <span>Ouvrir le comparateur →</span>
           </Link>
 
-          <Link className={styles.card} href="/player-area">
-            <h2>Mes matchs</h2>
-            <p>Consulte les rounds publiés et les informations de match qui te concernent.</p>
-            <span>Voir mes matchs →</span>
-          </Link>
+          {role === "player" ? (
+            <Link className={styles.card} href="/player-area">
+              <h2>Mes matchs</h2>
+              <p>Consulte les rounds publiés et les informations de match qui te concernent.</p>
+              <span>Voir mes matchs →</span>
+            </Link>
+          ) : null}
 
           {(role === "staff" || role === "admin") ? (
             <Link className={styles.card} href="/staff">
