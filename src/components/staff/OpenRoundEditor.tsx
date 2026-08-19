@@ -88,7 +88,7 @@ export function OpenRoundEditor({ data }: { data: OpenRoundManagementData }) {
   }
 
   async function save(nextStatus: WtdgcRoundPublicationStatus) {
-    if (nextStatus === "published" && !window.confirm("Publier ce round ? Les joueurs autorisés pourront alors voir les informations de match publiées.")) return;
+    if (nextStatus === "published" && !window.confirm("Publier ce round ?")) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -108,7 +108,7 @@ export function OpenRoundEditor({ data }: { data: OpenRoundManagementData }) {
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Enregistrement impossible.");
       setStatus(nextStatus);
-      setMessage({ kind: "success", text: nextStatus === "published" ? "Round publié." : nextStatus === "ready" ? "Round marqué prêt." : "Brouillon enregistré." });
+      setMessage({ kind: "success", text: nextStatus === "published" ? "Round publié." : nextStatus === "ready" ? "Round prêt." : "Brouillon enregistré." });
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "Enregistrement impossible." });
     } finally {
@@ -119,7 +119,7 @@ export function OpenRoundEditor({ data }: { data: OpenRoundManagementData }) {
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
-        <Link className={styles.back} href="/staff">← Retour à l’espace Staff</Link>
+        <Link className={styles.back} href="/staff">← Staff</Link>
         <nav className={styles.roundNav} aria-label="Rounds Open">
           {Array.from({ length: 8 }, (_, index) => index + 1).map((round) => <Link key={round} href={`/staff/rounds/open/${round}`} aria-current={round === data.roundNumber ? "page" : undefined}>R{round}</Link>)}
         </nav>
@@ -127,7 +127,7 @@ export function OpenRoundEditor({ data }: { data: OpenRoundManagementData }) {
 
       <section className={styles.card}>
         <div className={styles.header}>
-          <div><h2>Open · Round {data.roundNumber}</h2><p>Préparation privée Staff. Même lecture que dans le scouting, avec la France et l’adversaire face à face.</p></div>
+          <div><h2>Open · Round {data.roundNumber}</h2></div>
           <span className={`${styles.status} ${statusClass(status)}`}>{statusLabel(status)}</span>
         </div>
 
@@ -137,40 +137,39 @@ export function OpenRoundEditor({ data }: { data: OpenRoundManagementData }) {
               <option value="">Non défini</option>
               {data.teams.map((team) => <option key={team.id} value={team.id}>{team.country}</option>)}
             </select>
-            <small>Le scouting de l’équipe choisie apparaît immédiatement à droite.</small>
           </label>
-          <label className={styles.field}>Départ · heure locale Vilnius
+          <label className={styles.field}>Départ · heure locale
             <input type="datetime-local" value={scheduledStart} disabled={busy} onChange={(event) => setScheduledStart(event.target.value)} />
-            <small>Obligatoire avant publication aux joueurs.</small>
           </label>
-          <label className={styles.field}>Parcours / lieu<input value={course} disabled={busy} onChange={(event) => setCourse(event.target.value)} placeholder="À renseigner quand officiel" /></label>
+          <label className={styles.field}>Parcours / lieu<input value={course} disabled={busy} onChange={(event) => setCourse(event.target.value)} placeholder="À définir" /></label>
           <label className={styles.field}>Trou de départ<input value={startingHole} disabled={busy} onChange={(event) => setStartingHole(event.target.value)} placeholder="Ex. 1, 7A…" /></label>
         </div>
 
         <div className={styles.rosterActions}>
-          <button className={styles.secondary} type="button" disabled={busy} onClick={useDefaultRoster}>Reprendre le Default Match Roster</button>
           <span>{menCount}/4 hommes · {womenCount}/2 féminines</span>
+          <button className={styles.secondary} type="button" disabled={busy} onClick={useDefaultRoster}>Roster par défaut</button>
         </div>
 
-        <div className="comparison-grid">
-          <ScoutingRosterPanel team={data.franceTeam} selectedIds={selectedIds} editable onToggle={toggleFrancePlayer} title="France · composition du round" />
+        <div className={`comparison-grid ${styles.comparison}`}>
+          <ScoutingRosterPanel team={data.franceTeam} selectedIds={selectedIds} editable onToggle={toggleFrancePlayer} title="France" />
           {opponentTeam ? (
-            <ScoutingRosterPanel team={opponentTeam} title={`${opponentTeam.country} · scouting`} helper="Lecture de référence de l’adversaire. Aucune modification depuis l’espace Staff." />
+            <ScoutingRosterPanel team={opponentTeam} title={opponentTeam.country} />
           ) : (
-            <article className="team-card"><div className="team-card__header"><div><span className="team-country-kicker">Adversaire</span><h3>À sélectionner</h3><p>Choisis l’adversaire au-dessus pour afficher son équipe avec les mêmes visuels que le scouting.</p></div></div></article>
+            <article className={`team-card ${styles.emptyOpponent}`}><div className="team-card__header"><div><span className="team-country-kicker">Adversaire</span><h3>À sélectionner</h3></div></div></article>
           )}
         </div>
 
-        <label className={`${styles.field} ${styles.full}`} style={{ marginTop: 20 }}>Notes internes Staff
-          <textarea value={internalNote} disabled={busy} onChange={(event) => setInternalNote(event.target.value)} placeholder="Stratégie, points d’attention, informations internes…" />
-          <small>Stockées séparément dans `staffNotes` et jamais exposées aux joueurs.</small>
-        </label>
+        <details className={styles.notes} open={Boolean(internalNote)}>
+          <summary>Notes Staff</summary>
+          <label className={`${styles.field} ${styles.full}`}>
+            <textarea value={internalNote} disabled={busy} onChange={(event) => setInternalNote(event.target.value)} placeholder="Stratégie, points d’attention…" />
+          </label>
+        </details>
 
-        <p className={styles.notice}>« Prêt » exige un adversaire et 4 hommes + 2 féminines. « Publié » exige en plus une heure de départ.</p>
         <div className={styles.actions}>
-          <button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</button>
-          <button className={styles.readyButton} type="button" disabled={busy || !canReady} onClick={() => save("ready")}>Marquer prêt</button>
-          <button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier le round</button>
+          <button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Brouillon" : "Enregistrer"}</button>
+          <button className={styles.readyButton} type="button" disabled={busy || !canReady} onClick={() => save("ready")}>Prêt</button>
+          <button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier</button>
         </div>
         {message ? <p className={`${styles.message} ${message.kind === "success" ? styles.success : styles.error}`}>{message.text}</p> : null}
       </section>
