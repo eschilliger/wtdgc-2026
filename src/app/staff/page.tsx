@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LogoutButton } from "../../components/auth/LogoutButton";
 import { DefaultOpenRoster } from "../../components/staff/DefaultOpenRoster";
 import authStyles from "../../components/auth/Auth.module.css";
 import roundStyles from "../../components/staff/StaffRounds.module.css";
@@ -37,17 +36,16 @@ export default async function StaffPage() {
             <h1>Espace Staff</h1>
             <p>{claims.email ?? "Compte staff"}</p>
           </div>
-          <LogoutButton />
         </header>
         {role === "admin" ? (
           <section className={authStyles.placeholder} style={{ marginBottom: 18 }}>
             <strong>Mode administrateur.</strong>
-            <p><Link href="/admin">Gérer les utilisateurs et les rôles</Link></p>
+            <p>Tu disposes également de la vue Joueur et de l’Administration via la navigation principale.</p>
           </section>
         ) : null}
         <section className={authStyles.placeholder}>
           <strong>Préparation WTDGC privée.</strong>
-          <p>Le Default Match Roster et les rounds en brouillon/prêts restent réservés au Staff/Admin. Seul un round explicitement publié pourra ensuite alimenter l’espace joueur.</p>
+          <p>Le Default Match Roster et les rounds en brouillon/prêts restent réservés au Staff/Admin. Seul un round explicitement publié pourra ensuite alimenter la vue « Mes matchs ».</p>
         </section>
 
         <DefaultOpenRoster team={franceTeam} roster={roster} />
