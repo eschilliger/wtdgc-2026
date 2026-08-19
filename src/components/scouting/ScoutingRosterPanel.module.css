@@ -1,0 +1,171 @@
+.panel {
+  min-width: 0;
+}
+
+@media (max-width: 599px) and (orientation: portrait) {
+  .panel :global(.team-card__header) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 10px !important;
+    padding: 13px 14px !important;
+  }
+
+  .panel :global(.team-country-kicker) {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .panel :global(.team-card__header h3) {
+    margin: 4px 0 0 !important;
+    font-size: 16px !important;
+    line-height: 1.15 !important;
+  }
+
+  .panel :global(.team-card__header p) {
+    display: none !important;
+  }
+
+  .panel :global(.team-rating-block) {
+    display: grid !important;
+    justify-items: end !important;
+    align-content: start !important;
+    gap: 1px !important;
+    min-width: 58px !important;
+  }
+
+  .panel :global(.team-rating-block span) {
+    order: 2 !important;
+    font-size: 9px !important;
+    white-space: nowrap !important;
+  }
+
+  .panel :global(.team-rating-block strong) {
+    order: 1 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+  }
+
+  .panel :global(.scenario-story) {
+    min-height: 0 !important;
+    padding: 8px 14px !important;
+  }
+
+  .panel :global(.scenario-story strong) {
+    font-size: 11px !important;
+  }
+
+  .panel :global(.scenario-story div) {
+    margin-top: 1px !important;
+    font-size: 10px !important;
+  }
+
+  .panel :global(.player-row) {
+    min-height: 74px !important;
+    padding: 8px 10px !important;
+    grid-template-columns: 46px minmax(0, 1fr) auto !important;
+    column-gap: 8px !important;
+  }
+
+  .panel :global(.player-ranks) {
+    min-width: 0 !important;
+    padding-right: 7px !important;
+  }
+
+  .panel :global(.player-ranks > strong) {
+    font-size: 16px !important;
+  }
+
+  .panel :global(.player-ranks > span:not(.player-gender-picto)) {
+    font-size: 8px !important;
+  }
+
+  .panel :global(.player-gender-picto) {
+    width: 22px !important;
+    height: 22px !important;
+    margin-top: 5px !important;
+    font-size: 10px !important;
+  }
+
+  .panel :global(.player-row__main) {
+    min-width: 0 !important;
+    align-self: center !important;
+  }
+
+  .panel :global(.player-name-line) {
+    margin: 0 !important;
+  }
+
+  .panel :global(.player-link),
+  .panel :global(.player-name-line > strong) {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .panel :global(.player-meta-line) {
+    display: none !important;
+  }
+
+  .panel :global(.player-mobile-core) {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 5px !important;
+    align-items: baseline !important;
+  }
+
+  .panel :global(.player-mobile-rating),
+  .panel :global(.player-mobile-trend) {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 4px !important;
+  }
+
+  .panel :global(.player-mobile-rating span),
+  .panel :global(.player-mobile-trend span) {
+    display: none !important;
+  }
+
+  .panel :global(.player-mobile-rating strong) {
+    font-size: 18px !important;
+    line-height: 1 !important;
+  }
+
+  .panel :global(.player-mobile-trend strong) {
+    font-size: 11px !important;
+    line-height: 1 !important;
+  }
+
+  .panel :global(.player-row__actions) {
+    display: none !important;
+  }
+
+  .panel :global(.player-mobile-actions) {
+    position: static !important;
+    display: grid !important;
+    align-content: center !important;
+    justify-items: end !important;
+    gap: 6px !important;
+    min-width: 62px !important;
+  }
+
+  .panel :global(.player-mobile-actions .player-status) {
+    font-size: 9px !important;
+    min-height: 20px !important;
+    padding: 0 6px !important;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 1024px) {
+  .panel :global(.team-card__header) {
+    padding: 10px 12px !important;
+  }
+
+  .panel :global(.scenario-story) {
+    min-height: 0 !important;
+    padding-block: 8px !important;
+  }
+
+  .panel :global(.player-row) {
+    min-height: 68px !important;
+  }
+}

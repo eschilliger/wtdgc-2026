@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DefaultOpenRoster } from "../../components/staff/DefaultOpenRoster";
 import authStyles from "../../components/auth/Auth.module.css";
 import roundStyles from "../../components/staff/StaffRounds.module.css";
-import { requireStaffAccess, roleFromClaims } from "../../server/auth/session";
+import { requireStaffAccess } from "../../server/auth/session";
 import { loadFranceOpenRosterData } from "../../server/repositories/france-roster.repository";
 import { listOpenRoundsForStaff } from "../../server/repositories/round-management.repository";
 import { loadScoutingTeams } from "../../server/repositories/scouting.repository";
@@ -19,7 +19,6 @@ function statusClass(status: "draft" | "ready" | "published") {
 
 export default async function StaffPage() {
   const claims = await requireStaffAccess();
-  const role = roleFromClaims(claims);
   const [{ roster }, rounds, openTeams] = await Promise.all([
     loadFranceOpenRosterData(),
     listOpenRoundsForStaff(),
@@ -37,23 +36,13 @@ export default async function StaffPage() {
             <p>{claims.email ?? "Compte staff"}</p>
           </div>
         </header>
-        {role === "admin" ? (
-          <section className={authStyles.placeholder} style={{ marginBottom: 18 }}>
-            <strong>Mode administrateur.</strong>
-            <p>Tu disposes également de la vue Joueur et de l’Administration via la navigation principale.</p>
-          </section>
-        ) : null}
-        <section className={authStyles.placeholder}>
-          <strong>Préparation WTDGC privée.</strong>
-          <p>Le Default Match Roster et les rounds en brouillon/prêts restent réservés au Staff/Admin. Seul un round explicitement publié pourra ensuite alimenter la vue « Mes matchs ».</p>
-        </section>
 
         <DefaultOpenRoster team={franceTeam} roster={roster} />
 
         <section className={roundStyles.section}>
           <div className={roundStyles.header}>
             <h2>Rounds · France Open</h2>
-            <p>Prépare chaque round à partir du roster par défaut, puis passe-le en Prêt et enfin en Publié lorsque les informations sont confirmées.</p>
+            <p>Prépare les compositions et les informations de chaque round.</p>
           </div>
           <div className={roundStyles.grid}>
             {rounds.map((round) => (

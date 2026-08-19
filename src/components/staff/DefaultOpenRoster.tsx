@@ -73,7 +73,7 @@ export function DefaultOpenRoster({ team, roster }: { team: ComparisonTeam; rost
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Enregistrement impossible.");
       setConfirmed(nextConfirmed);
-      setMessage({ kind: "success", text: nextConfirmed ? "Default Match Roster Open confirmé." : "Brouillon enregistré." });
+      setMessage({ kind: "success", text: nextConfirmed ? "Roster confirmé." : "Brouillon enregistré." });
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "Enregistrement impossible." });
     } finally {
@@ -85,8 +85,8 @@ export function DefaultOpenRoster({ team, roster }: { team: ComparisonTeam; rost
     <section className={styles.card}>
       <div className={styles.header}>
         <div>
-          <h2>Default Match Roster · Open</h2>
-          <p>Même lecture que dans le scouting : sélectionne directement les 4 hommes et 2 féminines. Le joueur restant devient remplaçant.</p>
+          <h2>Roster de référence · Open</h2>
+          <p>Sélectionne 4 hommes et 2 féminines.</p>
         </div>
         <span className={`${styles.status} ${confirmed ? styles.statusConfirmed : ""}`}>{confirmed ? "Confirmé" : "Brouillon"}</span>
       </div>
@@ -96,14 +96,13 @@ export function DefaultOpenRoster({ team, roster }: { team: ComparisonTeam; rost
         selectedIds={selectedIds}
         editable
         onToggle={toggle}
-        title="France · roster de référence"
-        helper="Clique sur Sélectionner/Retirer (ou le switch sur mobile). Les rangs J1 à J6 suivent automatiquement le rating WTDGC."
+        title="France"
       />
 
-      <p className={styles.legend}>{menCount}/4 hommes · {womenCount}/2 féminines. Le rating affiché est le rating WTDGC figé au 11/08/2026.</p>
+      <p className={styles.legend}>{menCount}/4 hommes · {womenCount}/2 féminines · rating WTDGC au 11/08/2026.</p>
       <div className={styles.actions}>
-        <button className={styles.save} type="button" disabled={busy} onClick={() => save(false)}>Enregistrer le brouillon</button>
-        <button className={styles.confirm} type="button" disabled={busy || !complete} onClick={() => save(true)}>Confirmer le roster</button>
+        <button className={styles.save} type="button" disabled={busy} onClick={() => save(false)}>Enregistrer</button>
+        <button className={styles.confirm} type="button" disabled={busy || !complete} onClick={() => save(true)}>Confirmer</button>
       </div>
       {message ? <p className={`${styles.message} ${message.kind === "success" ? styles.success : styles.error}`}>{message.text}</p> : null}
     </section>
