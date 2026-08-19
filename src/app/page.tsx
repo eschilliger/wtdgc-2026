@@ -63,7 +63,6 @@ export default async function HomePage() {
             <h1>Accueil</h1>
             <p>{claims.email ?? "Compte WTDGC"} · rôle {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Joueur"}</p>
           </div>
-          <LogoutButton />
         </header>
 
         <div className={styles.grid}>
@@ -73,13 +72,11 @@ export default async function HomePage() {
             <span>Ouvrir le comparateur →</span>
           </Link>
 
-          {role === "player" ? (
-            <Link className={styles.card} href="/player-area">
-              <h2>Mes matchs</h2>
-              <p>Consulte les rounds publiés et les informations de match qui te concernent.</p>
-              <span>Voir mes matchs →</span>
-            </Link>
-          ) : null}
+          <Link className={styles.card} href="/player-area">
+            <h2>Mes matchs</h2>
+            <p>Consulte les rounds publiés et les informations joueur. Les Staff et Admin peuvent aussi contrôler cette vue.</p>
+            <span>Voir la vue joueur →</span>
+          </Link>
 
           {(role === "staff" || role === "admin") ? (
             <Link className={styles.card} href="/staff">

@@ -24,8 +24,20 @@ export function roleFromClaims(claims: DecodedIdToken | null): WtdgcRole | null 
   return claims?.role === "admin" || claims?.role === "staff" || claims?.role === "player" ? claims.role : null;
 }
 
+export function canAccessPlayerArea(role: WtdgcRole | null) {
+  return role === "player" || role === "staff" || role === "admin";
+}
+
+export function canAccessStaffArea(role: WtdgcRole | null) {
+  return role === "staff" || role === "admin";
+}
+
+export function canAccessAdminArea(role: WtdgcRole | null) {
+  return role === "admin";
+}
+
 function homeForRole(role: WtdgcRole | null) {
-  return role === "admin" || role === "staff" || role === "player" ? "/" : "/";
+  return role ? "/" : "/?status=role-required";
 }
 
 export async function requireAuthorizedAccess() {
@@ -44,10 +56,18 @@ export async function requireRole(role: WtdgcRole) {
   return claims;
 }
 
+export async function requirePlayerAccess() {
+  const claims = await getSessionClaims();
+  const role = roleFromClaims(claims);
+  if (!claims) redirect("/login");
+  if (!canAccessPlayerArea(role)) redirect(homeForRole(role));
+  return claims;
+}
+
 export async function requireStaffAccess() {
   const claims = await getSessionClaims();
-  const actualRole = roleFromClaims(claims);
+  const role = roleFromClaims(claims);
   if (!claims) redirect("/login");
-  if (actualRole !== "staff" && actualRole !== "admin") redirect(homeForRole(actualRole));
+  if (!canAccessStaffArea(role)) redirect(homeForRole(role));
   return claims;
 }
