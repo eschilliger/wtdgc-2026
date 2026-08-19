@@ -53,15 +53,12 @@ export function lineupSummary(players: ComparisonPlayer[], disabledIds = new Set
     .map((player) => ({ ...player, referenceRating: referenceRating(player) }))
     .filter((player): player is SelectedPlayer => player.referenceRating !== null)
     .sort(compareByReference);
-
   const menPool = activeRated.filter((player) => player.gender === "M");
   const womenPool = activeRated.filter((player) => player.gender === "F");
-  const men = menPool.slice(0, 4);
-  const women = womenPool.slice(0, 2);
-  return buildSummary(men, women, menPool, womenPool);
+  return buildSummary(menPool.slice(0, 4), womenPool.slice(0, 2), menPool, womenPool);
 }
 
-function lineupFromSelection(players: ComparisonPlayer[], selectedIds: Set<string>) {
+export function lineupSelectionSummary(players: ComparisonPlayer[], selectedIds: Set<string>) {
   const rated = players
     .filter((player) => selectedIds.has(player.id))
     .map((player) => ({ ...player, referenceRating: referenceRating(player) }))
@@ -134,7 +131,7 @@ function DepthSummary({ scenario }: { scenario: ReturnType<typeof lineupSummary>
 function GenderPictogram({ gender }: { gender: "M" | "F" | null }) {
   if (!gender) return null;
   const label = gender === "F" ? "Féminine" : "Homme";
-  return <span className={`player-gender-picto player-gender-picto--${gender === "F" ? "female" : "male"}`} role="img" aria-label={label}>{gender === "F" ? "F" : "H"}</span>;
+  return <span className={`player-gender-picto player-gender-picto--${gender === "F" ? "female" : "male"}`} role="img" aria-label={label} />;
 }
 
 function PlayerName({ player, division }: { player: ComparisonPlayer; division: "open" | "masters" }) {
@@ -142,18 +139,7 @@ function PlayerName({ player, division }: { player: ComparisonPlayer; division: 
   return player.pdgaNumber ? <Link className="player-link" href={`/player/${player.pdgaNumber}?division=${division}`}>{content}</Link> : <strong>{content}</strong>;
 }
 
-function PlayerRow({ player, team, disabledIds, rank, refRank, selected, division, onToggle, selectionMode, interactionDisabled }: {
-  player: ComparisonPlayer;
-  team: ComparisonTeam;
-  disabledIds: Set<string>;
-  rank: number | null;
-  refRank: number | null;
-  selected: boolean;
-  division: "open" | "masters";
-  onToggle: () => void;
-  selectionMode: boolean;
-  interactionDisabled: boolean;
-}) {
+function PlayerRow({ player, team, disabledIds, rank, refRank, selected, division, onToggle, selectionMode, interactionDisabled }: { player: ComparisonPlayer; team: ComparisonTeam; disabledIds: Set<string>; rank: number | null; refRank: number | null; selected: boolean; division: "open" | "masters"; onToggle: () => void; selectionMode: boolean; interactionDisabled: boolean; }) {
   const disabled = !selectionMode && disabledIds.has(player.id);
   const refRating = referenceRating(player);
   const impact = selectionMode ? null : impactIfDisabled(team, player.id, disabledIds);
@@ -164,7 +150,6 @@ function PlayerRow({ player, team, disabledIds, rank, refRank, selected, divisio
   const rankLabel = disabled ? "—" : rank ? `J${rank}` : "R";
   const toggleLabel = selectionMode ? (selected ? "Retirer" : "Sélectionner") : (disabled ? "Réactiver" : "Désactiver");
   const checked = selectionMode ? selected : !disabled;
-
   return <div className={`player-row player-row--scenario${selected ? " player-row--selected" : " player-row--substitute"}${disabled ? " player-row--disabled" : ""}`}>
     <div className="player-ranks"><strong>{rankLabel}</strong><span>{disabled ? "indispo" : rank ? (player.officialRank ? `off. J${player.officialRank}` : `réf. #${refRank}`) : `rempl. #${refRank}`}</span><GenderPictogram gender={player.gender} /></div>
     <div className="player-row__main"><div className="player-name-line"><PlayerName player={player} division={division} /><span className={`player-status player-status--${statusClass} player-status--desktop-only`}><span className="player-status__desktop">{desktopStatusLabel}</span></span></div><span className="player-meta-line">{player.gender === "F" ? "Féminine" : "Homme"}{player.pdgaNumber ? ` · PDGA #${player.pdgaNumber}` : ""}</span><small className="player-impact">{selectionMode ? (selected ? "dans le six" : "en attente d'une place dans le six") : disabled ? "hors scénario" : !selected ? "en attente d'une place dans le six" : impact === null ? "absence : composition impossible" : `impact absence : ${signed(impact)}`}</small><div className="player-mobile-core"><div className="player-mobile-rating"><span>Rating</span><strong>{refRating ?? "—"}</strong></div><div className="player-mobile-trend"><span>Évolution sur 12 mois</span><strong>{player.trend12Months == null ? "—" : `${signed(player.trend12Months)} ${trendArrow(player.trend12Months)}`}</strong></div></div></div>
@@ -173,24 +158,15 @@ function PlayerRow({ player, team, disabledIds, rank, refRank, selected, divisio
   </div>;
 }
 
-export function ComparisonTeamCard({ team, featured = false, disabledIds = new Set<string>(), selectedIds, onTogglePlayer, onReset, interactionDisabled = false }: {
-  team: ComparisonTeam;
-  featured?: boolean;
-  disabledIds?: Set<string>;
-  selectedIds?: Set<string>;
-  onTogglePlayer: (playerId: string) => void;
-  onReset: () => void;
-  interactionDisabled?: boolean;
-}) {
+export function ComparisonTeamCard({ team, featured = false, disabledIds = new Set<string>(), selectedIds, onTogglePlayer, onReset, interactionDisabled = false }: { team: ComparisonTeam; featured?: boolean; disabledIds?: Set<string>; selectedIds?: Set<string>; onTogglePlayer: (playerId: string) => void; onReset: () => void; interactionDisabled?: boolean; }) {
   const selectionMode = selectedIds !== undefined;
   const nominal = lineupSummary(team.players);
-  const scenario = selectedIds ? lineupFromSelection(team.players, selectedIds) : lineupSummary(team.players, disabledIds);
+  const scenario = selectedIds ? lineupSelectionSummary(team.players, selectedIds) : lineupSummary(team.players, disabledIds);
   const allPlayers = [...team.players].sort(compareByReference);
   const scenarioRank = new Map(scenario.selected.map((player, index) => [player.id, index + 1] as const));
   const rosterReferenceRank = new Map(allPlayers.map((player, index) => [player.id, player.officialRank ?? index + 1] as const));
   const delta = nominal.average !== null && scenario.average !== null ? scenario.average - nominal.average : null;
   const liveVsReference = scenario.liveAverage !== null && scenario.average !== null ? scenario.liveAverage - scenario.average : null;
-
   return <article className={`team-card${featured ? " team-card--featured" : ""}`}>
     <div className="team-card__header"><div><span className="team-card__flag" aria-hidden="true">{flagEmoji(team.countryCode)}</span><div className="team-card__identity"><p className="team-card__eyebrow">{team.division === "open" ? "Open" : "Masters"}</p><h3>{team.country}</h3></div></div><div className="team-card__header-actions"><div className="rating-summary"><strong>{scenario.average ?? "—"}</strong><span>rating scénario · 4 hommes + 2 féminines</span><small className={delta !== null && delta < 0 ? "scenario-diff scenario-diff--down" : "scenario-diff"}>{nominal.average === null ? "référence incomplète" : `référence ${nominal.average} · ${signed(delta)}`}</small></div><button type="button" className="team-reset" onClick={onReset} disabled={interactionDisabled || (selectionMode ? false : disabledIds.size === 0)}>Réinitialiser</button></div></div>
     <div className="team-card__metrics team-card__metrics--v42"><Metric label="4 hommes retenus" value={scenario.menAverage ?? "—"} detail={`${scenario.menCount}/4`} /><Metric label="2 féminines retenues" value={scenario.womenAverage ?? "—"} detail={`${scenario.womenCount}/2`} /><Metric label="Rating PDGA live" value={scenario.liveAverage ?? "—"} detail={liveVsReference !== null ? `${signed(liveVsReference)} vs référence` : "six actif"} /><Metric label="Dynamique 12 mois" value={signed(scenario.trend12Months)} detail={scenario.trend12Months !== null ? trendLabel(scenario.trend12Months) : `${scenario.trendCount}/6 joueurs`} /></div>
