@@ -72,16 +72,41 @@
   font-size: 20px;
 }
 
-.nextBadge {
+.badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.nextBadge,
+.playerStatus {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
   padding: 0 9px;
   border-radius: 999px;
-  background: #dce8f7;
-  color: #1d4f8c;
   font-size: 11px;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.nextBadge {
+  background: #dce8f7;
+  color: #1d4f8c;
+}
+
+.starter {
+  background: #cdeedc;
+  color: #0b5f3a;
+  border: 1px solid #7fcda5;
+}
+
+.substitute {
+  background: #dce5ee;
+  color: #40556b;
+  border: 1px solid #aebdcc;
 }
 
 .facts {
@@ -114,5 +139,7 @@
   .grid { grid-template-columns: 1fr; }
   .card { padding: 15px; }
   .card h3 { font-size: 18px; }
+  .cardTop { align-items: flex-start; }
+  .badges { max-width: 130px; }
   .facts div { grid-template-columns: 72px 1fr; }
 }
