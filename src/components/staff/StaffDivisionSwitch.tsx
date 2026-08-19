@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import type { WtdgcDivision } from "../../domain/wtdgc/competition";
 import styles from "./StaffDivisionSwitch.module.css";
 
@@ -20,6 +21,10 @@ function hrefFor(division: WtdgcDivision, roundNumber?: number) {
 }
 
 export function StaffDivisionSwitch({ division, roundNumber }: Props) {
+  useEffect(() => {
+    rememberDivision(division);
+  }, [division]);
+
   return (
     <nav className={styles.switch} aria-label="Division Staff">
       {(["open", "masters"] as const).map((item) => (
