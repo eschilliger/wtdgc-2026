@@ -8,7 +8,7 @@ import { ComparisonSummary } from "../comparison/ComparisonDuel";
 import { nominalSixIds } from "../scouting/ScoutingRosterPanel";
 import { StaffDivisionSwitch } from "./StaffDivisionSwitch";
 import { type WtdgcRoundPublicationStatus } from "../../domain/wtdgc/competition";
-import { franceRoundSix, isMehdi, nominalSix, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../../domain/wtdgc/round-assignments";
+import { averageEventRating, franceRoundSix, isMehdi, nominalSix, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../../domain/wtdgc/round-assignments";
 import type { RoundManagementData, RoundMatchup } from "../../server/repositories/round-management.repository";
 import styles from "./OpenRoundEditor.module.css";
 
@@ -16,6 +16,8 @@ function statusLabel(status: WtdgcRoundPublicationStatus) { return status === "p
 function statusClass(status: WtdgcRoundPublicationStatus) { return status === "published" ? styles.published : status === "ready" ? styles.ready : styles.draft; }
 function rating(player: ComparisonPlayer) { return player.referenceRating ?? player.rating ?? -1; }
 function playerLabel(player: ComparisonPlayer) { return `${player.firstName} ${player.lastName}`.trim(); }
+function formatRating(value: number | null) { return value === null ? "—" : Number.isInteger(value) ? String(value) : value.toFixed(1); }
+function signedRating(value: number | null) { return value === null ? "—" : value > 0 ? `+${formatRating(value)}` : formatRating(value); }
 function fallbackRosterIds(data: RoundManagementData) {
   if (data.division === "open") return nominalSixIds(data.franceTeam);
   const men = data.franceTeam.players.filter((player) => player.gender === "M" && !isMehdi(player)).sort((a, b) => rating(b) - rating(a)).slice(0, 3);
@@ -160,18 +162,25 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
         <div className={styles.matchupsHeading}><div><p>Affectations officielles</p><h3>Simples et doubles du round</h3></div><span>Les deux compositions alimentent automatiquement les affectations selon l’ITPR.</span></div>
         {!complete ? <p className={styles.matchupsEmpty}>{data.division === "open" ? "Sélectionne 4 MPO et 2 FPO pour afficher les paires." : "Sélectionne 3 MP40, Mehdi en MP50 et 2 FP40 pour afficher les paires."}</p> : <div className={styles.matchupsList}>{officialMatchups.map((matchup, matchIndex) => {
           const game = officialGames[matchIndex];
+          const francePlayers = game.rosterSlots.map((slot) => selectedPlayers.find((candidate) => candidate.id === slotAssignments[slot])).filter((player): player is ComparisonPlayer => Boolean(player));
+          const opponentPlayers = game.rosterSlots.map((slot) => opponentSelectedPlayers.find((candidate) => candidate.id === opponentSlotAssignments[slot])).filter((player): player is ComparisonPlayer => Boolean(player));
+          const franceAverage = francePlayers.length === game.rosterSlots.length ? averageEventRating(francePlayers) : null;
+          const opponentAverage = opponentPlayers.length === game.rosterSlots.length ? averageEventRating(opponentPlayers) : null;
+          const ratingGap = franceAverage !== null && opponentAverage !== null ? franceAverage - opponentAverage : null;
           return <article className={styles.matchupCard} key={matchup.id}>
             <div className={styles.matchupTop}><strong>{game.label}</strong><span className={styles.slotLabel}>{game.rosterSlots.join(" + ")}</span></div>
             <div className={styles.matchupSides}>
               <div><span>France</span><div className={styles.fixedPlayers}>{game.rosterSlots.map((slot) => { const player = selectedPlayers.find((candidate) => candidate.id === slotAssignments[slot]); return player ? <strong key={slot}>{playerLabel(player)}</strong> : <em key={slot}>{slot} à définir</em>; })}</div></div>
               <div><span>{opponentTeam?.country ?? "Adversaire à définir"}</span><div className={styles.fixedPlayers}>{game.rosterSlots.map((slot) => { const player = opponentSelectedPlayers.find((candidate) => candidate.id === opponentSlotAssignments[slot]); return player ? <strong key={slot}>{playerLabel(player)}</strong> : <em key={slot}>{slot} à définir</em>; })}</div></div>
             </div>
+            <div className={styles.matchupRating}><span>{game.format === "double" ? "Rating moyen" : "Rating"} France <strong>{formatRating(franceAverage)}</strong></span><b className={ratingGap === null || ratingGap === 0 ? styles.ratingEven : ratingGap > 0 ? styles.ratingPositive : styles.ratingNegative}>Écart {signedRating(ratingGap)}</b><span>{opponentTeam?.country ?? "Adversaire"} <strong>{formatRating(opponentAverage)}</strong></span></div>
           </article>;
         })}</div>}
       </section>
 
       <details className={styles.notes} open={Boolean(internalNote)}><summary>Notes Staff</summary><label className={`${styles.field} ${styles.full}`}><textarea value={internalNote} disabled={busy} onChange={(event) => setInternalNote(event.target.value)} placeholder="Stratégie, points d’attention…" /></label></details>
-      <div className={styles.actions}><button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Brouillon" : "Enregistrer"}</button><button className={styles.readyButton} type="button" disabled={busy || !canReady} onClick={() => save("ready")}>Prêt</button><button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier</button></div>
+      <div className={styles.actionHelp}><span><strong>Brouillon</strong> sauvegarde de travail, invisible aux joueurs.</span><span><strong>Prêt</strong> composition complète et validée par le Staff.</span><span><strong>Publié</strong> visible dans Mes matchs.</span></div>
+      <div className={styles.actions}><button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</button><button className={styles.readyButton} type="button" disabled={busy || !canReady} onClick={() => save("ready")}>Prêt</button><button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier</button></div>
       {message ? <p className={`${styles.message} ${message.kind === "success" ? styles.success : styles.error}`}>{message.text}</p> : null}
     </section>
   </div>;
