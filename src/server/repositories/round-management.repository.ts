@@ -44,7 +44,7 @@ export type OpenRoundManagementData = RoundManagementData;
 
 type RoundDoc = {
   roundNumber?: number;
-  publicationStatus?: WtdgcRoundPublicationStatus;
+  publicationStatus?: string;
   opponentTeamId?: string | null;
   opponentScenario?: { disabledPlayerIds?: string[]; mp50PlayerId?: string | null } | null;
   scheduledStart?: string | null;
@@ -55,6 +55,10 @@ type RoundDoc = {
   publishedAt?: string | null;
   publishedBy?: string | null;
 };
+
+function normalizePublicationStatus(value: unknown): WtdgcRoundPublicationStatus {
+  return value === "published" ? "published" : "draft";
+}
 
 function normalizeMatchups(value: unknown): RoundMatchup[] {
   if (!Array.isArray(value)) return [];
@@ -83,7 +87,7 @@ export async function listRoundsForStaff(division: WtdgcDivision) {
   const snapshot = await db.collection("events").doc(WTDGC_EVENT_ID).collection("competitionRounds").where("division", "==", division).get();
   return snapshot.docs.map((doc) => {
     const data = doc.data() as RoundDoc;
-    return { id: doc.id, roundNumber: Number(data.roundNumber) as WtdgcRoundNumber, publicationStatus: (data.publicationStatus ?? "draft") as WtdgcRoundPublicationStatus, opponentTeamId: data.opponentTeamId ?? null, scheduledStart: data.scheduledStart ?? null };
+    return { id: doc.id, roundNumber: Number(data.roundNumber) as WtdgcRoundNumber, publicationStatus: normalizePublicationStatus(data.publicationStatus), opponentTeamId: data.opponentTeamId ?? null, scheduledStart: data.scheduledStart ?? null };
   }).filter((round) => round.roundNumber >= 1 && round.roundNumber <= 8).sort((a, b) => a.roundNumber - b.roundNumber);
 }
 
@@ -108,7 +112,7 @@ export async function loadRoundManagement(division: WtdgcDivision, roundNumber: 
   return {
     division,
     roundNumber,
-    publicationStatus: round.publicationStatus ?? "draft",
+    publicationStatus: normalizePublicationStatus(round.publicationStatus),
     opponentTeamId: round.opponentTeamId ?? null,
     opponentDisabledPlayerIds: round.opponentScenario?.disabledPlayerIds ?? [],
     opponentMp50PlayerId: round.opponentScenario?.mp50PlayerId ?? null,
@@ -163,7 +167,7 @@ export async function saveRoundManagement(input: {
       slotAssignments: input.slotAssignments ?? {},
       submittedAt: input.publicationStatus === "published" ? now : null,
       submissionDeadline: null,
-      confirmed: input.publicationStatus !== "draft",
+      confirmed: input.publicationStatus === "published",
     },
     matchups: input.matchups.map((matchup, index) => ({ ...matchup, order: index + 1 })),
     updatedAt: now,

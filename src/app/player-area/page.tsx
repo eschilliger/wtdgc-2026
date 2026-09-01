@@ -47,12 +47,12 @@ export default async function PlayerAreaPage() {
                     <div><dt>Trou</dt><dd>{match.startingHole || "À confirmer"}</dd></div>
                   </dl>
                   {match.matchups.length ? <div className={matchStyles.assignments}>
-                    <strong>Mes confrontations</strong>
-                    {match.matchups.map((matchup) => <div className={matchStyles.assignment} key={matchup.id}>
-                      <span>{gameLabel(matchup.game)}</span>
+                    <strong>Confrontations de l’équipe</strong>
+                    {match.matchups.map((matchup) => <div className={`${matchStyles.assignment} ${matchup.includesPlayer ? matchStyles.myAssignment : ""}`} key={matchup.id}>
+                      <div className={matchStyles.assignmentTop}><span>{gameLabel(matchup.game)}</span>{matchup.includesPlayer ? <strong>Ma confrontation</strong> : null}</div>
                       <p><b>{matchup.francePlayers.join(" + ")}</b><em>vs</em><b>{matchup.opponentPlayers.join(" + ")}</b></p>
                     </div>)}
-                  </div> : match.playerStatus === "substitute" ? <p className={matchStyles.noAssignment}>Aucune confrontation attribuée pour le moment.</p> : null}
+                  </div> : <p className={matchStyles.noAssignment}>Aucune confrontation publiée pour le moment.</p>}
                 </article>
               ))}
             </div>

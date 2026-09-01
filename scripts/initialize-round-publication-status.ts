@@ -10,7 +10,7 @@ async function main() {
 
   for (const roundDoc of rounds.docs) {
     const data = roundDoc.data() as { publicationStatus?: string };
-    if (data.publicationStatus === "draft" || data.publicationStatus === "ready" || data.publicationStatus === "published") {
+    if (data.publicationStatus === "draft" || data.publicationStatus === "published") {
       alreadySet += 1;
       continue;
     }

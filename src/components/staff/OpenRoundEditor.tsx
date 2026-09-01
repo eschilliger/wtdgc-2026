@@ -12,8 +12,8 @@ import { averageEventRating, franceRoundSix, isMehdi, nominalSix, roundGameAssig
 import type { RoundManagementData, RoundMatchup } from "../../server/repositories/round-management.repository";
 import styles from "./OpenRoundEditor.module.css";
 
-function statusLabel(status: WtdgcRoundPublicationStatus) { return status === "published" ? "Publié" : status === "ready" ? "Prêt" : "Brouillon"; }
-function statusClass(status: WtdgcRoundPublicationStatus) { return status === "published" ? styles.published : status === "ready" ? styles.ready : styles.draft; }
+function statusLabel(status: WtdgcRoundPublicationStatus) { return status === "published" ? "Publié" : "Brouillon"; }
+function statusClass(status: WtdgcRoundPublicationStatus) { return status === "published" ? styles.published : styles.draft; }
 function rating(player: ComparisonPlayer) { return player.referenceRating ?? player.rating ?? -1; }
 function playerLabel(player: ComparisonPlayer) { return `${player.firstName} ${player.lastName}`.trim(); }
 function formatRating(value: number | null) { return value === null ? "—" : Number.isInteger(value) ? String(value) : value.toFixed(1); }
@@ -76,8 +76,7 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
     opponentPlayerIds: game.rosterSlots.map((slot) => opponentSlotAssignments[slot]).filter((id): id is string => Boolean(id)),
   } satisfies RoundMatchup));
   const opponentsComplete = opponentSelectedPlayers.length === 6 && (data.division === "open" || Boolean(effectiveOpponentMp50Id));
-  const canReady = complete && Boolean(opponentTeamId) && opponentsComplete;
-  const canPublish = canReady && Boolean(scheduledStart);
+  const canPublish = complete && Boolean(opponentTeamId) && opponentsComplete && Boolean(scheduledStart);
   const divisionLabel = data.division === "open" ? "Open" : "Masters";
 
   function toggleFrancePlayer(player: ComparisonPlayer) {
@@ -127,7 +126,7 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Enregistrement impossible.");
       setStatus(nextStatus);
-      setMessage({ kind: "success", text: nextStatus === "published" ? "Round publié." : nextStatus === "ready" ? "Round prêt." : "Brouillon enregistré." });
+      setMessage({ kind: "success", text: nextStatus === "published" ? "Round publié." : "Brouillon enregistré." });
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "Enregistrement impossible." });
     } finally { setBusy(false); }
@@ -179,8 +178,8 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
       </section>
 
       <details className={styles.notes} open={Boolean(internalNote)}><summary>Notes Staff</summary><label className={`${styles.field} ${styles.full}`}><textarea value={internalNote} disabled={busy} onChange={(event) => setInternalNote(event.target.value)} placeholder="Stratégie, points d’attention…" /></label></details>
-      <div className={styles.actionHelp}><span><strong>Brouillon</strong> sauvegarde de travail, invisible aux joueurs.</span><span><strong>Prêt</strong> composition complète et validée par le Staff.</span><span><strong>Publié</strong> visible dans Mes matchs.</span></div>
-      <div className={styles.actions}><button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</button><button className={styles.readyButton} type="button" disabled={busy || !canReady} onClick={() => save("ready")}>Prêt</button><button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier</button></div>
+      <div className={styles.actionHelp}><span><strong>Brouillon</strong> sauvegarde de travail, invisible aux joueurs.</span><span><strong>Publié</strong> composition complète, visible dans Mes matchs.</span></div>
+      <div className={styles.actions}><button className={styles.save} type="button" disabled={busy} onClick={() => save("draft")}>{status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</button><button className={styles.publishButton} type="button" disabled={busy || !canPublish} onClick={() => save("published")}>Publier</button></div>
       {message ? <p className={`${styles.message} ${message.kind === "success" ? styles.success : styles.error}`}>{message.text}</p> : null}
     </section>
   </div>;

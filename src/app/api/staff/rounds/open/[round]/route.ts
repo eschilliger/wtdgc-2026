@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
   const body = await request.json().catch(() => null) as Body | null;
   if (!body) return NextResponse.json({ error: "invalid-body" }, { status: 400 });
   const publicationStatus = body.publicationStatus;
-  if (publicationStatus !== "draft" && publicationStatus !== "ready" && publicationStatus !== "published") return NextResponse.json({ error: "invalid-publication-status" }, { status: 400 });
+  if (publicationStatus !== "draft" && publicationStatus !== "published") return NextResponse.json({ error: "invalid-publication-status" }, { status: 400 });
 
   const data = await loadRoundManagement("open", roundNumber);
   const playersById = new Map(data.franceTeam.players.map((player) => [player.id, player] as const));
@@ -41,9 +41,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
   const matchups = officialRoundMatchups({ division: "open", roundNumber, slotAssignments: assignments, opponentSlotAssignments: opponentAssignments });
   const assignedOpponentIds = matchups.flatMap((matchup) => matchup.opponentPlayerIds);
   const incompleteMatchup = matchups.some((matchup) => matchup.francePlayerIds.length !== (matchup.format === "single" ? 1 : 2) || matchup.opponentPlayerIds.length !== (matchup.format === "single" ? 1 : 2)) || new Set(assignedOpponentIds).size !== 6;
-  if (publicationStatus !== "draft" && incompleteMatchup) return NextResponse.json({ error: "complete-matchups-required" }, { status: 400 });
-  if (publicationStatus !== "draft" && !complete) return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
-  if (publicationStatus !== "draft" && !opponentTeamId) return NextResponse.json({ error: "opponent-required" }, { status: 400 });
+  if (publicationStatus === "published" && incompleteMatchup) return NextResponse.json({ error: "complete-matchups-required" }, { status: 400 });
+  if (publicationStatus === "published" && !complete) return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
+  if (publicationStatus === "published" && !opponentTeamId) return NextResponse.json({ error: "opponent-required" }, { status: 400 });
   if (publicationStatus === "published" && !scheduledStart) return NextResponse.json({ error: "scheduled-start-required" }, { status: 400 });
 
   await saveRoundManagement({ division: "open", roundNumber, publicationStatus, opponentTeamId, opponentDisabledPlayerIds, opponentMp50PlayerId: null, scheduledStart, course: cleanString(body.course), startingHole: cleanString(body.startingHole), selectedPlayerIds: selectedIds, slotAssignments: assignments, matchups, internalNote: typeof body.internalNote === "string" ? body.internalNote.trim() : "", actorUid: claims.uid, actorEmail: claims.email ?? null });

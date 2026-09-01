@@ -13,12 +13,12 @@ import { loadScoutingTeams } from "../../server/repositories/scouting.repository
 
 export const dynamic = "force-dynamic";
 
-function statusLabel(status: "draft" | "ready" | "published") {
-  return status === "published" ? "Publié" : status === "ready" ? "Prêt" : "Brouillon";
+function statusLabel(status: "draft" | "published") {
+  return status === "published" ? "Publié" : "Brouillon";
 }
 
-function statusClass(status: "draft" | "ready" | "published") {
-  return status === "published" ? roundStyles.published : status === "ready" ? roundStyles.ready : roundStyles.draft;
+function statusClass(status: "draft" | "published") {
+  return status === "published" ? roundStyles.published : roundStyles.draft;
 }
 
 function parseDivision(value: string | undefined | null): WtdgcDivision | null {
