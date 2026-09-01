@@ -1,8 +1,9 @@
 import type { WtdgcDivision, WtdgcRoundNumber } from "../../domain/wtdgc/competition";
-import type { WtdgcGameKey } from "../../domain/wtdgc/round-assignments";
+import { averageEventRating, roundGameAssignments, type WtdgcGameKey } from "../../domain/wtdgc/round-assignments";
 import type { RoundMatchup } from "./round-management.repository";
 import { db } from "../firebase/admin";
 import { WTDGC_EVENT_ID } from "./competition.repository";
+import { loadScoutingTeams } from "./scouting.repository";
 
 export type PlayerAssociation = {
   personId: string;
@@ -11,13 +12,24 @@ export type PlayerAssociation = {
   playerDisplayName: string | null;
 };
 
+export type PublishedMatchupPlayer = {
+  id: string;
+  name: string;
+  slot: string;
+  rating: number | null;
+};
+
 export type PublishedPlayerMatchup = {
   id: string;
   order: number;
   game: WtdgcGameKey;
   format: "single" | "double";
-  francePlayers: string[];
-  opponentPlayers: string[];
+  slotLabel: string;
+  francePlayers: PublishedMatchupPlayer[];
+  opponentPlayers: PublishedMatchupPlayer[];
+  franceRating: number | null;
+  opponentRating: number | null;
+  ratingGap: number | null;
   includesPlayer: boolean;
 };
 
@@ -54,10 +66,11 @@ type RoundDoc = {
   matchups?: RoundMatchup[] | null;
 };
 
-type TeamDoc = { id?: string; country?: string };
-type PlayerDoc = { id?: string; firstName?: string; lastName?: string };
+function eventRating(player: { referenceRating?: number | null; rating?: number | null } | undefined) {
+  return player?.referenceRating ?? player?.rating ?? null;
+}
 
-function displayName(player: PlayerDoc | undefined, fallback: string) {
+function playerName(player: { firstName?: string; lastName?: string } | undefined, fallback: string) {
   if (!player) return fallback;
   const value = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim();
   return value || fallback;
@@ -77,39 +90,59 @@ export async function loadPlayerArea(uid: string) {
     playerDisplayName: typeof profile.playerDisplayName === "string" ? profile.playerDisplayName : null,
   };
 
-  const [roundsSnapshot, teamsSnapshot, playersSnapshot] = await Promise.all([
+  const [roundsSnapshot, divisionTeams] = await Promise.all([
     db.collection("events").doc(WTDGC_EVENT_ID).collection("competitionRounds").where("publicationStatus", "==", "published").get(),
-    db.collection("teams").get(),
-    db.collection("players").get(),
+    loadScoutingTeams(association.division),
   ]);
-  const countryByTeamId = new Map<string, string>();
-  teamsSnapshot.docs.forEach((doc) => {
-    const team = doc.data() as TeamDoc;
-    const country = typeof team.country === "string" ? team.country : "Adversaire";
-    countryByTeamId.set(doc.id, country);
-    if (typeof team.id === "string") countryByTeamId.set(team.id, country);
-  });
-  const playersById = new Map<string, PlayerDoc>();
-  playersSnapshot.docs.forEach((doc) => {
-    const player = doc.data() as PlayerDoc;
-    playersById.set(doc.id, player);
-    if (typeof player.id === "string") playersById.set(player.id, player);
-  });
+
+  const countryByTeamId = new Map(divisionTeams.map((team) => [team.id, team.country] as const));
+  const playersById = new Map(divisionTeams.flatMap((team) => team.players.map((player) => [player.id, player] as const)));
 
   const matches = roundsSnapshot.docs
     .map((doc) => ({ id: doc.id, data: doc.data() as RoundDoc }))
     .filter(({ data }) => data.division === association.division)
     .map(({ id, data }) => {
+      const roundNumber = Number(data.roundNumber) as WtdgcRoundNumber;
+      const officialGames = roundNumber >= 1 && roundNumber <= 8 ? roundGameAssignments(association.division, roundNumber) : [];
       const teamMatchups: PublishedPlayerMatchup[] = (Array.isArray(data.matchups) ? data.matchups : [])
         .map((matchup, index) => {
           const fallbackGame = (["singles-1", "singles-2", "doubles-1", "doubles-2"] as const)[index] ?? "singles-1";
+          const game = matchup.game ?? fallbackGame;
+          const officialGame = officialGames.find((entry) => entry.game === game) ?? officialGames[index];
+          const slots = officialGame?.rosterSlots ?? [];
+          const francePlayers = matchup.francePlayerIds.map((playerId, playerIndex) => {
+            const player = playersById.get(playerId);
+            return {
+              id: playerId,
+              name: playerName(player, "Joueur France"),
+              slot: slots[playerIndex] ?? "—",
+              rating: eventRating(player),
+            };
+          });
+          const opponentPlayers = matchup.opponentPlayerIds.map((playerId, playerIndex) => {
+            const player = playersById.get(playerId);
+            return {
+              id: playerId,
+              name: playerName(player, "Adversaire"),
+              slot: slots[playerIndex] ?? "—",
+              rating: eventRating(player),
+            };
+          });
+          const franceCandidates = matchup.francePlayerIds.map((playerId) => playersById.get(playerId)).filter((player): player is NonNullable<typeof player> => Boolean(player));
+          const opponentCandidates = matchup.opponentPlayerIds.map((playerId) => playersById.get(playerId)).filter((player): player is NonNullable<typeof player> => Boolean(player));
+          const franceRating = franceCandidates.length === matchup.francePlayerIds.length ? averageEventRating(franceCandidates) : null;
+          const opponentRating = opponentCandidates.length === matchup.opponentPlayerIds.length ? averageEventRating(opponentCandidates) : null;
           return {
             id: matchup.id || `match-${index + 1}`,
             order: Number.isFinite(matchup.order) ? matchup.order : index + 1,
-            game: matchup.game ?? fallbackGame,
+            game,
             format: matchup.format === "double" ? "double" as const : "single" as const,
-            francePlayers: matchup.francePlayerIds.map((playerId) => displayName(playersById.get(playerId), "Joueur France")),
-            opponentPlayers: matchup.opponentPlayerIds.map((playerId) => displayName(playersById.get(playerId), "Adversaire")),
+            slotLabel: slots.join(" + "),
+            francePlayers,
+            opponentPlayers,
+            franceRating,
+            opponentRating,
+            ratingGap: franceRating !== null && opponentRating !== null ? franceRating - opponentRating : null,
             includesPlayer: matchup.francePlayerIds.includes(association.personId),
           };
         })
@@ -117,7 +150,7 @@ export async function loadPlayerArea(uid: string) {
       return {
         id,
         division: association.division,
-        roundNumber: Number(data.roundNumber) as WtdgcRoundNumber,
+        roundNumber,
         opponentCountry: data.opponentTeamId ? countryByTeamId.get(data.opponentTeamId) ?? "Adversaire" : "Adversaire",
         scheduledStart: data.scheduledStart ?? null,
         course: data.course ?? null,
