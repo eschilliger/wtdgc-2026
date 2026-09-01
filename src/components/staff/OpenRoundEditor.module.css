@@ -13,7 +13,6 @@
 .header h2 { margin: 0; color: #123968; font-size: 22px; }
 .status { display: inline-flex; align-items: center; min-height: 30px; padding: 0 11px; border-radius: 999px; font-size: 12px; font-weight: 750; white-space: nowrap; }
 .draft { background: #fff4cc; color: #6d5117; }
-.ready { background: #dce8f7; color: #1d4f8c; }
 .published { background: #cdeedc; color: #0b5f3a; }
 
 .metaGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -70,13 +69,12 @@
 .notes[open] summary { border-bottom: 1px solid #e1e7ee; }
 .notes .field { padding: 12px; }
 
-.actionHelp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 18px; color: #52677c; font-size: 12px; line-height: 1.4; }
+.actionHelp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 18px; color: #52677c; font-size: 12px; line-height: 1.4; }
 .actionHelp span { padding: 9px 10px; border-radius: 9px; background: #f4f8fc; }
 .actionHelp strong { color: #123968; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .actions button { min-height: 42px; padding: 0 15px; border-radius: 10px; font-weight: 750; cursor: pointer; }
 .save { border: 1px solid #b7c9dc; background: #fff; color: #123968; }
-.readyButton { border: 1px solid #1d4f8c; background: #dce8f7; color: #123968; }
 .publishButton { border: 1px solid #0b5f3a; background: #0b5f3a; color: #fff; }
 .actions button:disabled, .secondary:disabled { opacity: .55; cursor: not-allowed; }
 .message { margin: 12px 0 0; font-size: 13px; }
@@ -123,7 +121,7 @@
   .notes .field { padding: 9px; }
   .field textarea { min-height: 90px; font-size: 12px; }
   .actionHelp { grid-template-columns: 1fr; margin-top: 12px; font-size: 11px; }
-  .actions { position: sticky; bottom: 8px; z-index: 30; display: grid; grid-template-columns: 1.5fr .7fr .8fr; gap: 6px; margin: 8px -4px 0; padding: 8px; border: 1px solid #d6e0eb; border-radius: 12px; background: rgba(255,255,255,.96); box-shadow: 0 10px 24px rgba(18,57,104,.12); backdrop-filter: blur(10px); }
+  .actions { position: sticky; bottom: 8px; z-index: 30; display: grid; grid-template-columns: 1.5fr .8fr; gap: 6px; margin: 8px -4px 0; padding: 8px; border: 1px solid #d6e0eb; border-radius: 12px; background: rgba(255,255,255,.96); box-shadow: 0 10px 24px rgba(18,57,104,.12); backdrop-filter: blur(10px); }
   .actions button { min-height: 38px; padding-inline: 6px; font-size: 11px; }
 }
 

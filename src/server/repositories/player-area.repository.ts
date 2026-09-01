@@ -18,6 +18,7 @@ export type PublishedPlayerMatchup = {
   format: "single" | "double";
   francePlayers: string[];
   opponentPlayers: string[];
+  includesPlayer: boolean;
 };
 
 export type PublishedPlayerMatch = {
@@ -99,8 +100,7 @@ export async function loadPlayerArea(uid: string) {
     .map((doc) => ({ id: doc.id, data: doc.data() as RoundDoc }))
     .filter(({ data }) => data.division === association.division)
     .map(({ id, data }) => {
-      const relevantMatchups: PublishedPlayerMatchup[] = (Array.isArray(data.matchups) ? data.matchups : [])
-        .filter((matchup) => Array.isArray(matchup.francePlayerIds) && matchup.francePlayerIds.includes(association.personId))
+      const teamMatchups: PublishedPlayerMatchup[] = (Array.isArray(data.matchups) ? data.matchups : [])
         .map((matchup, index) => {
           const fallbackGame = (["singles-1", "singles-2", "doubles-1", "doubles-2"] as const)[index] ?? "singles-1";
           return {
@@ -110,6 +110,7 @@ export async function loadPlayerArea(uid: string) {
             format: matchup.format === "double" ? "double" as const : "single" as const,
             francePlayers: matchup.francePlayerIds.map((playerId) => displayName(playersById.get(playerId), "Joueur France")),
             opponentPlayers: matchup.opponentPlayerIds.map((playerId) => displayName(playersById.get(playerId), "Adversaire")),
+            includesPlayer: matchup.francePlayerIds.includes(association.personId),
           };
         })
         .sort((a, b) => a.order - b.order);
@@ -123,7 +124,7 @@ export async function loadPlayerArea(uid: string) {
         startingHole: data.startingHole ?? null,
         publishedAt: data.publishedAt ?? null,
         playerStatus: data.roster?.selectedPlayerIds?.includes(association.personId) ? "starter" as const : "substitute" as const,
-        matchups: relevantMatchups,
+        matchups: teamMatchups,
       };
     })
     .filter((match) => match.roundNumber >= 1 && match.roundNumber <= 8)
