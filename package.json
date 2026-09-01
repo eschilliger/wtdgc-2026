@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:round-assignments": "node --import tsx scripts/check-round-assignments.ts",
     "import:wtdgc": "tsx scripts/import-wtdgc.ts",
     "import:firestore": "tsx scripts/import-firestore.ts"
   },

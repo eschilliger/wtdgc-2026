@@ -53,17 +53,18 @@ export type WtdgcCompetitionRound = {
 /**
  * Rounds 1-6 are Swiss. After round 6, the route depends on the standings:
  * medal play-offs for the top four, additional Swiss/placement play for the rest.
- * Exact round-specific Singles/Doubles assignments are intentionally not modeled yet.
+ * The official round-specific Singles/Doubles assignments are modeled in
+ * round-assignments.ts. Opponents and operational details remain round-specific.
  */
 export const WTDGC_ROUNDS: readonly WtdgcCompetitionRound[] = [
-  { roundNumber: 1, stage: "swiss", pairingsKnownInAdvance: true, gameAssignmentsKnown: false },
-  { roundNumber: 2, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 3, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 4, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 5, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 6, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 7, stage: "post-swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
-  { roundNumber: 8, stage: "post-swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: false },
+  { roundNumber: 1, stage: "swiss", pairingsKnownInAdvance: true, gameAssignmentsKnown: true },
+  { roundNumber: 2, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 3, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 4, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 5, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 6, stage: "swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 7, stage: "post-swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
+  { roundNumber: 8, stage: "post-swiss", pairingsKnownInAdvance: false, gameAssignmentsKnown: true },
 ];
 
 export type WtdgcPlayerCompetitionData = {
