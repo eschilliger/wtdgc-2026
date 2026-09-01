@@ -25,6 +25,7 @@ export type RoundManagementData = {
   publicationStatus: WtdgcRoundPublicationStatus;
   opponentTeamId: string | null;
   opponentDisabledPlayerIds: string[];
+  opponentMp50PlayerId: string | null;
   scheduledStart: string | null;
   course: string | null;
   startingHole: string | null;
@@ -45,7 +46,7 @@ type RoundDoc = {
   roundNumber?: number;
   publicationStatus?: WtdgcRoundPublicationStatus;
   opponentTeamId?: string | null;
-  opponentScenario?: { disabledPlayerIds?: string[] } | null;
+  opponentScenario?: { disabledPlayerIds?: string[]; mp50PlayerId?: string | null } | null;
   scheduledStart?: string | null;
   course?: string | null;
   startingHole?: string | null;
@@ -110,6 +111,7 @@ export async function loadRoundManagement(division: WtdgcDivision, roundNumber: 
     publicationStatus: round.publicationStatus ?? "draft",
     opponentTeamId: round.opponentTeamId ?? null,
     opponentDisabledPlayerIds: round.opponentScenario?.disabledPlayerIds ?? [],
+    opponentMp50PlayerId: round.opponentScenario?.mp50PlayerId ?? null,
     scheduledStart: round.scheduledStart ?? null,
     course: round.course ?? null,
     startingHole: round.startingHole ?? null,
@@ -133,6 +135,7 @@ export async function saveRoundManagement(input: {
   publicationStatus: WtdgcRoundPublicationStatus;
   opponentTeamId: string | null;
   opponentDisabledPlayerIds: string[];
+  opponentMp50PlayerId?: string | null;
   scheduledStart: string | null;
   course: string | null;
   startingHole: string | null;
@@ -147,7 +150,7 @@ export async function saveRoundManagement(input: {
   const roundRef = competitionRoundRef(input.division, input.roundNumber);
   const roundUpdate: Record<string, unknown> = {
     opponentTeamId: input.opponentTeamId,
-    opponentScenario: { disabledPlayerIds: input.opponentDisabledPlayerIds },
+    opponentScenario: { disabledPlayerIds: input.opponentDisabledPlayerIds, mp50PlayerId: input.opponentMp50PlayerId ?? null },
     scheduledStart: input.scheduledStart,
     course: input.course,
     startingHole: input.startingHole,

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { type WtdgcRoundNumber, type WtdgcRoundPublicationStatus } from "../../../../../../domain/wtdgc/competition";
-import { slotAssignmentsFromSelection, validateFranceRoster } from "../../../../../../domain/wtdgc/round-assignments";
+import { nominalSix, slotAssignmentsFromSelection, validateFranceRoster } from "../../../../../../domain/wtdgc/round-assignments";
 import { getSessionClaims, roleFromClaims } from "../../../../../../server/auth/session";
-import { loadRoundManagement, saveRoundManagement, type RoundMatchup } from "../../../../../../server/repositories/round-management.repository";
+import { loadRoundManagement, saveRoundManagement } from "../../../../../../server/repositories/round-management.repository";
 import { officialRoundMatchups } from "../../../../../../server/wtdgc/round-roster";
 
 function publicOrigin(request: NextRequest) { const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim(); const host = forwardedHost || request.headers.get("host"); if (!host) return request.nextUrl.origin; const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim(); const protocol = forwardedProto || request.nextUrl.protocol.replace(":", "") || "https"; return `${protocol}://${host}`; }
@@ -10,7 +10,7 @@ function sameOrigin(request: NextRequest) { const origin = request.headers.get("
 function parseRound(value: string): WtdgcRoundNumber | null { const round = Number.parseInt(value, 10); return round >= 1 && round <= 8 ? round as WtdgcRoundNumber : null; }
 function cleanString(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
 
-type Body = { publicationStatus?: WtdgcRoundPublicationStatus; opponentTeamId?: string | null; opponentDisabledPlayerIds?: string[]; scheduledStart?: string | null; course?: string | null; startingHole?: string | null; selectedPlayerIds?: string[]; matchups?: RoundMatchup[]; internalNote?: string; };
+type Body = { publicationStatus?: WtdgcRoundPublicationStatus; opponentTeamId?: string | null; opponentDisabledPlayerIds?: string[]; opponentMp50PlayerId?: string | null; scheduledStart?: string | null; course?: string | null; startingHole?: string | null; selectedPlayerIds?: string[]; internalNote?: string; };
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ round: string }> }) {
   if (!sameOrigin(request)) return NextResponse.json({ error: "invalid-origin" }, { status: 403 });
@@ -35,15 +35,20 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ rou
   if (opponentTeamId && !opponent) return NextResponse.json({ error: "invalid-opponent" }, { status: 400 });
   const opponentIds = new Set(opponent?.players.map((player) => player.id) ?? []);
   const opponentDisabledPlayerIds = Array.isArray(body.opponentDisabledPlayerIds) ? [...new Set(body.opponentDisabledPlayerIds.filter((id): id is string => typeof id === "string" && opponentIds.has(id)))] : [];
-  const matchups = officialRoundMatchups({ division: "masters", roundNumber, value: body.matchups, slotAssignments: assignments, opponentIds, disabledOpponentIds: new Set(opponentDisabledPlayerIds) });
-  if (!matchups) return NextResponse.json({ error: "invalid-matchups" }, { status: 400 });
+  const opponentSelected = nominalSix(opponent?.players.filter((player) => !opponentDisabledPlayerIds.includes(player.id)) ?? []);
+  const requestedMp50Id = cleanString(body.opponentMp50PlayerId);
+  const opponentMp50 = requestedMp50Id ? opponentSelected.find((player) => player.id === requestedMp50Id && player.gender === "M") : null;
+  if (requestedMp50Id && !opponentMp50) return NextResponse.json({ error: "invalid-opponent-mp50" }, { status: 400 });
+  const opponentAssignments = slotAssignmentsFromSelection("masters", opponentSelected, { mp50PlayerId: opponentMp50?.id });
+  const matchups = officialRoundMatchups({ division: "masters", roundNumber, slotAssignments: assignments, opponentSlotAssignments: opponentAssignments });
   const assignedOpponentIds = matchups.flatMap((matchup) => matchup.opponentPlayerIds);
   const incompleteMatchup = matchups.some((matchup) => matchup.francePlayerIds.length !== (matchup.format === "single" ? 1 : 2) || matchup.opponentPlayerIds.length !== (matchup.format === "single" ? 1 : 2)) || new Set(assignedOpponentIds).size !== 6;
   if (publicationStatus !== "draft" && incompleteMatchup) return NextResponse.json({ error: "complete-matchups-required" }, { status: 400 });
   if (publicationStatus !== "draft" && !complete) return NextResponse.json({ error: "complete-roster-required" }, { status: 400 });
   if (publicationStatus !== "draft" && !opponentTeamId) return NextResponse.json({ error: "opponent-required" }, { status: 400 });
+  if (publicationStatus !== "draft" && !opponentMp50) return NextResponse.json({ error: "opponent-mp50-required" }, { status: 400 });
   if (publicationStatus === "published" && !scheduledStart) return NextResponse.json({ error: "scheduled-start-required" }, { status: 400 });
 
-  await saveRoundManagement({ division: "masters", roundNumber, publicationStatus, opponentTeamId, opponentDisabledPlayerIds, scheduledStart, course: cleanString(body.course), startingHole: cleanString(body.startingHole), selectedPlayerIds, slotAssignments: assignments, matchups, internalNote: typeof body.internalNote === "string" ? body.internalNote.trim() : "", actorUid: claims.uid, actorEmail: claims.email ?? null });
+  await saveRoundManagement({ division: "masters", roundNumber, publicationStatus, opponentTeamId, opponentDisabledPlayerIds, opponentMp50PlayerId: opponentMp50?.id ?? null, scheduledStart, course: cleanString(body.course), startingHole: cleanString(body.startingHole), selectedPlayerIds, slotAssignments: assignments, matchups, internalNote: typeof body.internalNote === "string" ? body.internalNote.trim() : "", actorUid: claims.uid, actorEmail: claims.email ?? null });
   return NextResponse.json({ ok: true, publicationStatus });
 }

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ComparisonPlayer } from "../TeamComparison";
 import { ComparisonTeamCard } from "../comparison/ComparisonTeamCard";
-import { ComparisonSummary, LineupMatchups } from "../comparison/ComparisonDuel";
+import { ComparisonSummary } from "../comparison/ComparisonDuel";
 import { nominalSixIds } from "../scouting/ScoutingRosterPanel";
 import { StaffDivisionSwitch } from "./StaffDivisionSwitch";
 import { type WtdgcRoundPublicationStatus } from "../../domain/wtdgc/competition";
-import { isMehdi, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../../domain/wtdgc/round-assignments";
+import { franceRoundSix, isMehdi, nominalSix, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../../domain/wtdgc/round-assignments";
 import type { RoundManagementData, RoundMatchup } from "../../server/repositories/round-management.repository";
 import styles from "./OpenRoundEditor.module.css";
 
@@ -24,44 +24,56 @@ function fallbackRosterIds(data: RoundManagementData) {
   return new Set([...men, ...(mehdi ? [mehdi] : []), ...women].map((player) => player.id));
 }
 
+function disabledIdsForSelection(data: RoundManagementData, targetIds: Set<string>) {
+  const disabledIds = new Set<string>();
+  for (let index = 0; index < data.franceTeam.players.length; index += 1) {
+    const active = franceRoundSix(data.division, data.franceTeam.players.filter((player) => !disabledIds.has(player.id)));
+    const extra = active.find((player) => !targetIds.has(player.id));
+    if (!extra) break;
+    disabledIds.add(extra.id);
+  }
+  return disabledIds;
+}
+
 export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
-  const initialSelected = useMemo(() => {
+  const initialDisabled = useMemo(() => {
     const ids = data.roster?.selectedPlayerIds?.length ? data.roster.selectedPlayerIds : data.defaultSelectedPlayerIds;
-    return ids.length ? new Set(ids) : fallbackRosterIds(data);
+    const targetIds = ids.length ? new Set(ids) : fallbackRosterIds(data);
+    return disabledIdsForSelection(data, targetIds);
   }, [data]);
-  const [selectedIds, setSelectedIds] = useState(initialSelected);
+  const [franceDisabledIds, setFranceDisabledIds] = useState(initialDisabled);
   const [opponentTeamId, setOpponentTeamId] = useState(data.opponentTeamId ?? "");
   const [opponentDisabledIds, setOpponentDisabledIds] = useState(new Set(data.opponentDisabledPlayerIds));
+  const [opponentMp50PlayerId, setOpponentMp50PlayerId] = useState(data.opponentMp50PlayerId ?? "");
   const [scheduledStart, setScheduledStart] = useState(data.scheduledStart ?? "");
   const [course, setCourse] = useState(data.course ?? "");
   const [startingHole, setStartingHole] = useState(data.startingHole ?? "");
-  const [matchups, setMatchups] = useState<RoundMatchup[]>(data.matchups);
   const [internalNote, setInternalNote] = useState(data.internalNote);
   const [status, setStatus] = useState<WtdgcRoundPublicationStatus>(data.publicationStatus);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
-  const selectedPlayers = data.franceTeam.players.filter((player) => selectedIds.has(player.id));
+  const selectedPlayers = franceRoundSix(data.division, data.franceTeam.players.filter((player) => !franceDisabledIds.has(player.id)));
+  const selectedIds = new Set(selectedPlayers.map((player) => player.id));
   const rosterValidation = validateFranceRoster(data.division, selectedPlayers);
   const { menCount, womenCount, mp40Count, hasMehdi, complete } = rosterValidation;
   const slotAssignments = slotAssignmentsFromSelection(data.division, selectedPlayers);
   const officialGames = roundGameAssignments(data.division, data.roundNumber);
-  const officialMatchups = officialGames.map((game, index) => {
-    const saved = matchups.find((matchup) => matchup.game === game.game) ?? matchups[index];
-    return {
-      id: game.game,
-      order: index + 1,
-      game: game.game,
-      format: game.format,
-      francePlayerIds: game.rosterSlots.map((slot) => slotAssignments[slot]).filter((id): id is string => Boolean(id)),
-      opponentPlayerIds: saved?.opponentPlayerIds?.slice(0, game.format === "single" ? 1 : 2) ?? [],
-    } satisfies RoundMatchup;
-  });
   const opponentTeam = data.teams.find((team) => team.id === opponentTeamId) ?? null;
   const opponentAvailableTeam = opponentTeam ? { ...opponentTeam, players: opponentTeam.players.filter((player) => !opponentDisabledIds.has(player.id)) } : null;
-  const opponentMatchPlayers = opponentAvailableTeam?.players ?? [];
-  const opponentSelections = officialMatchups.flatMap((matchup) => matchup.opponentPlayerIds);
-  const opponentsComplete = opponentSelections.length === 6 && new Set(opponentSelections).size === 6;
+  const opponentSelectedPlayers = nominalSix(opponentAvailableTeam?.players ?? []);
+  const opponentSelectedIds = new Set(opponentSelectedPlayers.map((player) => player.id));
+  const effectiveOpponentMp50Id = opponentSelectedPlayers.some((player) => player.id === opponentMp50PlayerId && player.gender === "M") ? opponentMp50PlayerId : "";
+  const opponentSlotAssignments = slotAssignmentsFromSelection(data.division, opponentSelectedPlayers, { mp50PlayerId: effectiveOpponentMp50Id });
+  const officialMatchups = officialGames.map((game, index) => ({
+    id: game.game,
+    order: index + 1,
+    game: game.game,
+    format: game.format,
+    francePlayerIds: game.rosterSlots.map((slot) => slotAssignments[slot]).filter((id): id is string => Boolean(id)),
+    opponentPlayerIds: game.rosterSlots.map((slot) => opponentSlotAssignments[slot]).filter((id): id is string => Boolean(id)),
+  } satisfies RoundMatchup));
+  const opponentsComplete = opponentSelectedPlayers.length === 6 && (data.division === "open" || Boolean(effectiveOpponentMp50Id));
   const canReady = complete && Boolean(opponentTeamId) && opponentsComplete;
   const canPublish = canReady && Boolean(scheduledStart);
   const divisionLabel = data.division === "open" ? "Open" : "Masters";
@@ -69,39 +81,25 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
   function toggleFrancePlayer(player: ComparisonPlayer) {
     if (busy) return;
     setMessage(null);
-    setSelectedIds((current) => {
+    setFranceDisabledIds((current) => {
       const next = new Set(current);
-      if (next.has(player.id)) { next.delete(player.id); return next; }
-      const currentPlayers = data.franceTeam.players.filter((candidate) => next.has(candidate.id));
-      const count = currentPlayers.filter((candidate) => candidate.gender === player.gender).length;
-      const mastersMp40Count = currentPlayers.filter((candidate) => candidate.gender === "M" && !isMehdi(candidate)).length;
-      const limit = player.gender === "F" ? 2 : data.division === "masters" && !isMehdi(player) ? 3 : 4;
-      const effectiveCount = data.division === "masters" && player.gender === "M" && !isMehdi(player) ? mastersMp40Count : count;
-      if (effectiveCount >= limit) {
-        setMessage({ kind: "error", text: player.gender === "F" ? "La composition utilise déjà 2 joueuses." : data.division === "masters" ? "La composition utilise déjà 3 MP40." : "La composition utilise déjà 4 MPO." });
-        return current;
-      }
-      next.add(player.id);
+      if (next.has(player.id)) next.delete(player.id); else next.add(player.id);
       return next;
     });
   }
   function toggleOpponentPlayer(playerId: string) {
-    setOpponentDisabledIds((current) => { const next = new Set(current); if (next.has(playerId)) next.delete(playerId); else next.add(playerId); return next; });
+    setOpponentDisabledIds((current) => {
+      const next = new Set(current);
+      if (next.has(playerId)) next.delete(playerId); else { next.add(playerId); if (playerId === opponentMp50PlayerId) setOpponentMp50PlayerId(""); }
+      return next;
+    });
   }
   function useDefaultRoster() {
-    setSelectedIds(data.defaultSelectedPlayerIds.length ? new Set(data.defaultSelectedPlayerIds) : fallbackRosterIds(data));
+    const targetIds = data.defaultSelectedPlayerIds.length ? new Set(data.defaultSelectedPlayerIds) : fallbackRosterIds(data);
+    setFranceDisabledIds(disabledIdsForSelection(data, targetIds));
     setMessage(null);
   }
-  function resetDuel() { useDefaultRoster(); setOpponentDisabledIds(new Set()); }
-  function setOpponentPlayer(id: string, index: number, playerId: string) {
-    setMatchups(officialMatchups.map((item) => {
-      const withoutDuplicate = playerId && item.id !== id ? item.opponentPlayerIds.filter((value) => value !== playerId) : item.opponentPlayerIds;
-      if (item.id !== id) return { ...item, opponentPlayerIds: withoutDuplicate };
-      const next = [...withoutDuplicate];
-      if (playerId) next[index] = playerId; else next.splice(index, 1);
-      return { ...item, opponentPlayerIds: next.filter(Boolean) };
-    }));
-  }
+  function resetDuel() { useDefaultRoster(); setOpponentDisabledIds(new Set()); setOpponentMp50PlayerId(""); }
 
   async function save(nextStatus: WtdgcRoundPublicationStatus) {
     if (nextStatus === "published" && !window.confirm("Publier ce round ?")) return;
@@ -114,10 +112,11 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
           publicationStatus: nextStatus,
           opponentTeamId: opponentTeamId || null,
           opponentDisabledPlayerIds: [...opponentDisabledIds],
+          opponentMp50PlayerId: effectiveOpponentMp50Id || null,
           scheduledStart: scheduledStart || null,
           course: course || null,
           startingHole: startingHole || null,
-          selectedPlayerIds: [...selectedIds],
+          selectedPlayerIds: selectedPlayers.map((player) => player.id),
           slotAssignments,
           matchups: officialMatchups,
           internalNote,
@@ -142,7 +141,7 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
     <section className={styles.card}>
       <div className={styles.header}><div><h2>{divisionLabel} · Round {data.roundNumber}</h2></div><span className={`${styles.status} ${statusClass(status)}`}>{statusLabel(status)}</span></div>
       <div className={styles.metaGrid}>
-        <label className={styles.field}>Adversaire<select value={opponentTeamId} disabled={busy} onChange={(event) => { setOpponentTeamId(event.target.value); setOpponentDisabledIds(new Set()); setMatchups([]); }}><option value="">Non défini</option>{data.teams.map((team) => <option key={team.id} value={team.id}>{team.country}</option>)}</select></label>
+        <label className={styles.field}>Adversaire<select value={opponentTeamId} disabled={busy} onChange={(event) => { setOpponentTeamId(event.target.value); setOpponentDisabledIds(new Set()); setOpponentMp50PlayerId(""); }}><option value="">Non défini</option>{data.teams.map((team) => <option key={team.id} value={team.id}>{team.country}</option>)}</select></label>
         <label className={styles.field}>Départ · heure locale<input type="datetime-local" value={scheduledStart} disabled={busy} onChange={(event) => setScheduledStart(event.target.value)} /></label>
         <label className={styles.field}>Parcours / lieu<input value={course} disabled={busy} onChange={(event) => setCourse(event.target.value)} placeholder="À définir" /></label>
         <label className={styles.field}>Trou de départ<input value={startingHole} disabled={busy} onChange={(event) => setStartingHole(event.target.value)} placeholder="Ex. 1, 7A…" /></label>
@@ -150,21 +149,22 @@ export function OpenRoundEditor({ data }: { data: RoundManagementData }) {
 
       <div className={styles.rosterActions}><span>{data.division === "open" ? `${menCount}/4 MPO · ${womenCount}/2 FPO` : `${mp40Count}/3 MP40 · ${hasMehdi ? "Mehdi MP50 ✓" : "Mehdi MP50 manquant"} · ${womenCount}/2 FP40`}</span><button className={styles.secondary} type="button" disabled={busy} onClick={useDefaultRoster}>Roster par défaut</button></div>
       <div className={`comparison-grid ${styles.comparison}`}>
-        <ComparisonTeamCard team={data.franceTeam} selectedIds={selectedIds} onTogglePlayer={(id) => { const player = data.franceTeam.players.find((candidate) => candidate.id === id); if (player) toggleFrancePlayer(player); }} onReset={useDefaultRoster} />
-        {opponentTeam ? <ComparisonTeamCard team={opponentTeam} disabledIds={opponentDisabledIds} onTogglePlayer={toggleOpponentPlayer} onReset={() => setOpponentDisabledIds(new Set())} /> : <article className={`team-card ${styles.emptyOpponent}`}><div className="team-card__header"><div><div className="team-card__identity"><p className="team-card__eyebrow">Adversaire</p><h3>À sélectionner</h3></div></div></div></article>}
+        <ComparisonTeamCard team={data.franceTeam} disabledIds={franceDisabledIds} scenarioIds={selectedIds} mp50PlayerId={data.division === "masters" ? selectedPlayers.find(isMehdi)?.id : null} lockedPlayerIds={new Set(data.division === "masters" ? selectedPlayers.filter(isMehdi).map((player) => player.id) : [])} onTogglePlayer={(id) => { const player = data.franceTeam.players.find((candidate) => candidate.id === id); if (player) toggleFrancePlayer(player); }} onReset={useDefaultRoster} />
+        {opponentTeam ? <ComparisonTeamCard team={opponentTeam} disabledIds={opponentDisabledIds} scenarioIds={opponentSelectedIds} mp50PlayerId={effectiveOpponentMp50Id || null} onTogglePlayer={toggleOpponentPlayer} onReset={() => { setOpponentDisabledIds(new Set()); setOpponentMp50PlayerId(""); }} /> : <article className={`team-card ${styles.emptyOpponent}`}><div className="team-card__header"><div><div className="team-card__identity"><p className="team-card__eyebrow">Adversaire</p><h3>À sélectionner</h3></div></div></div></article>}
       </div>
-      {opponentTeam ? <><ComparisonSummary teamA={data.franceTeam} teamB={opponentTeam} disabledA={new Set()} disabledB={opponentDisabledIds} selectedA={selectedIds} onResetDuel={resetDuel} /><LineupMatchups teamA={data.franceTeam} teamB={opponentTeam} disabledA={new Set()} disabledB={opponentDisabledIds} selectedA={selectedIds} /></> : null}
+      {opponentTeam ? <ComparisonSummary teamA={data.franceTeam} teamB={opponentTeam} disabledA={franceDisabledIds} disabledB={opponentDisabledIds} selectedA={selectedIds} selectedB={opponentSelectedIds} onResetDuel={resetDuel} /> : null}
+
+      {data.division === "masters" && opponentTeam ? <section className={styles.mp50Section}><div><strong>MP50 adverse</strong><span>À renseigner lorsque le Match Roster adverse est connu.</span></div><select value={effectiveOpponentMp50Id} disabled={busy} onChange={(event) => setOpponentMp50PlayerId(event.target.value)}><option value="">MP50 à définir</option>{opponentSelectedPlayers.filter((player) => player.gender === "M").map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}</select></section> : null}
 
       <section className={styles.matchupsSection}>
-        <div className={styles.matchupsHeading}><div><p>Affectations officielles</p><h3>Simples et doubles du round</h3></div><span>La composition France est calculée automatiquement selon l’ITPR.</span></div>
+        <div className={styles.matchupsHeading}><div><p>Affectations officielles</p><h3>Simples et doubles du round</h3></div><span>Les deux compositions alimentent automatiquement les affectations selon l’ITPR.</span></div>
         {!complete ? <p className={styles.matchupsEmpty}>{data.division === "open" ? "Sélectionne 4 MPO et 2 FPO pour afficher les paires." : "Sélectionne 3 MP40, Mehdi en MP50 et 2 FP40 pour afficher les paires."}</p> : <div className={styles.matchupsList}>{officialMatchups.map((matchup, matchIndex) => {
-          const slots = matchup.format === "single" ? 1 : 2;
           const game = officialGames[matchIndex];
           return <article className={styles.matchupCard} key={matchup.id}>
             <div className={styles.matchupTop}><strong>{game.label}</strong><span className={styles.slotLabel}>{game.rosterSlots.join(" + ")}</span></div>
             <div className={styles.matchupSides}>
-              <div><span>France</span><div className={styles.fixedPlayers}>{matchup.francePlayerIds.map((playerId) => <strong key={playerId}>{playerLabel(selectedPlayers.find((player) => player.id === playerId)!)}</strong>)}</div></div>
-              <div><span>{opponentTeam?.country ?? "Adversaire à définir"}</span>{Array.from({ length: slots }, (_, index) => <select key={index} value={matchup.opponentPlayerIds[index] ?? ""} disabled={busy || !opponentTeam} onChange={(event) => setOpponentPlayer(matchup.id, index, event.target.value)}><option value="">Joueur {index + 1}</option>{opponentMatchPlayers.filter((player) => !opponentSelections.includes(player.id) || matchup.opponentPlayerIds[index] === player.id).map((player) => <option key={player.id} value={player.id}>{playerLabel(player)}</option>)}</select>)}</div>
+              <div><span>France</span><div className={styles.fixedPlayers}>{game.rosterSlots.map((slot) => { const player = selectedPlayers.find((candidate) => candidate.id === slotAssignments[slot]); return player ? <strong key={slot}>{playerLabel(player)}</strong> : <em key={slot}>{slot} à définir</em>; })}</div></div>
+              <div><span>{opponentTeam?.country ?? "Adversaire à définir"}</span><div className={styles.fixedPlayers}>{game.rosterSlots.map((slot) => { const player = opponentSelectedPlayers.find((candidate) => candidate.id === opponentSlotAssignments[slot]); return player ? <strong key={slot}>{playerLabel(player)}</strong> : <em key={slot}>{slot} à définir</em>; })}</div></div>
             </div>
           </article>;
         })}</div>}

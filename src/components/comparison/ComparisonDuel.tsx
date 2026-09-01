@@ -6,7 +6,6 @@ import {
   flagEmoji,
   lineupSelectionSummary,
   lineupSummary,
-  referenceRating,
   signed,
 } from "./ComparisonTeamCard";
 
@@ -39,6 +38,10 @@ export function ComparisonSummary({ teamA, teamB, disabledA, disabledB, selected
   const trendGap = a.trend12Months !== null && b.trend12Months !== null ? a.trend12Months - b.trend12Months : null;
   const leader = gap === null || gap === 0 ? null : gap > 0 ? teamA : teamB;
   const swing = gap !== null && nominalGap !== null ? gap - nominalGap : null;
+  const menLabel = teamA.division === "open" ? "Écart MPO" : "Écart MP40 / MP50";
+  const womenLabel = teamA.division === "open" ? "Écart FPO" : "Écart FP40";
+  const menDetail = teamA.division === "open" ? "4 MPO" : "3 MP40 + 1 MP50";
+  const womenDetail = teamA.division === "open" ? "2 FPO" : "2 FP40";
 
   return <div className="duel-summary duel-summary--scenario">
     <div className="duel-summary__headline">
@@ -46,20 +49,6 @@ export function ComparisonSummary({ teamA, teamB, disabledA, disabledB, selected
       <div className="duel-summary__actions"><div className="duel-gap"><strong>{gap === null ? "—" : Math.abs(gap)}</strong><span>points d'écart</span>{swing !== null ? <small>mouvement vs référence : {signed(swing)}</small> : null}</div><button type="button" className="duel-reset" onClick={onResetDuel}>Réinitialiser le duel</button></div>
     </div>
     {helpOpen ? <><button type="button" className="duel-info-backdrop" aria-label="Fermer l'aide" onClick={() => setHelpOpen(false)} /><aside className="duel-info-popover" role="dialog" aria-label="Comprendre la simulation"><div className="duel-info-popover__header"><strong>Comprendre la simulation</strong><button type="button" aria-label="Fermer" onClick={() => setHelpOpen(false)}>×</button></div><dl><div><dt>Écart scénario</dt><dd>Différence entre les deux compositions actuellement sélectionnées.</dd></div><div><dt>Écart référence</dt><dd>Différence entre les deux équipes sans modification.</dd></div><div><dt>Écart hommes</dt><dd>Comparaison des moyennes des 4 hommes retenus.</dd></div><div><dt>Écart féminines</dt><dd>Comparaison des moyennes des 2 féminines retenues.</dd></div><div><dt>Dynamique 12 mois</dt><dd>Différence entre les évolutions moyennes récentes.</dd></div></dl><p className="duel-info-popover__rule"><strong>+ = avantage {teamA.country}</strong><span>− = avantage {teamB.country}</span></p></aside></> : null}
-    <div className="duel-metrics"><Metric label="Écart scénario" value={gap === null ? "—" : signed(gap)} detail={`${teamA.country} - ${teamB.country}`} /><Metric label="Écart référence" value={nominalGap === null ? "—" : signed(nominalGap)} detail="sans modification" /><Metric label="Écart hommes" value={menGap === null ? "—" : signed(menGap)} detail="4 hommes" /><Metric label="Écart féminines" value={womenGap === null ? "—" : signed(womenGap)} detail="2 féminines" /><Metric label="Dynamique 12 mois" value={trendGap === null ? "—" : signed(trendGap)} detail={`${teamA.country} - ${teamB.country}`} /></div>
+    <div className="duel-metrics"><Metric label="Écart scénario" value={gap === null ? "—" : signed(gap)} detail={`${teamA.country} - ${teamB.country}`} /><Metric label="Écart référence" value={nominalGap === null ? "—" : signed(nominalGap)} detail="sans modification" /><Metric label={menLabel} value={menGap === null ? "—" : signed(menGap)} detail={menDetail} /><Metric label={womenLabel} value={womenGap === null ? "—" : signed(womenGap)} detail={womenDetail} /><Metric label="Dynamique 12 mois" value={trendGap === null ? "—" : signed(trendGap)} detail={`${teamA.country} - ${teamB.country}`} /></div>
   </div>;
-}
-
-export function LineupMatchups({ teamA, teamB, disabledA, disabledB, selectedA, selectedB }: {
-  teamA: ComparisonTeam;
-  teamB: ComparisonTeam;
-  disabledA: Set<string>;
-  disabledB: Set<string>;
-  selectedA?: Set<string>;
-  selectedB?: Set<string>;
-}) {
-  const a = scenarioFor(teamA, disabledA, selectedA);
-  const b = scenarioFor(teamB, disabledB, selectedB);
-  if (!a.complete || !b.complete) return null;
-  return <div className="lineup-matchups lineup-matchups--v43"><div className="lineup-matchups__heading"><div><p className="eyebrow">Lecture du six</p><h3>Joueur par joueur</h3></div></div><div className="lineup-matchups__rows">{a.selected.map((playerA, index) => { const playerB = b.selected[index]; const ratingA = referenceRating(playerA); const ratingB = referenceRating(playerB); const gap = ratingA !== null && ratingB !== null ? ratingA - ratingB : null; return <div className="lineup-matchup-row lineup-matchup-row--v43" key={`${playerA.id}-${playerB.id}`}><strong className="lineup-rank">J{index + 1}</strong><div className="lineup-matchup-player lineup-matchup-player--a"><span>{playerA.firstName} {playerA.lastName}</span></div><b className="lineup-rating">{ratingA ?? "—"}</b><div className={`lineup-matchup-gap${gap !== null && gap > 0 ? " lineup-matchup-gap--a" : gap !== null && gap < 0 ? " lineup-matchup-gap--b" : ""}`}>{gap === null ? "—" : signed(gap)}</div><b className="lineup-rating">{ratingB ?? "—"}</b><div className="lineup-matchup-player lineup-matchup-player--b"><span>{playerB.firstName} {playerB.lastName}</span></div></div>; })}</div></div>;
 }

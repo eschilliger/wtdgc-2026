@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ComparisonPlayer, ComparisonTeam } from "../TeamComparison";
+import { isMehdi, positionLabels } from "../../domain/wtdgc/round-assignments";
 
 type SelectedPlayer = ComparisonPlayer & { referenceRating: number };
 
@@ -55,7 +56,11 @@ export function lineupSummary(players: ComparisonPlayer[], disabledIds = new Set
     .sort(compareByReference);
   const menPool = activeRated.filter((player) => player.gender === "M");
   const womenPool = activeRated.filter((player) => player.gender === "F");
-  return buildSummary(menPool.slice(0, 4), womenPool.slice(0, 2), menPool, womenPool);
+  const mehdi = menPool.find(isMehdi);
+  const men = mehdi
+    ? [...menPool.filter((player) => !isMehdi(player)).slice(0, 3), mehdi].sort(compareByReference)
+    : menPool.slice(0, 4);
+  return buildSummary(men, womenPool.slice(0, 2), menPool, womenPool);
 }
 
 export function lineupSelectionSummary(players: ComparisonPlayer[], selectedIds: Set<string>) {
@@ -139,7 +144,7 @@ function PlayerName({ player, division }: { player: ComparisonPlayer; division: 
   return player.pdgaNumber ? <Link className="player-link" href={`/player/${player.pdgaNumber}?division=${division}`}>{content}</Link> : <strong>{content}</strong>;
 }
 
-function PlayerRow({ player, team, disabledIds, rank, refRank, selected, division, onToggle, selectionMode, interactionDisabled }: { player: ComparisonPlayer; team: ComparisonTeam; disabledIds: Set<string>; rank: number | null; refRank: number | null; selected: boolean; division: "open" | "masters"; onToggle: () => void; selectionMode: boolean; interactionDisabled: boolean; }) {
+function PlayerRow({ player, team, disabledIds, positionLabel, selected, division, onToggle, selectionMode, interactionDisabled, locked }: { player: ComparisonPlayer; team: ComparisonTeam; disabledIds: Set<string>; positionLabel: string; selected: boolean; division: "open" | "masters"; onToggle: () => void; selectionMode: boolean; interactionDisabled: boolean; locked: boolean; }) {
   const disabled = !selectionMode && disabledIds.has(player.id);
   const refRating = referenceRating(player);
   const impact = selectionMode ? null : impactIfDisabled(team, player.id, disabledIds);
@@ -147,32 +152,34 @@ function PlayerRow({ player, team, disabledIds, rank, refRank, selected, divisio
   const desktopStatusLabel = disabled ? "Indisponible" : selected ? "Titulaire" : "Remplaçant";
   const mobileStatusLabel = disabled ? "Indispo" : selected ? "Titulaire" : "Remplaçant";
   const statusClass = disabled ? "disabled" : selected ? "starter" : "substitute";
-  const rankLabel = disabled ? "—" : rank ? `J${rank}` : "R";
-  const toggleLabel = selectionMode ? (selected ? "Retirer" : "Sélectionner") : (disabled ? "Réactiver" : "Désactiver");
+  const rankLabel = disabled ? "—" : selected ? positionLabel : "R";
+  const toggleLabel = locked ? "Obligatoire" : selectionMode ? (selected ? "Retirer" : "Sélectionner") : (disabled ? "Réactiver" : "Désactiver");
   const checked = selectionMode ? selected : !disabled;
   return <div className={`player-row player-row--scenario${selected ? " player-row--selected" : " player-row--substitute"}${disabled ? " player-row--disabled" : ""}`}>
-    <div className="player-ranks"><strong>{rankLabel}</strong><span>{disabled ? "indispo" : rank ? (player.officialRank ? `off. J${player.officialRank}` : `réf. #${refRank}`) : `rempl. #${refRank}`}</span><GenderPictogram gender={player.gender} /></div>
+    <div className="player-ranks"><strong>{rankLabel}</strong><span>{disabled ? "indispo" : selected ? "position active" : positionLabel}</span><GenderPictogram gender={player.gender} /></div>
     <div className="player-row__main"><div className="player-name-line"><PlayerName player={player} division={division} /><span className={`player-status player-status--${statusClass} player-status--desktop-only`}><span className="player-status__desktop">{desktopStatusLabel}</span></span></div><span className="player-meta-line">{player.gender === "F" ? "Féminine" : "Homme"}{player.pdgaNumber ? ` · PDGA #${player.pdgaNumber}` : ""}</span><small className="player-impact">{selectionMode ? (selected ? "dans le six" : "en attente d'une place dans le six") : disabled ? "hors scénario" : !selected ? "en attente d'une place dans le six" : impact === null ? "absence : composition impossible" : `impact absence : ${signed(impact)}`}</small><div className="player-mobile-core"><div className="player-mobile-rating"><span>Rating</span><strong>{refRating ?? "—"}</strong></div><div className="player-mobile-trend"><span>Évolution sur 12 mois</span><strong>{player.trend12Months == null ? "—" : `${signed(player.trend12Months)} ${trendArrow(player.trend12Months)}`}</strong></div></div></div>
-    <div className="player-row__actions"><div className="player-row__rating"><strong>{refRating ?? "—"}</strong><span>{player.referenceRating != null ? "rating WTDGC" : "rating PDGA"}</span>{liveDelta !== null ? <small>PDGA live {player.rating} · {signed(liveDelta)}</small> : null}{player.trend12Months != null ? <small className={`player-rating-trend${player.trend12Months >= 4 ? " player-trend--up" : player.trend12Months <= -4 ? " player-trend--down" : ""}`}>12 mois {signed(player.trend12Months)} {trendArrow(player.trend12Months)}</small> : null}</div><button type="button" className={`player-toggle player-toggle--desktop${disabled ? " player-toggle--restore" : ""}`} onClick={onToggle} disabled={interactionDisabled}>{toggleLabel}</button></div>
-    <div className="player-mobile-actions"><span className={`player-status player-status--${statusClass}`}><span className="player-status__mobile">{mobileStatusLabel}</span></span><label className="player-switch"><input type="checkbox" checked={checked} onChange={onToggle} disabled={interactionDisabled} aria-label={`${toggleLabel} ${player.firstName} ${player.lastName}`} /><i aria-hidden="true" /></label></div>
+    <div className="player-row__actions"><div className="player-row__rating"><strong>{refRating ?? "—"}</strong><span>{player.referenceRating != null ? "rating WTDGC" : "rating PDGA"}</span>{liveDelta !== null ? <small>PDGA live {player.rating} · {signed(liveDelta)}</small> : null}{player.trend12Months != null ? <small className={`player-rating-trend${player.trend12Months >= 4 ? " player-trend--up" : player.trend12Months <= -4 ? " player-trend--down" : ""}`}>12 mois {signed(player.trend12Months)} {trendArrow(player.trend12Months)}</small> : null}</div><button type="button" className={`player-toggle player-toggle--desktop${disabled ? " player-toggle--restore" : ""}`} onClick={onToggle} disabled={interactionDisabled || locked}>{toggleLabel}</button></div>
+    <div className="player-mobile-actions"><span className={`player-status player-status--${statusClass}`}><span className="player-status__mobile">{mobileStatusLabel}</span></span><label className="player-switch"><input type="checkbox" checked={checked} onChange={onToggle} disabled={interactionDisabled || locked} aria-label={`${toggleLabel} ${player.firstName} ${player.lastName}`} /><i aria-hidden="true" /></label></div>
   </div>;
 }
 
-export function ComparisonTeamCard({ team, featured = false, disabledIds = new Set<string>(), selectedIds, onTogglePlayer, onReset, interactionDisabled = false }: { team: ComparisonTeam; featured?: boolean; disabledIds?: Set<string>; selectedIds?: Set<string>; onTogglePlayer: (playerId: string) => void; onReset: () => void; interactionDisabled?: boolean; }) {
+export function ComparisonTeamCard({ team, featured = false, disabledIds = new Set<string>(), selectedIds, scenarioIds, mp50PlayerId, lockedPlayerIds = new Set<string>(), onTogglePlayer, onReset, interactionDisabled = false }: { team: ComparisonTeam; featured?: boolean; disabledIds?: Set<string>; selectedIds?: Set<string>; scenarioIds?: Set<string>; mp50PlayerId?: string | null; lockedPlayerIds?: Set<string>; onTogglePlayer: (playerId: string) => void; onReset: () => void; interactionDisabled?: boolean; }) {
   const selectionMode = selectedIds !== undefined;
   const nominal = lineupSummary(team.players);
-  const scenario = selectedIds ? lineupSelectionSummary(team.players, selectedIds) : lineupSummary(team.players, disabledIds);
+  const scenario = selectedIds ? lineupSelectionSummary(team.players, selectedIds) : scenarioIds ? lineupSelectionSummary(team.players, scenarioIds) : lineupSummary(team.players, disabledIds);
   const allPlayers = [...team.players].sort(compareByReference);
-  const scenarioRank = new Map(scenario.selected.map((player, index) => [player.id, index + 1] as const));
-  const rosterReferenceRank = new Map(allPlayers.map((player, index) => [player.id, player.officialRank ?? index + 1] as const));
+  const labels = positionLabels(team.division, scenario.selected, allPlayers, { mp50PlayerId });
   const delta = nominal.average !== null && scenario.average !== null ? scenario.average - nominal.average : null;
   const liveVsReference = scenario.liveAverage !== null && scenario.average !== null ? scenario.liveAverage - scenario.average : null;
+  const compositionLabel = team.division === "open" ? "4 MPO + 2 FPO" : "3 MP40 + 1 MP50 + 2 FP40";
+  const menMetricLabel = team.division === "open" ? "4 MPO retenus" : "MP40 + MP50 retenus";
+  const womenMetricLabel = team.division === "open" ? "2 FPO retenues" : "2 FP40 retenues";
   return <article className={`team-card${featured ? " team-card--featured" : ""}`}>
-    <div className="team-card__header"><div><span className="team-card__flag" aria-hidden="true">{flagEmoji(team.countryCode)}</span><div className="team-card__identity"><p className="team-card__eyebrow">{team.division === "open" ? "Open" : "Masters"}</p><h3>{team.country}</h3></div></div><div className="team-card__header-actions"><div className="rating-summary"><strong>{scenario.average ?? "—"}</strong><span>rating scénario · 4 hommes + 2 féminines</span><small className={delta !== null && delta < 0 ? "scenario-diff scenario-diff--down" : "scenario-diff"}>{nominal.average === null ? "référence incomplète" : `référence ${nominal.average} · ${signed(delta)}`}</small></div><button type="button" className="team-reset" onClick={onReset} disabled={interactionDisabled || (selectionMode ? false : disabledIds.size === 0)}>Réinitialiser</button></div></div>
-    <div className="team-card__metrics team-card__metrics--v42"><Metric label="4 hommes retenus" value={scenario.menAverage ?? "—"} detail={`${scenario.menCount}/4`} /><Metric label="2 féminines retenues" value={scenario.womenAverage ?? "—"} detail={`${scenario.womenCount}/2`} /><Metric label="Rating PDGA live" value={scenario.liveAverage ?? "—"} detail={liveVsReference !== null ? `${signed(liveVsReference)} vs référence` : "six actif"} /><Metric label="Dynamique 12 mois" value={signed(scenario.trend12Months)} detail={scenario.trend12Months !== null ? trendLabel(scenario.trend12Months) : `${scenario.trendCount}/6 joueurs`} /></div>
+    <div className="team-card__header"><div><span className="team-card__flag" aria-hidden="true">{flagEmoji(team.countryCode)}</span><div className="team-card__identity"><p className="team-card__eyebrow">{team.division === "open" ? "Open" : "Masters"}</p><h3>{team.country}</h3></div></div><div className="team-card__header-actions"><div className="rating-summary"><strong>{scenario.average ?? "—"}</strong><span>rating scénario · {compositionLabel}</span><small className={delta !== null && delta < 0 ? "scenario-diff scenario-diff--down" : "scenario-diff"}>{nominal.average === null ? "référence incomplète" : `référence ${nominal.average} · ${signed(delta)}`}</small></div><button type="button" className="team-reset" onClick={onReset} disabled={interactionDisabled || (selectionMode ? false : disabledIds.size === 0)}>Réinitialiser</button></div></div>
+    <div className="team-card__metrics team-card__metrics--v42"><Metric label={menMetricLabel} value={scenario.menAverage ?? "—"} detail={`${scenario.menCount}/4`} /><Metric label={womenMetricLabel} value={scenario.womenAverage ?? "—"} detail={`${scenario.womenCount}/2`} /><Metric label="Rating PDGA live" value={scenario.liveAverage ?? "—"} detail={liveVsReference !== null ? `${signed(liveVsReference)} vs référence` : "six actif"} /><Metric label="Dynamique 12 mois" value={signed(scenario.trend12Months)} detail={scenario.trend12Months !== null ? trendLabel(scenario.trend12Months) : `${scenario.trendCount}/6 joueurs`} /></div>
     <div className="team-depth-strip team-depth-strip--v43"><span>Profondeur du banc</span><DepthSummary scenario={scenario} /></div>
     {!selectionMode ? <TeamScenarioStory team={team} disabledIds={disabledIds} /> : null}
-    {!scenario.complete ? <div className="scenario-alert scenario-alert--error"><strong>Rating équipe impossible à calculer</strong><span>Composition disponible : {scenario.menCount}/4 hommes et {scenario.womenCount}/2 féminines.</span></div> : <div className="scenario-note"><strong>Six actif</strong><span>Les rangs J1 à J6 sont recalculés dans le scénario, sans déplacer les joueurs dans la liste.</span></div>}
-    <div className="player-list player-list--fixed-roster">{allPlayers.map((player) => <PlayerRow key={player.id} player={player} team={team} disabledIds={disabledIds} rank={scenarioRank.get(player.id) ?? null} refRank={rosterReferenceRank.get(player.id) ?? null} selected={scenario.selectedIds.has(player.id)} division={team.division} onToggle={() => onTogglePlayer(player.id)} selectionMode={selectionMode} interactionDisabled={interactionDisabled} />)}</div>
+    {!scenario.complete ? <div className="scenario-alert scenario-alert--error"><strong>Rating équipe impossible à calculer</strong><span>Composition disponible : {scenario.menCount}/4 hommes et {scenario.womenCount}/2 féminines.</span></div> : <div className="scenario-note"><strong>Six actif</strong><span>Les positions WTDGC sont recalculées automatiquement selon la composition.</span></div>}
+    <div className="player-list player-list--fixed-roster">{allPlayers.map((player) => <PlayerRow key={player.id} player={player} team={team} disabledIds={disabledIds} positionLabel={labels.get(player.id) ?? "Remplaçant"} selected={scenario.selectedIds.has(player.id)} division={team.division} onToggle={() => onTogglePlayer(player.id)} selectionMode={selectionMode} interactionDisabled={interactionDisabled} locked={lockedPlayerIds.has(player.id)} />)}</div>
   </article>;
 }

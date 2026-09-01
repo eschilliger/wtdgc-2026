@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../src/domain/wtdgc/round-assignments";
+import { franceRoundSix, nominalSix, positionLabels, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../src/domain/wtdgc/round-assignments";
 import type { WtdgcDivision, WtdgcRoundNumber } from "../src/domain/wtdgc/competition";
 import { officialRoundMatchups } from "../src/server/wtdgc/round-roster";
 
@@ -47,15 +47,25 @@ assert.equal(validateFranceRoster("masters", mastersPlayers.map((player) => play
 const roundOne = officialRoundMatchups({
   division: "open",
   roundNumber: 1,
-  value: [
-    { game: "singles-1", opponentPlayerIds: ["o1"] }, { game: "singles-2", opponentPlayerIds: ["o2"] },
-    { game: "doubles-1", opponentPlayerIds: ["o3", "o4"] }, { game: "doubles-2", opponentPlayerIds: ["o5", "o6"] },
-  ],
   slotAssignments: slotAssignmentsFromSelection("open", openPlayers),
-  opponentIds: new Set(["o1", "o2", "o3", "o4", "o5", "o6"]),
-  disabledOpponentIds: new Set(),
+  opponentSlotAssignments: { MPO1: "o1", MPO2: "o2", MPO3: "o3", MPO4: "o4", FPO1: "o5", FPO2: "o6" },
 });
 assert.deepEqual(roundOne?.map((matchup) => matchup.francePlayerIds), [["m2"], ["m3"], ["m1", "m4"], ["f1", "f2"]]);
-assert.deepEqual(roundOne?.flatMap((matchup) => matchup.opponentPlayerIds), ["o1", "o2", "o3", "o4", "o5", "o6"]);
+assert.deepEqual(roundOne?.map((matchup) => matchup.opponentPlayerIds), [["o2"], ["o3"], ["o1", "o4"], ["o5", "o6"]]);
+
+assert.deepEqual(slotAssignmentsFromSelection("masters", mastersPlayers, { mp50PlayerId: null }), { "MP40-1": "", "MP40-2": "", "MP40-3": "", "FP40-1": "fp1", "FP40-2": "fp2", MP50: "" });
+assert.deepEqual(slotAssignmentsFromSelection("masters", mastersPlayers, { mp50PlayerId: "mp1" }), { "MP40-1": "mehdi", "MP40-2": "mp2", "MP40-3": "mp3", "FP40-1": "fp1", "FP40-2": "fp2", MP50: "mp1" });
+
+const openWithBench = [...openPlayers, { id: "m5", gender: "M" as const, rating: 960 }];
+assert.deepEqual(nominalSix(openWithBench).map((player) => player.id), ["m1", "m2", "m3", "m4", "f1", "f2"]);
+const promotedOpen = nominalSix(openWithBench.filter((player) => player.id !== "m4"));
+assert.deepEqual(promotedOpen.map((player) => player.id), ["m1", "m2", "m3", "m5", "f1", "f2"]);
+assert.equal(positionLabels("open", promotedOpen, openWithBench).get("m5"), "MPO4");
+assert.equal(positionLabels("open", promotedOpen, openWithBench).get("m4"), "Rempl. MPO");
+
+const mastersWithHigherBench = [...mastersPlayers, { id: "mp4", gender: "M" as const, rating: 995, pdgaNumber: 4 }];
+assert.deepEqual(franceRoundSix("masters", mastersWithHigherBench).map((player) => player.id), ["mp4", "mp1", "mp2", "mehdi", "fp1", "fp2"]);
+assert.equal(positionLabels("masters", mastersPlayers, mastersWithHigherBench, { mp50PlayerId: "mehdi" }).get("mehdi"), "MP50");
+assert.equal(positionLabels("masters", mastersPlayers, mastersWithHigherBench, { mp50PlayerId: "mehdi" }).get("mp1"), "MP40-1");
 
 console.log("Round assignments: OK");
