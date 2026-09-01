@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { franceRoundSix, nominalSix, positionLabels, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../src/domain/wtdgc/round-assignments";
+import { averageEventRating, franceRoundSix, nominalSix, positionLabels, roundGameAssignments, slotAssignmentsFromSelection, validateFranceRoster } from "../src/domain/wtdgc/round-assignments";
 import type { WtdgcDivision, WtdgcRoundNumber } from "../src/domain/wtdgc/competition";
 import { officialRoundMatchups } from "../src/server/wtdgc/round-roster";
 
@@ -34,6 +34,10 @@ const openPlayers = [
 ];
 assert.equal(validateFranceRoster("open", openPlayers).complete, true);
 assert.deepEqual(slotAssignmentsFromSelection("open", openPlayers), { MPO1: "m1", MPO2: "m2", MPO3: "m3", MPO4: "m4", FPO1: "f1", FPO2: "f2" });
+assert.equal(averageEventRating([openPlayers[0]]), 1000);
+assert.equal(averageEventRating([openPlayers[0], openPlayers[3]]), 985);
+assert.equal(averageEventRating([{ ...openPlayers[0], referenceRating: 1005 }, openPlayers[3]]), 987.5);
+assert.equal(averageEventRating([{ id: "unknown", gender: "M" }]), null);
 
 const mastersPlayers = [
   { id: "mp1", gender: "M" as const, rating: 980, pdgaNumber: 1 }, { id: "mp2", gender: "M" as const, rating: 970, pdgaNumber: 2 },

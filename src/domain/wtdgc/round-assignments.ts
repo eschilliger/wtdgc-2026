@@ -64,6 +64,13 @@ function rating(candidate: WtdgcRosterCandidate) {
   return candidate.referenceRating ?? candidate.rating ?? -1;
 }
 
+export function averageEventRating(candidates: WtdgcRosterCandidate[]) {
+  if (!candidates.length) return null;
+  const ratings = candidates.map(rating);
+  if (ratings.some((value) => value < 0)) return null;
+  return ratings.reduce((total, value) => total + value, 0) / ratings.length;
+}
+
 function rankCandidates<T extends WtdgcRosterCandidate>(candidates: T[]): T[] {
   return [...candidates].sort((a, b) => {
     const ratingGap = rating(b) - rating(a);
