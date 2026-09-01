@@ -2,7 +2,6 @@
 .heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .heading span { color: #748193; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .heading h2 { margin: 3px 0 0; color: #123968; font-size: 24px; }
-.heading > strong { display: grid; place-items: center; min-width: 36px; height: 36px; border-radius: 999px; background: #eaf1f8; color: #123968; }
 .roundSelector { display: flex; align-items: center; gap: 7px; max-width: 980px; overflow-x: auto; padding: 2px 0 4px; }
 .roundSelector a { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 1px solid #c9d6e3; border-radius: 10px; background: #fff; color: #123968; font-size: 13px; font-weight: 800; text-decoration: none; white-space: nowrap; }
 .roundSelector a span { padding: 2px 6px; border-radius: 999px; background: #dce8f7; color: #1d4f8c; font-size: 9px; font-weight: 800; text-transform: uppercase; }
