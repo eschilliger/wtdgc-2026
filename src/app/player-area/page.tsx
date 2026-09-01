@@ -51,7 +51,7 @@ export default async function PlayerAreaPage({ searchParams }: PlayerAreaPagePro
           <section className={styles.placeholder}><strong>Aucun match publié pour le moment.</strong><p>{divisionLabel(association.division)} · les prochains matchs apparaîtront ici dès leur publication.</p></section>
         ) : selectedMatch ? (
           <section className={matchStyles.section}>
-            <div className={matchStyles.heading}><div><span>{divisionLabel(association.division)}</span><h2>Matchs publiés</h2></div><strong>{matches.length}</strong></div>
+            <div className={matchStyles.heading}><div><span>{divisionLabel(association.division)}</span><h2>Matchs publiés</h2></div></div>
 
             <nav className={matchStyles.roundSelector} aria-label="Choisir un round à afficher">
               {matches.map((match) => {
