@@ -1,4 +1,5 @@
 import type { WtdgcDivision, WtdgcRoundNumber } from "../../domain/wtdgc/competition";
+import type { WtdgcGameKey } from "../../domain/wtdgc/round-assignments";
 import type { RoundMatchup } from "./round-management.repository";
 import { db } from "../firebase/admin";
 import { WTDGC_EVENT_ID } from "./competition.repository";
@@ -13,6 +14,7 @@ export type PlayerAssociation = {
 export type PublishedPlayerMatchup = {
   id: string;
   order: number;
+  game: WtdgcGameKey;
   format: "single" | "double";
   francePlayers: string[];
   opponentPlayers: string[];
@@ -99,13 +101,17 @@ export async function loadPlayerArea(uid: string) {
     .map(({ id, data }) => {
       const relevantMatchups: PublishedPlayerMatchup[] = (Array.isArray(data.matchups) ? data.matchups : [])
         .filter((matchup) => Array.isArray(matchup.francePlayerIds) && matchup.francePlayerIds.includes(association.personId))
-        .map((matchup, index) => ({
-          id: matchup.id || `match-${index + 1}`,
-          order: Number.isFinite(matchup.order) ? matchup.order : index + 1,
-          format: matchup.format === "double" ? "double" as const : "single" as const,
-          francePlayers: matchup.francePlayerIds.map((playerId) => displayName(playersById.get(playerId), "Joueur France")),
-          opponentPlayers: matchup.opponentPlayerIds.map((playerId) => displayName(playersById.get(playerId), "Adversaire")),
-        }))
+        .map((matchup, index) => {
+          const fallbackGame = (["singles-1", "singles-2", "doubles-1", "doubles-2"] as const)[index] ?? "singles-1";
+          return {
+            id: matchup.id || `match-${index + 1}`,
+            order: Number.isFinite(matchup.order) ? matchup.order : index + 1,
+            game: matchup.game ?? fallbackGame,
+            format: matchup.format === "double" ? "double" as const : "single" as const,
+            francePlayers: matchup.francePlayerIds.map((playerId) => displayName(playersById.get(playerId), "Joueur France")),
+            opponentPlayers: matchup.opponentPlayerIds.map((playerId) => displayName(playersById.get(playerId), "Adversaire")),
+          };
+        })
         .sort((a, b) => a.order - b.order);
       return {
         id,

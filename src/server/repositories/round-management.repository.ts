@@ -1,4 +1,5 @@
-import type { OpenRosterSlot, WtdgcDivision, WtdgcRoundNumber, WtdgcRoundPublicationStatus, WtdgcRosterSlot } from "../../domain/wtdgc/competition";
+import type { WtdgcDivision, WtdgcRoundNumber, WtdgcRoundPublicationStatus, WtdgcRosterSlot } from "../../domain/wtdgc/competition";
+import type { WtdgcGameKey } from "../../domain/wtdgc/round-assignments";
 import type { ComparisonTeam } from "../../components/TeamComparison";
 import { db } from "../firebase/admin";
 import { competitionRoundRef, getDefaultMatchRoster, WTDGC_EVENT_ID } from "./competition.repository";
@@ -12,6 +13,7 @@ export type RoundRoster = {
 export type RoundMatchup = {
   id: string;
   order: number;
+  game: WtdgcGameKey;
   format: "single" | "double";
   francePlayerIds: string[];
   opponentPlayerIds: string[];
@@ -60,9 +62,15 @@ function normalizeMatchups(value: unknown): RoundMatchup[] {
     const raw = entry as Partial<RoundMatchup>;
     if (raw.format !== "single" && raw.format !== "double") return [];
     const size = raw.format === "single" ? 1 : 2;
+    const defaultGame = (["singles-1", "singles-2", "doubles-1", "doubles-2"] as const)[index];
+    const game = raw.game === "singles-1" || raw.game === "singles-2" || raw.game === "doubles-1" || raw.game === "doubles-2"
+      ? raw.game
+      : defaultGame;
+    if (!game) return [];
     return [{
       id: typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : `match-${index + 1}`,
       order: Number.isFinite(raw.order) ? Number(raw.order) : index + 1,
+      game,
       format: raw.format,
       francePlayerIds: Array.isArray(raw.francePlayerIds) ? raw.francePlayerIds.filter((id): id is string => typeof id === "string").slice(0, size) : [],
       opponentPlayerIds: Array.isArray(raw.opponentPlayerIds) ? raw.opponentPlayerIds.filter((id): id is string => typeof id === "string").slice(0, size) : [],
@@ -129,7 +137,7 @@ export async function saveRoundManagement(input: {
   course: string | null;
   startingHole: string | null;
   selectedPlayerIds: string[];
-  slotAssignments?: Partial<Record<OpenRosterSlot, string>>;
+  slotAssignments?: Partial<Record<WtdgcRosterSlot, string>>;
   matchups: RoundMatchup[];
   internalNote: string;
   actorUid: string;
@@ -165,7 +173,7 @@ export async function saveRoundManagement(input: {
   await roundRef.collection("staffNotes").doc("france").set({ text: input.internalNote, createdAt: now, updatedAt: now, authorUid: input.actorUid, authorEmail: input.actorEmail }, { merge: true });
 }
 
-export async function saveOpenRoundManagement(input: Omit<Parameters<typeof saveRoundManagement>[0], "division" | "selectedPlayerIds"> & { slotAssignments: Partial<Record<OpenRosterSlot, string>> }) {
+export async function saveOpenRoundManagement(input: Omit<Parameters<typeof saveRoundManagement>[0], "division" | "selectedPlayerIds"> & { slotAssignments: Partial<Record<WtdgcRosterSlot, string>> }) {
   const selectedPlayerIds = Object.values(input.slotAssignments).filter((value): value is string => Boolean(value));
   return saveRoundManagement({ ...input, division: "open", selectedPlayerIds });
 }

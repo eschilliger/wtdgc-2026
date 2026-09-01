@@ -4,6 +4,9 @@ import { requirePlayerAccess } from "../../server/auth/session";
 import { loadPlayerArea } from "../../server/repositories/player-area.repository";
 
 function divisionLabel(division: "open" | "masters") { return division === "open" ? "Open" : "Masters"; }
+function gameLabel(game: "singles-1" | "singles-2" | "doubles-1" | "doubles-2") {
+  return game === "singles-1" ? "Simple 1" : game === "singles-2" ? "Simple 2" : game === "doubles-1" ? "Double 1" : "Double 2";
+}
 function formatStart(value: string | null) {
   if (!value) return "Horaire à confirmer";
   const [date, time] = value.split("T");
@@ -46,7 +49,7 @@ export default async function PlayerAreaPage() {
                   {match.matchups.length ? <div className={matchStyles.assignments}>
                     <strong>Mes confrontations</strong>
                     {match.matchups.map((matchup) => <div className={matchStyles.assignment} key={matchup.id}>
-                      <span>Match {matchup.order} · {matchup.format === "double" ? "Double" : "Simple"}</span>
+                      <span>{gameLabel(matchup.game)}</span>
                       <p><b>{matchup.francePlayers.join(" + ")}</b><em>vs</em><b>{matchup.opponentPlayers.join(" + ")}</b></p>
                     </div>)}
                   </div> : match.playerStatus === "substitute" ? <p className={matchStyles.noAssignment}>Aucune confrontation attribuée pour le moment.</p> : null}
