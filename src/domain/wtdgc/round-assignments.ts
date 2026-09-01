@@ -27,6 +27,10 @@ export type WtdgcRosterCandidate = {
   rating?: number | null;
 };
 
+export type MastersSlotOptions = {
+  mp50PlayerId?: string | null;
+};
+
 const OPEN_PATTERNS: Record<WtdgcRoundNumber, readonly [readonly OpenRosterSlot[], readonly OpenRosterSlot[], readonly OpenRosterSlot[], readonly OpenRosterSlot[]]> = {
   1: [["MPO2"], ["MPO3"], ["MPO1", "MPO4"], ["FPO1", "FPO2"]],
   2: [["MPO4"], ["MPO1"], ["MPO3", "FPO1"], ["MPO2", "FPO2"]],
@@ -60,7 +64,7 @@ function rating(candidate: WtdgcRosterCandidate) {
   return candidate.referenceRating ?? candidate.rating ?? -1;
 }
 
-function rankCandidates(candidates: WtdgcRosterCandidate[]) {
+function rankCandidates<T extends WtdgcRosterCandidate>(candidates: T[]): T[] {
   return [...candidates].sort((a, b) => {
     const ratingGap = rating(b) - rating(a);
     if (ratingGap) return ratingGap;
@@ -72,6 +76,20 @@ function rankCandidates(candidates: WtdgcRosterCandidate[]) {
 
 export function isMehdi(candidate: Pick<WtdgcRosterCandidate, "pdgaNumber">) {
   return candidate.pdgaNumber === MEHDI_PDGA_NUMBER;
+}
+
+export function nominalSix<T extends WtdgcRosterCandidate>(candidates: T[]): T[] {
+  const men = rankCandidates(candidates.filter((player) => player.gender === "M")).slice(0, 4);
+  const women = rankCandidates(candidates.filter((player) => player.gender === "F")).slice(0, 2);
+  return [...men, ...women];
+}
+
+export function franceRoundSix<T extends WtdgcRosterCandidate>(division: WtdgcDivision, candidates: T[]): T[] {
+  if (division === "open") return nominalSix(candidates);
+  const mehdi = candidates.find(isMehdi);
+  const mp40 = rankCandidates(candidates.filter((player) => player.gender === "M" && !isMehdi(player))).slice(0, 3);
+  const fp40 = rankCandidates(candidates.filter((player) => player.gender === "F")).slice(0, 2);
+  return [...mp40, ...(mehdi ? [mehdi] : []), ...fp40];
 }
 
 export function validateFranceRoster(division: WtdgcDivision, selected: WtdgcRosterCandidate[]) {
@@ -100,6 +118,7 @@ export function validateFranceRoster(division: WtdgcDivision, selected: WtdgcRos
 export function slotAssignmentsFromSelection(
   division: WtdgcDivision,
   selected: WtdgcRosterCandidate[],
+  options: MastersSlotOptions = {},
 ): Partial<Record<WtdgcRosterSlot, string>> {
   const women = rankCandidates(selected.filter((player) => player.gender === "F"));
   if (division === "open") {
@@ -113,16 +132,50 @@ export function slotAssignmentsFromSelection(
       FPO2: women[1]?.id ?? "",
     };
   }
-  const mp40 = rankCandidates(selected.filter((player) => player.gender === "M" && !isMehdi(player)));
-  const mehdi = selected.find(isMehdi);
+  const mp50ExplicitlyAssigned = Object.prototype.hasOwnProperty.call(options, "mp50PlayerId");
+  const mp50 = mp50ExplicitlyAssigned
+    ? selected.find((player) => player.id === options.mp50PlayerId && player.gender === "M")
+    : selected.find(isMehdi);
+  const mp40 = mp50ExplicitlyAssigned && !mp50
+    ? []
+    : rankCandidates(selected.filter((player) => player.gender === "M" && player.id !== mp50?.id));
   return {
     "MP40-1": mp40[0]?.id ?? "",
     "MP40-2": mp40[1]?.id ?? "",
     "MP40-3": mp40[2]?.id ?? "",
     "FP40-1": women[0]?.id ?? "",
     "FP40-2": women[1]?.id ?? "",
-    MP50: mehdi?.id ?? "",
+    MP50: mp50?.id ?? "",
   };
+}
+
+export function positionLabels(
+  division: WtdgcDivision,
+  selected: WtdgcRosterCandidate[],
+  allPlayers: WtdgcRosterCandidate[],
+  options: MastersSlotOptions = {},
+) {
+  const labels = new Map<string, string>();
+  const selectedIds = new Set(selected.map((player) => player.id));
+  if (division === "open") {
+    const selectedMpo = rankCandidates(selected.filter((player) => player.gender === "M"));
+    const selectedFpo = rankCandidates(selected.filter((player) => player.gender === "F"));
+    allPlayers.filter((player) => player.gender === "M").forEach((player) => labels.set(player.id, selectedIds.has(player.id) ? `MPO${selectedMpo.findIndex((item) => item.id === player.id) + 1}` : "Rempl. MPO"));
+    allPlayers.filter((player) => player.gender === "F").forEach((player) => labels.set(player.id, selectedIds.has(player.id) ? `FPO${selectedFpo.findIndex((item) => item.id === player.id) + 1}` : "Rempl. FPO"));
+    return labels;
+  }
+
+  const mp50Id = options.mp50PlayerId ?? selected.find(isMehdi)?.id ?? null;
+  const selectedMp40 = rankCandidates(selected.filter((player) => player.gender === "M" && player.id !== mp50Id));
+  const selectedFp40 = rankCandidates(selected.filter((player) => player.gender === "F"));
+  for (const player of allPlayers.filter((item) => item.gender === "M")) {
+    if (player.id === mp50Id) labels.set(player.id, selectedIds.has(player.id) ? "MP50" : "Rempl. MP50");
+    else if (!mp50Id && selectedIds.has(player.id)) labels.set(player.id, "MP40 / MP50");
+    else if (!mp50Id) labels.set(player.id, "Rempl. MP40 / MP50");
+    else labels.set(player.id, selectedIds.has(player.id) ? `MP40-${selectedMp40.findIndex((item) => item.id === player.id) + 1}` : "Rempl. MP40");
+  }
+  allPlayers.filter((player) => player.gender === "F").forEach((player) => labels.set(player.id, selectedIds.has(player.id) ? `FP40-${selectedFp40.findIndex((item) => item.id === player.id) + 1}` : "Rempl. FP40"));
+  return labels;
 }
 
 export function roundGameAssignments(division: WtdgcDivision, roundNumber: WtdgcRoundNumber): WtdgcRoundGameAssignment[] {

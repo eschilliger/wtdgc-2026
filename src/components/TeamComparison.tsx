@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ComparisonTeamCard, flagEmoji } from "./comparison/ComparisonTeamCard";
-import { ComparisonSummary, LineupMatchups } from "./comparison/ComparisonDuel";
+import { ComparisonSummary } from "./comparison/ComparisonDuel";
 
 export type ComparisonPlayer = {
   id: string;
@@ -72,7 +72,6 @@ export default function TeamComparison({ teams }: Props) {
       {teamA && teamB ? <>
         <ComparisonSummary teamA={teamA} teamB={teamB} disabledA={disabledFor(teamA.id)} disabledB={disabledFor(teamB.id)} onResetDuel={() => resetDuel(teamA.id, teamB.id)} />
         <div className="comparison-grid"><ComparisonTeamCard team={teamA} disabledIds={disabledFor(teamA.id)} onTogglePlayer={(id) => togglePlayer(teamA.id, id)} onReset={() => resetTeam(teamA.id)} /><ComparisonTeamCard team={teamB} disabledIds={disabledFor(teamB.id)} onTogglePlayer={(id) => togglePlayer(teamB.id, id)} onReset={() => resetTeam(teamB.id)} /></div>
-        <LineupMatchups teamA={teamA} teamB={teamB} disabledA={disabledFor(teamA.id)} disabledB={disabledFor(teamB.id)} />
       </> : null}
     </section>
   </>;

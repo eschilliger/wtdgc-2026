@@ -28,6 +28,12 @@
 .comparison { align-items: start; }
 .emptyOpponent { min-height: 160px; }
 
+.mp50Section { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; padding: 14px; border: 1px solid #c9d6e3; border-radius: 12px; background: #f4f8fc; }
+.mp50Section > div { display: grid; gap: 3px; }
+.mp50Section strong { color: #123968; }
+.mp50Section span { color: #748193; font-size: 12px; }
+.mp50Section select { min-width: 240px; min-height: 40px; padding: 0 10px; border: 1px solid #9fb8d2; border-radius: 9px; background: #fff; color: #17202a; font: inherit; }
+
 .matchupsSection { display: grid; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #e1e7ee; }
 .matchupsHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .matchupsHeading p { margin: 0; color: #748193; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
@@ -49,6 +55,7 @@
 .matchupSides select { width: 100%; padding: 0 9px; }
 .fixedPlayers { display: grid; gap: 7px; }
 .fixedPlayers strong { display: flex; align-items: center; min-height: 36px; padding: 0 10px; border: 1px solid #c7d8e8; border-radius: 8px; background: #eef4fa; color: #123968; font-size: 13px; }
+.fixedPlayers em { display: flex; align-items: center; min-height: 36px; padding: 0 10px; border: 1px dashed #d2ad62; border-radius: 8px; background: #fff8e8; color: #7a5716; font-size: 12px; font-style: normal; font-weight: 700; }
 .matchupControls button:disabled, .matchupControls select:disabled, .matchupSides select:disabled { opacity: .55; cursor: not-allowed; }
 
 .notes { margin-top: 16px; border: 1px solid #d6e0eb; border-radius: 12px; background: #f9fbfd; }
@@ -86,6 +93,8 @@
   .rosterActions { margin: 12px 0 8px; gap: 8px; font-size: 11px; }
   .secondary { min-height: 34px; padding-inline: 9px; font-size: 11px; }
   .comparison { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
+  .mp50Section { align-items: stretch; flex-direction: column; }
+  .mp50Section select { min-width: 0; width: 100%; }
   .matchupsSection { margin-top: 14px; padding-top: 14px; }
   .matchupsHeading { align-items: stretch; flex-direction: column; }
   .matchupsHeading h3 { font-size: 18px; }
