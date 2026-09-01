@@ -3,40 +3,68 @@
 .heading span { color: #748193; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .heading h2 { margin: 3px 0 0; color: #123968; font-size: 24px; }
 .heading > strong { display: grid; place-items: center; min-width: 36px; height: 36px; border-radius: 999px; background: #eaf1f8; color: #123968; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.card { padding: 18px; border: 1px solid #d6e0eb; border-radius: 16px; background: #fff; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 980px; }
+.card { padding: 20px; border: 1px solid #d6e0eb; border-radius: 16px; background: #fff; }
 .next { border-color: #91b4db; box-shadow: inset 4px 0 0 #1d4f8c; }
 .cardTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .round { color: #748193; font-size: 12px; font-weight: 800; text-transform: uppercase; }
-.card h3 { margin: 4px 0 0; color: #123968; font-size: 20px; }
+.card h3 { margin: 4px 0 0; color: #123968; font-size: 21px; }
 .badges { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 .nextBadge, .playerStatus { display: inline-flex; align-items: center; min-height: 26px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
 .nextBadge { background: #dce8f7; color: #1d4f8c; }
 .starter { background: #cdeedc; color: #0b5f3a; border: 1px solid #7fcda5; }
 .substitute { background: #dce5ee; color: #40556b; border: 1px solid #aebdcc; }
-.facts { display: grid; gap: 0; margin: 14px 0 0; }
-.facts div { display: grid; grid-template-columns: 86px 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid #edf1f5; }
-.facts dt { color: #748193; font-size: 12px; }
-.facts dd { margin: 0; color: #17202a; font-weight: 750; text-align: right; }
-.assignments { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #e1e7ee; }
-.assignments > strong { color: #123968; font-size: 13px; }
-.assignment { padding: 10px 12px; border: 1px solid #dce5ee; border-radius: 10px; background: #f9fbfd; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+.facts div { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #edf1f5; border-radius: 10px; background: #f9fbfd; }
+.facts dt { color: #748193; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.facts dd { margin: 0; color: #17202a; font-weight: 750; }
+.assignments { display: grid; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #e1e7ee; }
+.assignmentsHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.assignmentsHeading > div { display: grid; gap: 3px; }
+.assignmentsHeading span { color: #748193; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.assignmentsHeading strong { color: #123968; font-size: 18px; }
+.matchupsList { display: grid; gap: 10px; }
+.assignment { display: grid; gap: 12px; padding: 14px; border: 1px solid #d6e0eb; border-radius: 12px; background: #f9fbfd; }
 .myAssignment { border-color: #75b997; background: #f0faf5; box-shadow: inset 3px 0 0 #0b7a4b; }
-.assignmentTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.assignmentTop > span { color: #748193; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-.assignmentTop > strong { padding: 3px 7px; border-radius: 999px; background: #cdeedc; color: #0b5f3a; font-size: 10px; white-space: nowrap; }
-.assignment p { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 6px 0 0; color: #17202a; font-size: 13px; }
-.assignment p b:last-child { text-align: right; }
-.assignment em { color: #748193; font-size: 11px; font-style: normal; font-weight: 800; text-transform: uppercase; }
+.assignmentTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gameTitle { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gameTitle > strong { color: #123968; font-size: 15px; }
+.slotLabel { padding: 4px 8px; border-radius: 999px; background: #e7eef7; color: #1d4f8c; font-size: 11px; font-weight: 800; }
+.myBadge { padding: 4px 8px; border-radius: 999px; background: #cdeedc; color: #0b5f3a; font-size: 10px; white-space: nowrap; }
+.matchupSides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.side { display: grid; gap: 7px; min-width: 0; }
+.sideLabel { color: #40556b; font-size: 12px; font-weight: 800; }
+.playersList { display: grid; gap: 7px; }
+.playerRow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border: 1px solid #c7d8e8; border-radius: 8px; background: #eef4fa; }
+.playerRow strong { min-width: 0; overflow: hidden; color: #123968; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.playerRow > b { color: #17202a; font-size: 13px; }
+.playerSlot { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 24px; padding: 0 6px; border-radius: 999px; background: #fff; color: #1d4f8c; font-size: 10px; font-weight: 800; }
+.playerMissing { display: flex; align-items: center; min-height: 40px; padding: 0 10px; border: 1px dashed #d2ad62; border-radius: 8px; background: #fff8e8; color: #7a5716; font-size: 12px; font-weight: 700; }
+.matchupRating { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding-top: 11px; border-top: 1px solid #dce5ee; color: #40556b; font-size: 12px; }
+.matchupRating > span:last-child { text-align: right; }
+.matchupRating span strong { color: #123968; }
+.matchupRating > b { min-width: 78px; padding: 5px 9px; border-radius: 999px; text-align: center; font-size: 12px; white-space: nowrap; }
+.ratingPositive { background: #cdeedc; color: #0b5f3a; }
+.ratingNegative { background: #f8d7da; color: #9f1239; }
+.ratingEven { background: #e7eef7; color: #40556b; }
 .noAssignment { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #edf1f5; color: #748193; font-size: 12px; }
 
 @media (max-width: 700px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid { max-width: none; }
   .card { padding: 15px; }
   .card h3 { font-size: 18px; }
   .cardTop { align-items: flex-start; }
   .badges { max-width: 130px; }
-  .facts div { grid-template-columns: 72px 1fr; }
-  .assignment p { grid-template-columns: 1fr; gap: 3px; }
-  .assignment p b:last-child { text-align: left; }
+  .facts { grid-template-columns: 1fr; gap: 7px; }
+  .facts div { grid-template-columns: 72px 1fr; align-items: center; gap: 8px; padding: 8px 10px; }
+  .facts dt { font-size: 10px; }
+  .facts dd { text-align: right; }
+  .assignments { margin-top: 14px; padding-top: 14px; }
+  .assignmentsHeading strong { font-size: 16px; }
+  .assignment { padding: 11px; }
+  .assignmentTop { align-items: flex-start; }
+  .matchupSides { grid-template-columns: 1fr; }
+  .playerRow strong { white-space: normal; }
+  .matchupRating { grid-template-columns: 1fr auto; }
+  .matchupRating > span:last-child { grid-column: 1 / -1; text-align: left; }
 }

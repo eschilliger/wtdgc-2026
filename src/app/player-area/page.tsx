@@ -14,6 +14,15 @@ function formatStart(value: string | null) {
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year}${time ? ` · ${time.slice(0, 5)}` : ""}`;
 }
+function formatRating(value: number | null) {
+  if (value === null) return "—";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+function signedRating(value: number | null) {
+  if (value === null) return "—";
+  if (value > 0) return `+${formatRating(value)}`;
+  return formatRating(value);
+}
 
 export default async function PlayerAreaPage() {
   const claims = await requirePlayerAccess();
@@ -41,18 +50,49 @@ export default async function PlayerAreaPage() {
                       {index === 0 ? <span className={matchStyles.nextBadge}>Prochain</span> : null}
                     </div>
                   </div>
+
                   <dl className={matchStyles.facts}>
                     <div><dt>Départ</dt><dd>{formatStart(match.scheduledStart)}</dd></div>
                     <div><dt>Parcours</dt><dd>{match.course || "À confirmer"}</dd></div>
                     <div><dt>Trou</dt><dd>{match.startingHole || "À confirmer"}</dd></div>
                   </dl>
-                  {match.matchups.length ? <div className={matchStyles.assignments}>
-                    <strong>Confrontations de l’équipe</strong>
-                    {match.matchups.map((matchup) => <div className={`${matchStyles.assignment} ${matchup.includesPlayer ? matchStyles.myAssignment : ""}`} key={matchup.id}>
-                      <div className={matchStyles.assignmentTop}><span>{gameLabel(matchup.game)}</span>{matchup.includesPlayer ? <strong>Ma confrontation</strong> : null}</div>
-                      <p><b>{matchup.francePlayers.join(" + ")}</b><em>vs</em><b>{matchup.opponentPlayers.join(" + ")}</b></p>
-                    </div>)}
-                  </div> : <p className={matchStyles.noAssignment}>Aucune confrontation publiée pour le moment.</p>}
+
+                  {match.matchups.length ? (
+                    <section className={matchStyles.assignments}>
+                      <div className={matchStyles.assignmentsHeading}><div><span>Affectations officielles</span><strong>Simples et doubles du round</strong></div></div>
+                      <div className={matchStyles.matchupsList}>
+                        {match.matchups.map((matchup) => (
+                          <article className={`${matchStyles.assignment} ${matchup.includesPlayer ? matchStyles.myAssignment : ""}`} key={matchup.id}>
+                            <div className={matchStyles.assignmentTop}>
+                              <div className={matchStyles.gameTitle}><strong>{gameLabel(matchup.game)}</strong><span className={matchStyles.slotLabel}>{matchup.slotLabel || "Positions à confirmer"}</span></div>
+                              {matchup.includesPlayer ? <strong className={matchStyles.myBadge}>Ma confrontation</strong> : null}
+                            </div>
+
+                            <div className={matchStyles.matchupSides}>
+                              <div className={matchStyles.side}>
+                                <span className={matchStyles.sideLabel}>France</span>
+                                <div className={matchStyles.playersList}>
+                                  {matchup.francePlayers.map((player) => <div className={matchStyles.playerRow} key={player.id}><span className={matchStyles.playerSlot}>{player.slot}</span><strong>{player.name}</strong><b>{formatRating(player.rating)}</b></div>)}
+                                </div>
+                              </div>
+                              <div className={matchStyles.side}>
+                                <span className={matchStyles.sideLabel}>{match.opponentCountry}</span>
+                                <div className={matchStyles.playersList}>
+                                  {matchup.opponentPlayers.length ? matchup.opponentPlayers.map((player) => <div className={matchStyles.playerRow} key={player.id}><span className={matchStyles.playerSlot}>{player.slot}</span><strong>{player.name}</strong><b>{formatRating(player.rating)}</b></div>) : <div className={matchStyles.playerMissing}>Adversaire à renseigner</div>}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className={matchStyles.matchupRating}>
+                              <span>{matchup.format === "double" ? "Rating moyen" : "Rating"} France <strong>{formatRating(matchup.franceRating)}</strong></span>
+                              <b className={matchup.ratingGap === null || matchup.ratingGap === 0 ? matchStyles.ratingEven : matchup.ratingGap > 0 ? matchStyles.ratingPositive : matchStyles.ratingNegative}>Écart {signedRating(matchup.ratingGap)}</b>
+                              <span>{matchup.format === "double" ? "Rating moyen" : "Rating"} {match.opponentCountry} <strong>{formatRating(matchup.opponentRating)}</strong></span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ) : <p className={matchStyles.noAssignment}>Aucune confrontation publiée pour le moment.</p>}
                 </article>
               ))}
             </div>
