@@ -1,0 +1,32 @@
+.section { margin-top: 18px; padding: 22px; border: 1px solid #d6e0eb; border-radius: 16px; background: #fff; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.header h2 { margin: 0 0 6px; color: #123968; font-size: 22px; }
+.header p { margin: 0; color: #748193; line-height: 1.45; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; color: #52677c; font-size: 12px; font-weight: 700; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.legend i { width: 9px; height: 9px; border-radius: 999px; }
+.publishedDot { background: #0b7a4b; }
+.draftDot { background: #d59a22; }
+.tableWrap { overflow-x: auto; border: 1px solid #dce5ee; border-radius: 12px; }
+.table { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; }
+.table th, .table td { padding: 10px 9px; border-bottom: 1px solid #edf1f5; text-align: center; vertical-align: middle; }
+.table thead th { background: #f6f9fc; color: #52677c; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.table thead th:first-child { min-width: 230px; text-align: left; }
+.table tbody tr:last-child th, .table tbody tr:last-child td { border-bottom: 0; }
+.table tbody th { display: flex; align-items: center; gap: 9px; text-align: left; color: #123968; font-size: 13px; }
+.category { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 24px; padding: 0 6px; border-radius: 999px; background: #e7eef7; color: #1d4f8c; font-size: 10px; font-weight: 800; }
+.usageMark { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-size: 13px; font-weight: 900; }
+.published { background: #0b7a4b; }
+.draft { background: #d59a22; }
+.empty { color: #b6c0ca; }
+.total { display: inline-grid; place-items: center; min-width: 32px; height: 32px; padding: 0 7px; border-radius: 999px; background: #eaf1f8; color: #123968; font-size: 13px; }
+.highTotal { background: #fff1c9; color: #78540d; }
+.maxTotal { background: #f8d7da; color: #9f1239; }
+.help { margin: 10px 0 0; color: #748193; font-size: 11px; line-height: 1.4; }
+
+@media (max-width: 700px) {
+  .section { padding: 16px; }
+  .header { align-items: flex-start; flex-direction: column; }
+  .header h2 { font-size: 20px; }
+  .tableWrap { margin-right: -4px; }
+}
