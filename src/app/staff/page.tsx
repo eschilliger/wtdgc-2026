@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { DefaultOpenRoster } from "../../components/staff/DefaultOpenRoster";
 import { StaffDivisionSwitch } from "../../components/staff/StaffDivisionSwitch";
+import { StaffPlayerUsage } from "../../components/staff/StaffPlayerUsage";
 import { ScoutingRosterPanel } from "../../components/scouting/ScoutingRosterPanel";
 import authStyles from "../../components/auth/Auth.module.css";
 import roundStyles from "../../components/staff/StaffRounds.module.css";
@@ -10,6 +11,7 @@ import { requireStaffAccess } from "../../server/auth/session";
 import { loadFranceOpenRosterData } from "../../server/repositories/france-roster.repository";
 import { listRoundsForStaff } from "../../server/repositories/round-management.repository";
 import { loadScoutingTeams } from "../../server/repositories/scouting.repository";
+import { loadStaffPlayerUsage } from "../../server/repositories/staff-player-usage.repository";
 
 export const dynamic = "force-dynamic";
 
@@ -58,10 +60,11 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
     ?? "open";
 
   if (division === "open") {
-    const [{ roster }, rounds, openTeams] = await Promise.all([
+    const [{ roster }, rounds, openTeams, usage] = await Promise.all([
       loadFranceOpenRosterData(),
       listRoundsForStaff("open"),
       loadScoutingTeams("open"),
+      loadStaffPlayerUsage("open"),
     ]);
     const franceTeam = openTeams.find((team) => team.country.trim().toLowerCase() === "france");
     if (!franceTeam) throw new Error("France Open scouting team not found.");
@@ -74,15 +77,17 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           </header>
           <StaffDivisionSwitch division={division} />
           <DefaultOpenRoster team={franceTeam} roster={roster} />
+          <StaffPlayerUsage division={division} team={franceTeam} rounds={usage} />
           <RoundsSection division={division} rounds={rounds} />
         </div>
       </main>
     );
   }
 
-  const [rounds, mastersTeams] = await Promise.all([
+  const [rounds, mastersTeams, usage] = await Promise.all([
     listRoundsForStaff("masters"),
     loadScoutingTeams("masters"),
+    loadStaffPlayerUsage("masters"),
   ]);
   const franceMasters = mastersTeams.find((team) => team.country.trim().toLowerCase() === "france");
   if (!franceMasters) throw new Error("France Masters scouting team not found.");
@@ -101,6 +106,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           </div>
           <ScoutingRosterPanel team={franceMasters} />
         </section>
+        <StaffPlayerUsage division={division} team={franceMasters} rounds={usage} />
         <RoundsSection division={division} rounds={rounds} />
       </div>
     </main>
