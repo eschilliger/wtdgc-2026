@@ -8,7 +8,7 @@
 .publishedDot { background: #0b7a4b; }
 .draftDot { background: #d59a22; }
 .tableWrap { overflow-x: auto; border: 1px solid #dce5ee; border-radius: 12px; }
-.table { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; }
+.table { width: 100%; min-width: 900px; border-collapse: collapse; background: #fff; }
 .table th, .table td { padding: 10px 9px; border-bottom: 1px solid #edf1f5; text-align: center; vertical-align: middle; }
 .table thead th { background: #f6f9fc; color: #52677c; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
 .table thead th:first-child { min-width: 230px; text-align: left; }
@@ -19,6 +19,7 @@
 .published { background: #0b7a4b; }
 .draft { background: #d59a22; }
 .empty { color: #b6c0ca; }
+.formatTotal { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border-radius: 8px; background: #f0f4f8; color: #123968; font-size: 13px; }
 .total { display: inline-grid; place-items: center; min-width: 32px; height: 32px; padding: 0 7px; border-radius: 999px; background: #eaf1f8; color: #123968; font-size: 13px; }
 .highTotal { background: #fff1c9; color: #78540d; }
 .maxTotal { background: #f8d7da; color: #9f1239; }
